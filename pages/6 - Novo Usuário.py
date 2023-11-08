@@ -7,6 +7,7 @@ from PIL import Image
 import streamlit_authenticator as stauth
 import pandas as pd
 import mysql.connector
+from utilR import font_TITLE
 
 
 conexao = mysql.connector.connect(
@@ -18,137 +19,128 @@ conexao = mysql.connector.connect(
 )
 mycursor = conexao.cursor()
 
-
-comando2 = 'SELECT * FROM projeu_users;'
-mycursor.execute(comando2)
-listCod = mycursor.fetchall()
-
 st.set_page_config(
 page_title="9box | New User",
 page_icon=Image.open('imagens/icone.png'),
 layout="centered")
 
-comando2 = 'SELECT * FROM projeu_users;'
-mycursor.execute(comando2)
-dadosUser = mycursor.fetchall()
-
-
-def transform_to_string(lista):
-    # Junta os elementos da lista em uma única string separada por vírgulas
-    string_com_virgulas = ', '.join(map(str, lista))
-    return string_com_virgulas
-
-
-#perfilUser = 'BP'
-
 tab1, tab2 = st.tabs(['Novos Usuários', 'Usuários Criados'])
 
-with tab1:
-    def gerar_sequencia_aleatoria():
-        tamanho = 30
+with tab1:    
+    comando1 = 'SELECT * FROM projeu_users;'
+    mycursor.execute(comando1)
+    usersBD = mycursor.fetchall()
 
-        trava = True
-        while trava:
-            caracteres = string.ascii_letters + string.digits
-            carac_random =''.join(random.choices(caracteres, k=tamanho))
-            if carac_random not in [x[1] for x in listCod]:
-                trava = False    
+    comando2 = """SELECT DISTINCT PU.unidade, PM.macroprocesso, PC.condicao, PU.id, PM.id, PC.id
+        FROM projeu_macropr AS PM
+        INNER JOIN projeu_unidades AS PU
+        INNER JOIN projeu_condicao_pagamento AS PC
+        GROUP BY PU.unidade, PM.macroprocesso, PC.condicao, PU.id, PM.id, PC.id;"""
+    mycursor.execute(comando2)
+    dadosPagingBD = mycursor.fetchall()
 
-        return carac_random
+    comando3 = "SELECT * FROM projeu_empresas;"
+    mycursor.execute(comando3)
+    empresasBD = mycursor.fetchall()
+
+    unidadesBD = list(set([x[0] for x in dadosPagingBD]))
+    macroprocBD = list(set([x[1] for x in dadosPagingBD]))
+    condPagamentoBD = list(set([x[2] for x in dadosPagingBD]))
+    mycursor.close()
+
+    def func_users(username):
+        dic_users = {'Padrão': 'P',
+                     'Administrador': 'A',
+                     'Governança': 'GV',
+                     'Liderança': 'L'}
+
+        return dic_users[str(username).strip()]
 
 
-    def linkify(word, url):
-        return f'<a href="{url}">{word}</a>'
+    fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
+    def CadastroDeUsuarios():
+        font_TITLE('CADASTRO DE NOVOS USUÁRIOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
+        
+        # colU, colU1 = st.columns([2,1.3])
+        # with colU: 
+        #     unidade = st.selectbox("Unidade de Negócio",  unidadesBD)
+        # with colU1:
+        #     empresa = st.selectbox('Empresa', list(set([x[1] for x in empresasBD if x[0] != 0])))
 
-    st.text(' ')
-    st.subheader("Inclusão de Novos Usuários")
-    st.text(' ')
+        colu1, colu2 = st.columns([2, 1.6])
+        col1, col2, col3 = st.columns(3)
+        co1, co2, co3 = st.columns([3, 3, 2])
 
-    perfil_new_user = st.selectbox('Perfil', ['A', 'B'])
+        with colu1:
+            nome = st.text_input("Nome")
+        with colu2:
+            cpf = st.text_input("CPF / CNPJ")
 
-    if perfil_new_user == 'Administrador':
-        perfil = 'A'
-    elif perfil_new_user == 'Gestor':
-        perfil = 'B'
-    elif perfil_new_user == 'Business Partners':
-        perfil = 'BP'
-    else:
-        perfil = 'C'
-    
-    #if perfil_new_user == 'Business Partners':
-        #unidadeBP = st.multiselect('Unidades da BP', unidadesBD)
+        with col1:
+            unidade = st.selectbox("Unidade de Negócio",  unidadesBD)
+        with col2:
+            empresa = st.selectbox('Empresa', list(set([x[1] for x in empresasBD if x[0] != 0])))
+        with col3:
+            macroproc = st.selectbox('Macroprocesso', macroprocBD)
 
-    funcao = st.selectbox('Função', ["Executor de Processos", "Líder de Processos", "Dono de processo", "Gestor de Processos",
-                                    ])
-    st.text(' ')
-    st.text(' ')
-    button = st.button('Gerar')
+        with co1:
+            matricula = st.text_input('Matricula')
+        with co2:
+            condPagamento = st.selectbox("Condiçao de Pagamento", condPagamentoBD)
+        with co3:
+            codCartao = st.text_input("Código cartão da empresa")
 
-    codigo = gerar_sequencia_aleatoria()
-    if button:
-        if perfil != 'BP':
-            comando = f'INSERT INTO Usuarios(cod_acesso, Perfil, Cargo) VALUES ("{codigo}", "{perfil}", "{funcao}")'
-        else:
-            comando = f'INSERT INTO Usuarios(cod_acesso, Perfil, Unidades_BP, Cargo) VALUES ("{codigo}", "{perfil}", "{transform_to_string(unidadeBP)}", "{funcao}")'
+        if str(empresa).strip().upper() == 'PJ':
+            email2 = st.text_input('Email para receber notificações')
 
-        mycursor.execute(comando)
-        conexao.commit()
-        with st.container():
-            st.info(f"""
-                        Cadastro | 9box
-                        ----------------------------------------------------------------
+        st.text(' ')
+        especialidade = st.text_area('Especialidades')
+        st.divider()
+        email = st.text_input("Insira seu e-mail/Login")
+        col1, col2 = st.columns(2)
+        with col1:
+            senhaaux =st.text_input("Insira uma senha", type = "password")
+        with col2:
+            senha = st.text_input("Confirme a senha", type = "password")
+        
+        type_user = st.selectbox('Tipo Usuário', ['Padrão', 'Administrador', 'Governança', 'Liderança'])
+        
+        st.text(' ')
+        submitted = st.button("Cadastrar")
 
-                        ----------------------------------------------------------------
+        if submitted:
+            if senha != senhaaux:
+                st.toast('Senhas diferentes', icon='❌')
+            else:
+                if str(email).strip().lower() not in [str(x[3]).strip().lower() for x in usersBD] and (senha).strip().lower() not in [str(x[4]).strip().lower() for x in usersBD]:
+                    columnsBD = '''Matricula, Nome, cpf_cnpj, email, senha, unidade_fgkey, empresa_fgkey, macroprocesso_fgkey, condicao_pagamento_fgkey, especialidade, senha_hash, perfil_proj'''
+                    values = f"""{matricula}, 
+                                '{str(nome).strip()}', 
+                                '{str(cpf).strip()}',
+                                '{str(email).strip()}', 
+                                '{senha}',
+                                '{list(set(x[3] for x in dadosPagingBD if x[0] == unidade))[0]}',
+                                '{empresasBD[list(x[1] for x in empresasBD).index(empresa)][0]}',
+                                '{list(set(x[4] for x in dadosPagingBD if x[1] == macroproc))[0]}',
+                                '{list(set(x[5] for x in dadosPagingBD if x[2] == condPagamento))[0]}',
+                                '{str(especialidade).strip()}',
+                                '{stauth.Hasher([senha]).generate()[0]}',
+                                '{func_users(str(type_user).strip())}' """
 
-                        Insira o código de acesso 
+                    if str(empresa).strip().upper() == 'PJ':
+                        columnsBD += ', email_pj'
+                        values += f", '{email2}'"
 
-                        ----------------------------------------------------------------
-                        **{codigo}** 
-                        ----------------------------------------------------------------                  
-                        ----------------------------------------------------------------
-                        No seguinte link:
-                        
-                        ----------------------------------------------------------------
+                    senha = str(senha).strip()
+                    mycursor = conexao.cursor()
+                    cmdINSERT = f"""INSERT INTO projeu_users ({columnsBD})
+                                        VALUES ({values});"""
+                    
+                    mycursor.execute(cmdINSERT)
+                    conexao.commit()
+                    mycursor.close()
+                    st.toast('Cadastro Concluído!', icon='✅') 
+                else:
+                    st.toast('Muito comum email ou senha utilizada.', icon='❌')
 
-                        https://9box-cadastro.eucatur.com.br/
-
-                        ----------------------------------------------------------------
-
-                        
-                        """)
-
-    st.text(' ')
-
-    #with tab2:
-    #    st.text(' ')
-    #    st.subheader("Usuários Criados")
-    #    st.text(' ')
-    #    
-    #    perfil = ''
-    #    Unidade = st.multiselect("Unidade de negócio", list(set([x[2] for x in dadosUser if x[2] != '' and x[2] != None and x[2] != 'Zero'])), [])
-    #                                                
-    #    if len(Unidade) < 1:
-    #        st.write("Não há uma unidade selecionada.")
-    #    else:
-    #        FuncList = set([x[6] for x in dadosUser if x[2] in Unidade])
-    #        funcao = st.multiselect('Função', FuncList, FuncList)
-    #        if len(funcao) < 1:
-    #            st.info("Não há uma função selecionada")
-    #        else:
-    #            PerfList = list(set([x[9] for x in dadosUser if x[2] in Unidade and x[6] in funcao]))
-    #            perfil = st.multiselect('Perfil', PerfList, PerfList)
-#
-    #    if len(perfil) > 0:
-    #        dadosUser = [x for x in dadosUser if x[2] in Unidade and x[6] in funcao and x[9] in perfil]
-#
-    #        tipos_perfil = ['Administrador' if x[9] == 'A' else 'Gestor' if x[9] == 'B' else 'Business Partners' if x[9] == 'BP' else 'Avaliador' for x in dadosUser]
-    #        
-    #        list_dadosUser = [[dadosUser[x][4], dadosUser[x][5], dadosUser[x][2], tipos_perfil[x], dadosUser[x][1]] for x in range(len(dadosUser)) if dadosUser[x][5] != '' and dadosUser[x][5] != None and 'TESTE' not in str(dadosUser[x][5]).upper()]
-    #        
-    #        dados_user_to_df = pd.DataFrame({'Código Cadastro':[x[4] for x in list_dadosUser],
-    #                                            'Matricula': [x[0] for x in list_dadosUser],
-    #                                            'Colaborador': [x[1] for x in list_dadosUser],
-    #                                            'Unidade': [x[2] for x in list_dadosUser],
-    #                                            'Perfil': [x[3] for x in list_dadosUser]})
-    #        
-    #        st.table(dados_user_to_df)
+    CadastroDeUsuarios()
