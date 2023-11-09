@@ -155,7 +155,7 @@ for list11 in list(set([x[11] for x in consulta1])):
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('CADASTRO DE PARÂMETROS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
 
-ParamEscolh = st.selectbox("Escolha o parâmetro", ["Programas", "Prêmio", "Prêmio Projeto"])
+ParamEscolh = st.selectbox("Escolha o parâmetro", ["Programas", "Prêmio", "Parâmetro Especial"])
 st.text(' ')
 if ParamEscolh == 'Programas':
     col1, col2 = st.columns((3,1.7))
@@ -374,7 +374,7 @@ elif ParamEscolh == 'Prêmio':
             st.toast('Prêmio por função atualizado com sucesso.', icon='✅')  
             st.rerun()
 
-elif ParamEscolh == "Prêmio Projeto":
+elif ParamEscolh == "Parâmetro Especial":
     st.text(' ')
     st.divider()
 
