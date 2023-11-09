@@ -75,7 +75,7 @@ mycursor.execute("""SELECT Matricula,
 )
 users = mycursor.fetchall()
 
-mycursor.execute('SELECT * FROM projeu_users;')
+mycursor.execute('SELECT * FROM projeu_users WHERE perfil_proj in ("A", "L", "GV");')
 usersBD = mycursor.fetchall()
 mycursor.close()
 
