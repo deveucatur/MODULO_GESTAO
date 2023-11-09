@@ -62,7 +62,8 @@ SELECT
         FROM 
             projeu_empresas AS PEM 
         WHERE id_empresa = PU.empresa_fgkey
-    ) AS NUMBER_EMPRESA
+    ) AS NUMBER_EMPRESA,
+     PPE.opcional_evento AS OPC_EVENTO
 FROM projeu_premio_entr AS PPE
 LEFT JOIN 
     projeu_sprints PS ON PS.id_sprint = PPE.id_sprint_fgkey
@@ -171,6 +172,7 @@ def organizar_por_funcao(dicionario):
     return resultado
 
 
+
 tab1, tab2 = st.tabs(['APROVAÇÃO', 'CONSOLIDADO'])
 
 with tab1:
@@ -231,7 +233,11 @@ with tab1:
                         with col4:
                             qntd_atdd = st.text_input('', len(list(set([str(x[3]).strip() for x in dd_name[0] if x[3] != None]))) if len(dd_name[0]) > 0 else 0, label_visibility='collapsed', key=f'Nome{proj_name} - pessoa {name}- sprint{sprint}')
                         with col5:
-                            horas_pessoa = st.text_input('', sum([x[7] if x[7] != None else 0 for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0, label_visibility='collapsed', key=f'Cargo{proj_name} - pessoa {name}- sprint{sprint}')
+                            if dd_name[0][0][7] == None and dd_name[0][0][8] != None:
+                                hrs_pes_totl =  dd_name[0][0][8] / dd_name[0][0][9]
+                            else:
+                                hrs_pes_totl = sum([x[7] if x[7] != None else 0 for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0
+                            horas_pessoa = st.text_input('', hrs_pes_totl, label_visibility='collapsed', key=f'Cargo{proj_name} - pessoa {name}- sprint{sprint}')
                         with col6:
                             valor_total_pessoa = st.text_input('', sum([x[10] for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0, label_visibility='collapsed', key=f'Valor{proj_name} - pessoa {name}- sprint{sprint}')
 
@@ -251,8 +257,8 @@ with tab1:
                         st.caption('Complexidade')
                     with col5:
                         st.caption('Valor')
+                    for idx_premio in range(len(dd_sprint)):                        
 
-                    for idx_premio in range(len(dd_sprint)):
                         with col0:
                             st.text_input('', dd_sprint[idx_premio][4], label_visibility='collapsed', key=f'matricula {proj_name} - {idx_premio} - sprint{sprint}')
                         with col1:
@@ -260,9 +266,14 @@ with tab1:
                         with col11:
                             st.text_input('', funcao_premio(dd_sprint[idx_premio][6]), label_visibility='collapsed', key=f'funcao {proj_name} - {idx_premio} - sprint{sprint}')
                         with col2:
-                            st.text_input('', dd_sprint[idx_premio][3], label_visibility='collapsed', key=f'Entrega {proj_name} - {idx_premio} - sprint{sprint}')
+                            st.text_input('', dd_sprint[idx_premio][3] if dd_sprint[idx_premio][3] != None and dd_sprint[idx_premio][3] != '' and dd_sprint[idx_premio][15] != None and dd_sprint[idx_premio][15] != '' else dd_sprint[idx_premio][15], label_visibility='collapsed', key=f'Entrega {proj_name} - {idx_premio} - sprint{sprint}')
                         with col3:
-                            st.text_input('', dd_sprint[idx_premio][7], label_visibility='collapsed', key=f'Horas {proj_name} - {idx_premio} - sprint{sprint}')
+                            if dd_sprint[idx_premio][7] == None and dd_sprint[idx_premio][8] != None:
+                                hrs_entrg = dd_sprint[idx_premio][8] / dd_sprint[idx_premio][9]
+                            else:
+                                hrs_entrg = dd_sprint[idx_premio][7]
+                            
+                            st.text_input('', hrs_entrg, label_visibility='collapsed', key=f'Horas {proj_name} - {idx_premio} - sprint{sprint}')
                         with col4:
                             st.text_input('', complexidade_name(dd_sprint[idx_premio][9]) if dd_sprint[idx_premio][9] != None else ' ', label_visibility='collapsed', key=f'Complexidade {proj_name} - {idx_premio} - sprint{sprint}')
                         with col5:
@@ -364,8 +375,7 @@ with tab2:
                         
                         dd_txt = fun_digits([matric_colab, '1204', hoje.month, hoje.year,hoje.month, hoje.year, 0, 5, str(round(sum_valor, 2)).replace('.', ',')])
 
-                        info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}
-'''
+                        info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}'''
                     temp_file.write(info_txt)
                     arquivo_temporario = temp_file.name
                 
