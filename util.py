@@ -1039,8 +1039,8 @@ class CalculoPrêmio:
 
 
     def param_especial_event(self, evento):
-        dic_aux = {'SPRINT PRÉ MVP': self.proj_especial[0][4], 
-                'SPRINT PÓS MVP': self.proj_especial[0][6], 
+        dic_aux = {'PRÉ MVP': self.proj_especial[0][4], 
+                'PÓS MVP': self.proj_especial[0][6], 
                 'ENTREGA FINAL': self.proj_especial[0][7], 
                 'MVP': self.proj_especial[0][5]}
         
@@ -1144,7 +1144,6 @@ class CalculoPrêmio:
         #EXEMPLO DE USO
         # sprint = 1                     ---> [[LISTA DE ENTREGAS], VALOR DISTRIBUIDO PARA A SPRINT]
         # exemplo_de_como_chamar = CalculaSquad([list(x) for x in entregasBD if x[0] == sprint], 1200)
-        print(list(set([x[0] for x in entregas if int(x[0]) in self.number_sprint])))
         
         if len(list(set([x[0] for x in entregas if int(x[0]) in [int(x) for x in self.number_sprint]]))) > 0:
             entregas_sprint = entregas
