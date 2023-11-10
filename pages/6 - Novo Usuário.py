@@ -86,7 +86,7 @@ with tab1:
         with co1:
             matricula = st.text_input('Matricula')
         with co2:
-            condPagamento = st.selectbox("Condiçao de Pagamento", condPagamentoBD)
+            condPagamento = st.selectbox("Condição de Pagamento", condPagamentoBD)
         with co3:
             codCartao = st.text_input("Código cartão da empresa")
 
