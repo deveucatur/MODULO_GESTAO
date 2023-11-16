@@ -101,6 +101,7 @@ SELECT
         SELECT GROUP_CONCAT(id_registro) 
         FROM projeu_registroequipe 
         WHERE projeu_registroequipe.id_projeto = projeu_projetos.id_proj
+        AND projeu_registroequipe.status_reg = 'A'
     ) as id_registro,
     (
         SELECT GROUP_CONCAT(Nome) 
@@ -109,12 +110,14 @@ SELECT
             SELECT id_colab 
             FROM projeu_registroequipe 
             WHERE projeu_registroequipe.id_projeto = projeu_projetos.id_proj
+            AND projeu_registroequipe.status_reg = 'A'
         )
     ) as colaborador,
     (
         SELECT GROUP_CONCAT(papel) 
         FROM projeu_registroequipe 
         WHERE projeu_registroequipe.id_projeto = projeu_projetos.id_proj
+        AND projeu_registroequipe.status_reg = 'A'
     ) as PAPEL,
     (
         SELECT 
@@ -122,6 +125,7 @@ SELECT
         FROM projeu_users AS PU
         INNER JOIN projeu_registroequipe AS PR ON PU.id_user = PR.id_colab 
         WHERE PR.id_projeto = projeu_projetos.id_proj
+        AND PR.status_reg = 'A'
     ) as matriculaEQUIPE,
     projeu_projetos.status_proj AS STATUS_PROJETO,
     projeu_projetos.produto_mvp AS PRODUTO_MVP,
@@ -171,9 +175,15 @@ GROUP BY
 mycursor.execute(comand)
 ddPaging = mycursor.fetchall()
 
-comandUSERS = 'SELECT * FROM projeu_users WHERE perfil_proj in ("A", "L", "GV");'
+comandUSERS = 'SELECT * FROM projeu_users;'
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
+
+mycursor.execute("""SELECT Matricula, 
+                 Nome FROM projeu_users;"""
+)
+users = mycursor.fetchall()
+
 mycursor.close()
 
 def tableGeral():
@@ -532,6 +542,96 @@ elif authentication_status:
                         string_to_datetime(dadosOrigin[0][30]) if dadosOrigin[0][30] != None else None, 
                         dadosOrigin[0][31]]
 
+        st.text(' ')
+        func_split = lambda x: x.split(",") if x is not None else [x]
+        #ESPAÇO PARA MANIPULAR OS COLABORADORES VINCULADOS À AQUELE PROJETO
+        with st.expander('Equipe do Projeto'):
+            matriculasEQUIP = func_split(dadosOrigin[0][23])
+
+            #st.write(dadosOrigin)
+            #st.info(matriculasEQUIP)
+            equipe_atual = {matriculasEQUIP[idx_mat]: [matriculasEQUIP[idx_mat], func_split(dadosOrigin[0][21])[idx_mat], func_split(dadosOrigin[0][22])[idx_mat],  func_split(dadosOrigin[0][20])[idx_mat]] for idx_mat in range(len(matriculasEQUIP)) if matriculasEQUIP[idx_mat] != str(dadosOrigin[0][3]).strip()}
+
+            tab1, tab2 = st.tabs(['Adcionar', 'Excluir'])
+            
+            with tab1:
+                col1, col2 = st.columns([3,1])
+                with col2:
+                    qntd_clb = st.number_input('Quantidade', min_value=0, step=1)
+                
+                for a in range(qntd_clb):
+                    equipe_atual[f'{a}'] = ['', '', 'Executor']        
+
+                with st.form('FORMS ATUALIZAR EQUIPE'):
+                        
+                    col_equip1, col_equip2, col_equip3 = st.columns([0.3, 2, 1])
+                    with col_equip1:
+                        st.caption('Matricula')
+                    with col_equip2:
+                        st.caption('Colaboradores')
+                    with col_equip3:
+                        st.caption('Função')
+
+                    list_colbs = []
+                    equipe_list = [x for x in equipe_atual.values()]
+
+                    for colb_a in range(len(equipe_list)):
+                        with col_equip2:
+                            colb_name = st.selectbox('Colaboradores', [x[1] for x in users], list([x[1] for x in users]).index(equipe_list[colb_a][1]),label_visibility="collapsed", key=f'Nome Colab{colb_a}')        
+                        with col_equip1:
+                            colab_matric = st.text_input('Matricula', list(set([x[0] for x in users if x[1] == colb_name]))[0], label_visibility="collapsed", disabled=True, key=f'MatriculaColabs{colb_a}')
+                        with col_equip3:
+                            colb_funç = st.selectbox('Função', ['Especialista', 'Executor'],list(['Especialista', 'Executor']).index(equipe_list[colb_a][2]), label_visibility="collapsed", key=f'funcaoColab{colb_a}')
+                        list_colbs.append([colab_matric, colb_funç])
+                    
+                    button_att_equipe = st.form_submit_button('Atualizar')
+                    if button_att_equipe:
+                        equipe_limp = [x for x in list_colbs if str(x[0]).strip() != '0']
+                        mycursor = conexao.cursor()
+
+                        for matric, func in equipe_limp:
+                            if str(matric).strip() in [str(x).strip() for x in equipe_atual.keys()]: #VERIFICANDO SE O COLABORADOR JÁ ESTÁ VINCULADO A EQUIPE
+                                if str(equipe_atual[matric][2]).strip() != str(func).strip(): #VERIFICANDO SE OUVE ALGUMA MUDANÇA NOS COLABORADORES JÁ VINCULADOS
+                                    cmd_att_equipe = f'UPDATE projeu_registroequipe SET papel = "{func}" WHERE id_registro = {equipe_atual[matric][3]}'
+                                    mycursor.execute(cmd_att_equipe)
+                                    conexao.commit()
+                            else: #SE FOR UM COLABORADOR NOVO NA EQUIPE
+                                cmd_new_equip = f'''INSERT INTO projeu_registroequipe(id_projeto, id_colab, papel)
+                                                VALUES (
+                                                    {dadosOrigin[0][0]}, 
+                                                    (SELECT id_user FROM projeu_users WHERE Matricula = {matric}), 
+                                                    '{func}');'''
+                                st.info(cmd_new_equip)
+                                mycursor.execute(cmd_new_equip)
+                                conexao.commit()
+                            
+                        mycursor.close()
+                        st.rerun()
+                        st.toast('Dados Atualizados!', icon='✅') 
+            with tab2:
+                
+                font_TITLE('EXCLUIR COLABORADOR DA EQUIPE', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
+                st.text(' ')
+                col1, col2, col3 = st.columns([0.6,3,2])
+                
+                with col2:
+                    colab_ex = st.selectbox('Colaborador', [str(x[1]).strip() for x in equipe_atual.values()])
+                with col1:
+                    matric_ex = st.text_input('Matricula', [x[0] for x in users if str(x[1]).strip().lower() == str(colab_ex).strip().lower()][0], disabled=True)
+                with col3:
+                    funca_ex = st.text_input('Função', equipe_atual[matric_ex][2], disabled=True)
+
+                button_ex_equip = st.button('Excluir', key='EXCLUIR COLABORADOR DO PROJETO')
+                if button_ex_equip:
+                    mycursor = conexao.cursor()
+                    cmd_ex_equip = f'UPDATE projeu_registroequipe SET status_reg = "I" WHERE id_registro = {equipe_atual[matric_ex][3]};'
+
+                    mycursor.execute(cmd_ex_equip)
+                    conexao.commit()
+                
+                    st.rerun()
+            
+
         with st.expander('Controle do Projeto', expanded=True): 
             
             font_TITLE('DATAS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
@@ -609,138 +709,189 @@ elif authentication_status:
                             cardGRANDE(['Colaboradores', 'Atividades', 'Entregues', 'Avanço', 'Horas', 'Complexidade'], [len(list(set([x[2] for x in spEntregas if x[2] != None]))), len([x for x in spEntregas if x[1] != None]), len([x for x in spEntregas if str(x[5]).strip() == '🟩 Concluído']), porc_avan, sum([x[3] for x in spEntregas]), mapear_dificuldade(dif_comum[0][0])])
                             st.text(' ')
 
+                            st.text(' ')
+                            colPROJ1, colPROJ2 = st.columns([2,1])
+                            with colPROJ1:
+                                font_TITLE('ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                            with colPROJ2:
+                                font_TITLE('STATUS DO PROJETO - EM ANDAMENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                                
+                            especialist_proj = [list(func_split(dadosOrigin[0][21]))[x] for x in range(len(func_split(dadosOrigin[0][22]))) if str(list(func_split(dadosOrigin[0][22]))[x]).upper() == 'ESPECIALISTA']
+                            especialist_sprint = st.multiselect('Especialistas',especialist_proj, especialist_proj, key=f'especialista multi{idx_spr}')
+                            
+                            st.text(' ')
+                            spEntregas = [x for x in spEntregas if x[1] != None and x[2] != None and x[3] != None]
+                            
                             tab1, tab2, tab3, tab4 = st.tabs(['Entregas', 'Excluir', 'Homologação', 'Observação'])
                             with tab1:
-                                font_TITLE('ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
-
-                                especialist_proj = [list(func_split(dadosOrigin[0][21]))[x] for x in range(len(func_split(dadosOrigin[0][22]))) if str(list(func_split(dadosOrigin[0][22]))[x]).upper() == 'ESPECIALISTA']
-                                especialist_sprint = st.multiselect('Especialistas',especialist_proj, especialist_proj, key=f'especialista multi{idx_spr}')
-
                                 #FORMULÁRIO APRESENTANDO AS ENTREGAS
                                 col1, col2, col3 = st.columns([3,1,1])
                                 qnt_att = st.number_input('Adcionar Atividade', min_value=0, step=1, key=f'add{idx_spr} - {idx_parm}')
                                 
                                 spEntregas.extend([[idx_spr, None, None, 0 , '---', '🟨 Backlog', None] for x in range(qnt_att)])
 
-                                st.text(' ')
-                                col1, col2, col3, col4, col5 = st.columns([1, 0.3, 0.25, 0.25, 0.2])
-                                with col1:
-                                    st.caption('Atividades')
-                                with col2:
-                                    st.caption('Status')
-                                with col3:
-                                    st.caption('Executor')
-                                with col4:
-                                    st.caption('Hrs Neces')
-                                with col5:
-                                    st.caption('Compl')
+                                if len(spEntregas) > 0:
+                                    with st.form(f'Formulário Entregas {idx_parm} - {id_sprint}'):
+                                        st.text(' ')
+                                        
+                                        for ativIDX in range(len(spEntregas)): 
+                                            col1, col2, col4 = st.columns([0.6, 0.3, 0.12])
+                                            with col1:
+                                                st.caption(f'Entrega {ativIDX+1}')
+                                            with col2:
+                                                st.caption('Status | Executor')
+                                            with col4:
+                                                st.caption('Hr | Compl')
+                                            with col1:
+                                                name_entreg = st.text_area('Atividade', spEntregas[ativIDX][1] if spEntregas[ativIDX][1] != None else '', key=f'atividade{idx_spr} - {ativIDX} - {idx_parm}', disabled=False, label_visibility="collapsed")
+                                            with col4:
+                                                horas_entreg = st.number_input('Horas', value=spEntregas[ativIDX][3],min_value=0, step=1, key=f'horas{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
 
-                                for ativIDX in range(len(spEntregas)): 
-                                    with col1:
-                                        name_entreg = st.text_input('Atividade', spEntregas[ativIDX][1] if spEntregas[ativIDX][1] != None else '', key=f'atividade{idx_spr} - {ativIDX} - {idx_parm}', disabled=False, label_visibility="collapsed")
-                                    with col4:
-                                        horas_entreg = st.number_input('Horas', value=spEntregas[ativIDX][3],min_value=0, step=1, key=f'horas{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
-                                    with col3:
-                                        opc_colb = func_split(dadosOrigin[0][21])
-                                        colab_entreg = st.selectbox('Colaborador', opc_colb, opc_colb.index(spEntregas[ativIDX][2]) if spEntregas[ativIDX][2] != None and spEntregas[ativIDX][2] != '' else 0, key=f'colab{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
-                                    with col2:
-                                        opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando',  '🟩 Concluído']
-                                        status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
-                                    with col5:
-                                        opc_compl = ['Fácil', 'Médio', 'Difícil']
-                                        compl_entreg = st.selectbox('Compl.', opc_compl, opc_compl.index(spEntregas[ativIDX][4]) if spEntregas[ativIDX][4] != None and spEntregas[ativIDX][4] != '---' else 0, key=f'complex{idx_spr}  - {idx_parm}- {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
+                                                opc_compl = ['Fácil', 'Médio', 'Difícil']
 
-                                    listDadosAux.append([name_entreg, colab_entreg, horas_entreg, status_entreg, compl_entreg, spEntregas[ativIDX][6], 1])
+                                                compl_entreg = st.selectbox('Compl.', opc_compl, opc_compl.index(spEntregas[ativIDX][4]) if spEntregas[ativIDX][4] != None and spEntregas[ativIDX][4] != '---' else 0, key=f'complex{idx_spr}  - {idx_parm}- {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
 
-                                if block_sprint == False:
-                                    button_atual = st.button('Atualizar Entregas', key=f'{idx_spr} {idx_parm}', disabled=block_sprint,)
-                                    button_final = st.button('Finalizar Sprint', key=f'Finalizar Sprint {idx_spr} {idx_parm}', disabled=block_sprint,)
-                                    if button_atual:
-                                        mycursor = conexao.cursor()
+                                            with col2:
+                                                opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando',  '🟩 Concluído']
+                                                status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
+                                                
+                                                opc_colb = func_split(dadosOrigin[0][21])
+                                                colab_entreg = st.selectbox('Colaborador', opc_colb, opc_colb.index(spEntregas[ativIDX][2]) if spEntregas[ativIDX][2] != None and spEntregas[ativIDX][2] != '' else 0, key=f'colab{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
+                                    
 
-                                        for list_atual in listDadosAux:
-                                            if list_atual[5] != None: #SE A ENTREGA DA "list_atual" JÁ ESTIVER DENTRO DO BANCO DE DADOS SOMENTE VAI ATUALIZAR AS INFORMAÇÕES SOBRE A ENTREGA
-                                                columnsUP = ['nome_Entrega', 'executor', 'hra_necess', 'stt_entrega', 'compl_entrega']
+                                            listDadosAux.append([name_entreg, colab_entreg, horas_entreg, status_entreg, compl_entreg, spEntregas[ativIDX][6]]) 
+                                        
+                                        listDadosAux = [x for x in listDadosAux if x[0] != '' and x[0] != None]
+                                        entrgasBD_by_sprint = [x for x in EntregasBD if str(x[0]).strip() == str(idx_spr).strip()]
 
-                                                for idxColum in range(len(columnsUP)):
-                                                    cmd_update = f'''UPDATE projeu_entregas SET {columnsUP[idxColum]} = {f'"{list_atual[idxColum]}"' if idxColum != 1 else f'(SELECT id_user FROM projeu_users WHERE Nome = "{list_atual[idxColum]}" LIMIT 1)'} WHERE id_entr = {list_atual[5]};'''
-                                                    mycursor.execute(cmd_update)
-                                                    conexao.commit()
+                                        limp_entrg = lambda entr: str(entr).strip().replace('"', "'")
+                                        if len(entrgasBD_by_sprint) > 0:
+                                            col1, col2, col3 = st.columns([1,3,7])
+                                            with col1:
+                                                #, key=f'{idx_spr} {idx_parm}'
+                                                button_atual = st.form_submit_button('Atualizar', disabled=block_sprint)        
+                                            if str(matriUser).strip() == str(dadosOrigin[0][3]).strip():
+                                                with col2:
+                                                    # key=f'Finalizar Sprint {idx_spr} {idx_parm}',
+                                                    button_final = st.form_submit_button('Finalizar Sprint', disabled=block_sprint) 
+                                            
+                                                    if button_final:
+                                                        mycursor = conexao.cursor()
+                                                        columns_final = ['check_sprint', 'data_check']
+                                                        values_final = [0, f'"{datetime.today()}"']
 
-                                            else: #INSERT DA ENTREGA CASO ELA NÃO ESTEJA PRESENTE DENTRO DO BANCO DE DADOS
-                                                if list_atual[0] != None and list_atual[0] != '':
-                                                    cmd_insert = f'''
-                                                        INSERT INTO projeu_entregas (id_sprint, nome_Entrega, executor, hra_necess, stt_entrega, compl_entrega, status2) 
-                                                            values((SELECT id_sprint FROM projeu_sprints WHERE number_sprint = {spEntregas[0][0]}  
-                                                                AND id_proj_fgkey = 
-                                                                    (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{dadosOrigin[0][1]}') LIMIT 1),
-                                                                    "{list_atual[0]}", 
-                                                                    (SELECT id_user FROM projeu_users WHERE Nome = '{list_atual[1]}' LIMIT 1),
-                                                                    {list_atual[2]},
-                                                                    "{list_atual[3]}",
-                                                                    "{list_atual[4]}",
-                                                                    1);'''
-                                                    mycursor.execute(cmd_insert)
-                                                    conexao.commit()
+                                                        for idx_column in range(len(columns_final)):
+                                                            cmd_final = f'''UPDATE projeu_sprints SET {columns_final[idx_column]} = {values_final[idx_column]} WHERE id_sprint = {int(id_sprint)};'''
+                                                            mycursor.execute(cmd_final)
+                                                            conexao.commit()
 
-                                        mycursor.close()
-                                        st.toast('Dados Atualizados!', icon='✅')
-                                        sleep(1.3)
-                                        st.rerun()
+                                                        mycursor.close()
+                                                        st.toast('Sprint Finalizada!', icon='✅')
+                                                        sleep(2)
+                                                        st.rerun()
 
-                                    if button_final:
-                                        mycursor = conexao.cursor()
-                                        columns_final = ['check_sprint', 'data_check']
-                                        values_final = [0, f'"{datetime.date.today()}"']
+                                            if button_atual:
+                                                mycursor = conexao.cursor()
 
-                                        for idx_column in range(len(columns_final)):
-                                            cmd_final = f'''UPDATE projeu_sprints SET {columns_final[idx_column]} = {values_final[idx_column]} WHERE id_sprint = {int(id_sprint)};'''
-                                            mycursor.execute(cmd_final)
-                                            conexao.commit()
+                                                for list_atual in listDadosAux:
+                                                    if list_atual[5] != None: #SE A ENTREGA DA "list_atual" JÁ ESTIVER DENTRO DO BANCO DE DADOS SOMENTE VAI ATUALIZAR AS INFORMAÇÕES SOBRE A ENTREGA
+                                                        columnsUP = ['nome_Entrega', 'executor', 'hra_necess', 'stt_entrega', 'compl_entrega']
 
-                                        mycursor.close()
-                                        st.toast('Sprint Finalizada!', icon='✅')
-                                        sleep(2)
-                                        st.rerun()
+                                                        for idxColum in range(len(columnsUP)):
+                                                            cmd_update = f'''UPDATE projeu_entregas SET {columnsUP[idxColum]} = {f'"{list_atual[idxColum]}"' if idxColum != 1 else f'(SELECT id_user FROM projeu_users WHERE Nome = "{list_atual[idxColum]}" LIMIT 1)'} WHERE id_entr = {list_atual[5]};'''
+                                                            mycursor.execute(cmd_update)
+                                                            conexao.commit()
 
+
+                                                    else: #INSERT DA ENTREGA CASO ELA NÃO ESTEJA PRESENTE DENTRO DO BANCO DE DADOS
+                                                        if list_atual[0] != None and list_atual[0] != '': 
+                                                            tables = ['projeu_entregas', 'projeu_entregas_planejamento']
+
+                                                            for table_name in tables:
+                                                                cmd_insert = f'''
+                                                                    INSERT INTO {table_name} (id_sprint, nome_Entrega, executor, hra_necess, stt_entrega, compl_entrega) 
+                                                                        values((SELECT id_sprint FROM projeu_sprints WHERE number_sprint = {spEntregas[0][0]}  
+                                                                            AND id_proj_fgkey = 
+                                                                                (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{dadosOrigin[0][1]}') LIMIT 1),
+                                                                                "{limp_entrg(list_atual[0])}", 
+                                                                                (SELECT id_user FROM projeu_users WHERE Nome = '{list_atual[1]}' LIMIT 1),
+                                                                                {list_atual[2]},
+                                                                                "{list_atual[3]}",
+                                                                                "{list_atual[4]}");'''
+                                                                mycursor.execute(cmd_insert)
+                                                                conexao.commit()
+
+
+                                                mycursor.close()
+                                                st.toast('Dados Atualizados!', icon='✅')
+                                                st.rerun()
+
+                                        else:
+                                            button_inic_entreg = st.form_submit_button('Enviar')
+                                            if button_inic_entreg:
+                                                mycursor = conexao.cursor()
+                                                tables = ['projeu_entregas', 'projeu_entregas_planejamento']
+
+                                                for table_name in tables:
+                                                    for list_atual in listDadosAux:
+                                                        cmd_insert = f'''
+                                                            INSERT INTO {table_name} (id_sprint, nome_Entrega, executor, hra_necess, stt_entrega, compl_entrega) 
+                                                                values((SELECT id_sprint FROM projeu_sprints WHERE number_sprint = {spEntregas[0][0]}  
+                                                                    AND id_proj_fgkey = 
+                                                                        (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{dadosOrigin[0][1]}') LIMIT 1),
+                                                                        "{limp_entrg(list_atual[0])}", 
+                                                                        (SELECT id_user FROM projeu_users WHERE Nome = '{list_atual[1]}' LIMIT 1),
+                                                                        {list_atual[2]},
+                                                                        "{list_atual[3]}",
+                                                                        "{list_atual[4]}");'''
+
+                                                        mycursor.execute(cmd_insert)
+                                                        conexao.commit()
+                                                st.toast('Entregas Enviadas!', icon='✅')
+                                                mycursor.close()
+                                                sleep(3)
+                                                st.rerun()
+                            
                             with tab2:
                                 font_TITLE('EXCLUIR', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
-                                atvdd_exc = st.selectbox('Atividade', [x[1] for x in spEntregas if x[1] != None and x[1] != ' '], key=f'NameExAtivid {idx_spr} - {idx_parm}')
-
-                                col_sel0, col_sel1, col_sel2, col_sel3 = st.columns([3,1,1,1])
-                                with col_sel0:
-                                    exec_exc = st.text_input('Executor', value=f'{[x[2] for x in spEntregas if x[1] == atvdd_exc][0]}', disabled=True, key=f'ExcutExAtivid {idx_spr} - {idx_parm}')
-                                with col_sel1:
-                                    compl_exc = st.text_input('Complexidade', value=[x[4] for x in spEntregas if x[1] == atvdd_exc and str(x[2]) == str(exec_exc)][0], disabled=True, key=f'ComplexidadeExAtivid {idx_spr} - {idx_parm}')
-                                with col_sel2:
-                                    hrs_exc = st.text_input('Horas', value=[x[3] for x in spEntregas if x[1] == atvdd_exc and str(x[2]) == str(exec_exc)][0], disabled=True, key=f'HorsExAtivid {idx_spr} - {idx_parm}')
-                                with col_sel3:
-                                    stt_exc = st.text_input('Status', value=[x[5] for x in spEntregas if x[1] == atvdd_exc and str(x[2]) == str(exec_exc)][0], disabled=True, key=f'StatusExAtivid {idx_spr} - {idx_parm}')
                                 
-                                buttonEX = st.button('Excluir', key=f'Excluir{idx_spr} - {idx_parm}')
+                                if len(spEntregas) > 0:
+                                    atvdd_exc = st.selectbox('Atividade', [x[1] for x in spEntregas if x[1] != None and x[1] != ' '], key=f'NameExAtivid {idx_spr} - {idx_parm}')
 
-                                id_entr = [x[6] for x in spEntregas if str(x[1]).strip().lower() == str(atvdd_exc).strip().lower() and str(x[3]).strip() == str(hrs_exc).strip() and x[1] != None and x[1] != ' ']
-                                if buttonEX:
-                                    if len(id_entr) > 0:
-                                        mycursor = conexao.cursor()
-                                        cmd_exc = f"""DELETE FROM projeu_entregas 
-                                                    WHERE 
-                                                        nome_entrega = '{atvdd_exc}' 
-                                                        AND executor = (SELECT id_user FROM projeu_users WHERE Nome = '{exec_exc}' LIMIT 1)
-                                                        AND compl_entrega = '{compl_exc}'
-                                                        AND stt_entrega = '{stt_exc}';"""
+                                    col_sel0, col_sel1, col_sel2, col_sel3 = st.columns([3,1,1,1])
+                                    with col_sel0:
+                                        exec_exc = st.text_input('Executor', value=f'{[x[2] for x in spEntregas if x[1] == atvdd_exc][0]}', disabled=True, key=f'ExcutExAtivid {idx_spr} - {idx_parm}')
+                                    with col_sel1:
+                                        compl_exc = st.text_input('Complexidade', value=[x[4] for x in spEntregas if x[1] == atvdd_exc and str(x[2]) == str(exec_exc)][0], disabled=True, key=f'ComplexidadeExAtivid {idx_spr} - {idx_parm}')
+                                    with col_sel2:
+                                        hrs_exc = st.text_input('Horas', value=[x[3] for x in spEntregas if x[1] == atvdd_exc and str(x[2]) == str(exec_exc)][0], disabled=True, key=f'HorsExAtivid {idx_spr} - {idx_parm}')
+                                    with col_sel3:
+                                        stt_exc = st.text_input('Status', value=[x[5] for x in spEntregas if x[1] == atvdd_exc and str(x[2]) == str(exec_exc)][0], disabled=True, key=f'StatusExAtivid {idx_spr} - {idx_parm}')
+                                    
+                                    buttonEX = st.button('Excluir', key=f'Excluir{idx_spr} - {idx_parm}')
 
-                                        mycursor.execute(cmd_exc)
-                                        conexao.commit()
+                                    id_entr = [x[6] for x in spEntregas if str(x[1]).strip().lower() == str(atvdd_exc).strip().lower() and str(x[3]).strip() == str(hrs_exc).strip() and x[1] != None and x[1] != ' ']
+                                    if buttonEX:
+                                        if len(id_entr) > 0:
+                                            mycursor = conexao.cursor()
+                                            cmd_exc = f"""DELETE FROM projeu_entregas 
+                                                        WHERE 
+                                                            nome_entrega = '{atvdd_exc}' 
+                                                            AND executor = (SELECT id_user FROM projeu_users WHERE Nome = '{exec_exc}' LIMIT 1)
+                                                            AND compl_entrega = '{compl_exc}'
+                                                            AND stt_entrega = '{stt_exc}';"""
 
-                                        st.toast('Entrega Excluida!', icon='✅')
-                                        mycursor.close()
-                                        sleep(1.3)
+                                            mycursor.execute(cmd_exc)
+                                            conexao.commit()
+
+                                            st.toast('Entrega Excluida!', icon='✅')
+                                            mycursor.close()
+                                            sleep(1.3)
+                                            st.rerun()
+                                        else:
+                                            st.toast('Entrega não encontrada no banco de dados!', icon='❌')
+
                                         st.rerun()
-                                    else:
-                                        st.toast('Entrega não encontrada no banco de dados!', icon='❌')
-
-                                    st.rerun()
 
                             with tab3:
                                 font_TITLE('HOMOLOGAÇÃO', fonte_Projeto, "'Bebas Neue', sans-serif", 26, 'left')
@@ -748,8 +899,7 @@ elif authentication_status:
                                 with col1:
                                     st.caption('Tipo de Homologação')
                                     type_homol = st.selectbox('Tipo de Homologação',
-                                                              ['SPRINT PRÉ MVP', 'MVP', 'SPRINT PÓS MVP',
-                                                               'ENTREGA FINAL'], label_visibility="collapsed",
+                                                              [param_sprint[idx_parm]], label_visibility="collapsed",
                                                               key=f' - {idx_spr} typHomo')
                                 with col2:
                                     st.caption('Data Homologação')
@@ -799,7 +949,7 @@ elif authentication_status:
 
                                                         valores = premio_aux.valorEvento()
 
-                                                        bonif_sprints = [idx_spr] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'SPRINT PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
+                                                        bonif_sprints = [idx_spr] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
                                                         
                                                         bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], len(especialist_sprint), bonif_sprints)
 
@@ -807,7 +957,7 @@ elif authentication_status:
                                                         
                                                         #SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU
                                                                 #-->  MATRICULA, VALOR DA BONIFICAÇÃO
-                                                        if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'SPRINT PÓS MVP': 
+                                                        if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP': 
                                                             bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G']]
                                                             bonific_list_aux = [[[func_split(dadosOrigin[0][23])[y] for y in range(len(func_split(dadosOrigin[0][21]))) if func_split(dadosOrigin[0][21])[y] == x][0], bonific_calcul['ESPECIALISTA']['ValorPorEspecialist'], 'E'] for x in especialist_sprint]
                                                         
