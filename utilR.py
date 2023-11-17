@@ -1324,15 +1324,13 @@ def css_9box():
     }
 
     .box-green::-webkit-scrollbar-track {
-        background: #C8E6C9;
         border-radius: 20px;
     }
 
 
     .box-green::-webkit-scrollbar-thumb {
-        background-color: #002100;
         border-radius: 20px;
-        border: 3px solid #C8E6C9;
+        border: 3px solid #000;
     }
 
     .box-orange::-webkit-scrollbar {
@@ -1382,8 +1380,6 @@ def css_9box():
 
 
     @media(max-width: 1400px){
-        .header-blue,
-        .header-yellow,
         .header-green{
             display: flex;
             justify-content: space-between;
@@ -1412,16 +1408,12 @@ def css_9box():
             align-items: center;
         }
 
-        .box-blue,
-        .box-yellow,
         .box-green{
             width: 90%;
             min-height: auto;
             margin: 10px 5px;
         }
 
-        .header-blue,
-        .header-yellow,
         .header-green{
             display: flex;
             justify-content: space-between;
@@ -1518,7 +1510,6 @@ def css_9box_home():
     p{
         font-weight: bold;
         font-size: 20px;
-        margin: 0 8px;
     }
 
     img{
@@ -1646,20 +1637,20 @@ def css_9box_home():
     }
 
     .box-green2::-webkit-scrollbar {
-        width: 12px;
+        width: 8px;
         border-radius: 20px;
     }
 
     .box-green2::-webkit-scrollbar-track {
-        background: #C8E6C9;
+        background: #848484;
         border-radius: 20px;
     }
 
 
     .box-green2::-webkit-scrollbar-thumb {
-        background-color: #002100;
+        background-color: #6c6c6c;
         border-radius: 20px;
-        border: 3px solid #C8E6C9;
+        border: 1px solid #000;
     }
 
     a,
@@ -1888,6 +1879,7 @@ class CalculoPrêmio:
     #PEGA O VALOR TOTAL DO PROJETO E DIVIDE ENTRE OS EVENTOS
     def valorEvento(self):
         if len(self.proj_especial) < 1:
+
             valor_base = [x[2] for x in premioBaseBD if str(x[0]).strip().upper() == str(self.typProj).strip().upper()  # VALOR BASE DAQUELA COMPLEXIDADE
                         and str(x[1]).strip().upper() == str(self.complexidProj).strip().upper()]
         else:
@@ -1985,3 +1977,142 @@ class CalculoPrêmio:
         else:
             retorno = 'PRIMAIRAMENTE, É NECESSÁRIO CONSUMIR O BANCO DADOS PARA PEGAR AS ENTREGAS DO PROJETO'
         return retorno
+    
+
+def menuProjeuHtml():
+    menuProjeu = f"""<head>
+            <link rel="preconnect" href="https://fonts.googleapis.com">
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+            <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap" rel="stylesheet">
+        </head>
+        <body>
+            <div class="fixed">
+                <div class="menu">
+                    <div class="logo">
+                        <h3>PROJEU</h3>
+                    </div>
+                    <div class="botoes">
+                        <a href="https://meusprojetos-mpjj.streamlit.app/"><button type="button" id="home">Home</button></a>
+                        <a href="https://meusprojetos-mpjj.streamlit.app/Meus_Projetos"><button type="button" id="projetos">Projetos</button></a>
+                        <a href="https://meusprojetos-mpjj.streamlit.app/Pr%C3%AAmio"><button type="button" id="premio">Prêmio</button></a>
+                    </div>
+                    <div class="icone">
+                        <button type="button"><img src="https://cdn-icons-png.flaticon.com/128/2400/2400721.png" alt="ícone de configurações para alteração do módulo de uso"></button>
+                        <div class="modulo">
+                            <a href="https://meusprojetos-mpjj.streamlit.app/"><button type="button">Módulo de Execução</button></a>
+                            <a href="https://meusprojetos-mpjj-mg.streamlit.app/"><button type="button">Módulo de Gestão</button></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>"""
+
+    return menuProjeu
+
+def menuProjeuCss():
+    styleMenuProjeu = f""".fixed{{
+            position: fixed;
+            top: 0;
+            z-index: 999990;
+            width: 100%;
+        }}
+
+        .menu{{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #F5F4F4;
+            color: #F5F4F4;
+            padding: 10px 20px;
+            width: 100%;
+            height: 60px;
+        }}
+
+        .logo img,
+        .logo h3{{
+            min-width: 40px;
+            min-height: 40px;
+            font-family: 'Chakra Petch', sans-serif;
+            font-weight: bold;
+            font-size: 40px
+        }}
+
+        .botoes button{{
+            margin-right: 10px;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3b635a;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }}
+
+        .icone img,
+        .icone button{{
+            background-color: #3b635a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-right: 100px;
+            cursor: pointer;
+            border: none;
+        }}
+
+        .modulo{{
+            display: none;
+            position: absolute;
+            top: auto;
+            right: 100px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #3b635a;
+            height: auto;
+            width: 175px;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+        }}
+
+        .modulo button{{
+            border-radius: 8px;
+        }}
+
+        .modulo:after{{
+            content: "";
+            width: 0;
+            height: 0;
+            position: absolute;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 20px solid #3b635a;
+            top: -15px;
+            right: 25px
+        }}
+
+        .icone:hover .modulo{{
+            display: block;
+        }}
+
+        .modulo button{{
+            display: block;
+            width: 100%;
+            padding: 5px;
+            text-align: left;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }}
+
+        .botoes button:hover,
+        .modulo button:hover{{
+            background-color: #466e67;
+        }}
+
+        .logo:hover{{
+            text-decoration: underline;
+        }}"""
+    
+    return styleMenuProjeu
