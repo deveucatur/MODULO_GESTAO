@@ -10,7 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 import tempfile
-from relatorio import css_email, escopoGeral
+from relatorio import escopoGeral
 
 
 icone = Image.open('imagens/icone.png')
@@ -108,7 +108,6 @@ def enviar_email(destino, nome_colab = None, list_valores = None, txt_temporario
     
     if nome_colab != None:
         html = escopoGeral(nome_colab, list_valores, '051.625.652-10', 'PJ')
-        css = css_email()
         corpo_email = html
         msg.attach(MIMEText(corpo_email, 'html'))
 
