@@ -220,7 +220,7 @@ with tab1:
                     with col6:
                         st.caption('Valor Total')
 
-                    for name, dd_name in premios_pessoa_sequencia.items():
+                    for name, dd_name in premios_pessoa_sequencia.items():                        
                         with col0:
                             empresa_number = st.text_input('', 'EUCATUR', label_visibility='collapsed', key=f'Empresa{proj_name}- pessoa {name} - sprint{sprint}')
                         with col1:
@@ -232,10 +232,12 @@ with tab1:
                         with col4:
                             qntd_atdd = st.text_input('', len(list(set([str(x[3]).strip() for x in dd_name[0] if x[3] != None]))) if len(dd_name[0]) > 0 else 0, label_visibility='collapsed', key=f'Nome{proj_name} - pessoa {name}- sprint{sprint}')
                         with col5:
-                            if dd_name[0][0][7] == None and dd_name[0][0][8] != None:
-                                hrs_pes_totl =  dd_name[0][0][8] / dd_name[0][0][9]
-                            else:
-                                hrs_pes_totl = sum([x[7] if x[7] != None else 0 for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0
+                            if len(dd_name[0]) > 0:
+                                if dd_name[0][0][7] == None and dd_name[0][0][8] != None:
+                                    hrs_pes_totl =  dd_name[0][0][8] / dd_name[0][0][9]
+                                else:
+                                    hrs_pes_totl = sum([x[7] if x[7] != None else 0 for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0
+                        
                             horas_pessoa = st.text_input('', hrs_pes_totl, label_visibility='collapsed', key=f'Cargo{proj_name} - pessoa {name}- sprint{sprint}')
                         with col6:
                             valor_total_pessoa = st.text_input('', sum([x[10] for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0, label_visibility='collapsed', key=f'Valor{proj_name} - pessoa {name}- sprint{sprint}')
@@ -256,8 +258,7 @@ with tab1:
                         st.caption('Complexidade')
                     with col5:
                         st.caption('Valor')
-                    for idx_premio in range(len(dd_sprint)):                        
-
+                    for idx_premio in range(len(dd_sprint)): 
                         with col0:
                             st.text_input('', dd_sprint[idx_premio][4], label_visibility='collapsed', key=f'matricula {proj_name} - {idx_premio} - sprint{sprint}')
                         with col1:
@@ -265,7 +266,7 @@ with tab1:
                         with col11:
                             st.text_input('', funcao_premio(dd_sprint[idx_premio][6]), label_visibility='collapsed', key=f'funcao {proj_name} - {idx_premio} - sprint{sprint}')
                         with col2:
-                            st.text_input('', dd_sprint[idx_premio][3] if dd_sprint[idx_premio][3] != None and dd_sprint[idx_premio][3] != '' and dd_sprint[idx_premio][15] != None and dd_sprint[idx_premio][15] != '' else dd_sprint[idx_premio][15], label_visibility='collapsed', key=f'Entrega {proj_name} - {idx_premio} - sprint{sprint}')
+                            st.text_input('', dd_sprint[idx_premio][3] if dd_sprint[idx_premio][3] != None and dd_sprint[idx_premio][3] != '' else dd_sprint[idx_premio][15], label_visibility='collapsed', key=f'Entrega {proj_name} - {idx_premio} - sprint{sprint}')
                         with col3:
                             if dd_sprint[idx_premio][7] == None and dd_sprint[idx_premio][8] != None:
                                 hrs_entrg = dd_sprint[idx_premio][8] / dd_sprint[idx_premio][9]
