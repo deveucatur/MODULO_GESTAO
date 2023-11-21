@@ -920,7 +920,7 @@ elif authentication_status:
                                 btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
                                 if btt_homo:
                                     if len(parec_homol) > 0:
-                                        try:
+                                        #try:
                                             mycursor1 = conexao.cursor()
                                             columns = ['tip_homolog', 'date_homolog', 'status_homolog',
                                                         'parecer_homolog']
@@ -937,6 +937,15 @@ elif authentication_status:
                                                 if str(ddSprint[list([x[4] for x in ddSprint]).index(id_sprint)][5]) == str(0):
                                                     if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None:
                                                         
+                                                        def trat_homol(name_hmo):
+                                                            aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
+                                                                       'PÓS MVP': 'SPRINT PÓS MVP',
+                                                                       'MVP': 'MVP',
+                                                                       'ENTREGA FINAL': 'ENTREGA FINAL'}
+                                                            
+                                                            return aux_dic[str(name_hmo).strip().upper()]
+                                                        
+                                                        type_homol = trat_homol(type_homol)
                                                         st.cache_resource.clear()
                                                         st.cache_data.clear()
                                                         premio_aux = CalculoPrêmio(
@@ -949,6 +958,7 @@ elif authentication_status:
 
                                                         valores = premio_aux.valorEvento()
 
+                                                        st.write(valores)
                                                         bonif_sprints = [idx_spr] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
                                                         
                                                         bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], len(especialist_sprint), bonif_sprints)
@@ -978,6 +988,7 @@ elif authentication_status:
 
                                                             
                                                         else:
+                                                            st.info('TESTE')
                                                             bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G', f'"{str(type_homol).strip().upper()}"']]
                                                             bonific_list_aux = [[[func_split(dadosOrigin[0][23])[y] for y in range(len(func_split(dadosOrigin[0][21]))) if func_split(dadosOrigin[0][21])[y] == x][0], bonific_calcul['ESPECIALISTA']['ValorPorEspecialist'], 'E', f'"{str(type_homol).strip().upper()}"'] for x in especialist_sprint]
                                                             columns_p = ['id_sprint_fgkey', 'valor',
@@ -1032,9 +1043,9 @@ elif authentication_status:
                                                 
                                             mycursor1.close()
                                             st.toast('Dados de homologação atualizados', icon='✅')
-                                        except:
+                                        #except:
                                             st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
-                                        st.rerun()
+                                        #st.rerun()
                                     else:
                                         st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
 
