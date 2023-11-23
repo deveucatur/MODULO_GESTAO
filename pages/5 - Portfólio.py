@@ -666,7 +666,7 @@ elif authentication_status:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
         param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP']
-        font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 40, 'left', '#228B22')
+        font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
             maior_idx = max([param_sprint.index(x)+1 if x != None else 0 for x in func_split(dadosOrigin[0][12])])
