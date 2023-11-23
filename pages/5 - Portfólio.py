@@ -4,7 +4,7 @@ import pandas as pd
 from util import font_TITLE, string_to_datetime, cardGRANDE, displayInd, ninebox, css_9box, nineboxDatasUnidades, CalculoPrêmio
 from time import sleep
 import mysql.connector
-from datetime import date
+from datetime import date, timedelta, datetime
 from collections import Counter
 from utilR import PlotCanvas
 import streamlit_authenticator as stauth
@@ -665,9 +665,88 @@ elif authentication_status:
                 except:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
+        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP']
+        font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 40, 'left', '#228B22')
+        with st.expander('Adcionar Sprint'):
+            #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
+            maior_idx = max([param_sprint.index(x)+1 if x != None else 0 for x in func_split(dadosOrigin[0][12])])
+            
+            if None in func_split(dadosOrigin[0][11]):
+                on_ex = False
+            else:    
+                on_ex = st.toggle('Excluir sprint')
+
+            listAddSprOF_EX = [len([x for x in func_split(dadosOrigin[0][11]) if x != None]) + 1, param_sprint[:maior_idx+1], datetime.today()]
+            listAddSprON_EX = [[int(x) if x != None else '' for x in func_split(dadosOrigin[0][11])], func_split(dadosOrigin[0][12]), [string_to_datetime(x) if x != None and x != " " else datetime.today() for x in func_split(dadosOrigin[0][13])]]
+
+            disabledON = True if on_ex else False
+            disabledOF = False if on_ex else True
+
+            col0, col1, col2, col3 = st.columns([0.5,3,1,1])
+            with col0:
+                number_sprint_new = int(st.text_input('Sprint', max(listAddSprON_EX[0]) if on_ex else listAddSprOF_EX[0], disabled=True))
+            with col1:
+                type_sprint_new = st.selectbox('Tipo', [listAddSprON_EX[1][listAddSprON_EX[0].index(number_sprint_new)]] if on_ex else listAddSprOF_EX[1], disabled=disabledON)
+            with col2:
+                dat_inc_new = st.date_input('Início', value=listAddSprON_EX[2][listAddSprON_EX[0].index(number_sprint_new)] if on_ex else listAddSprOF_EX[2], disabled=disabledON)
+            with col3:
+                dat_fim_new = st.date_input('Fim', value=dat_inc_new + timedelta(days=14), disabled=True)
+
+            colAdd, colExc = st.columns([1,7])
+            with colAdd:
+                button_addSprint = st.button('Adcionar Sprint', disabled=disabledON)
+            with colExc:
+                button_exSprint = st.button('Excluir Sprint', disabled=disabledOF)
+            
+            if button_addSprint:
+                mycursor = conexao.cursor()
+                cmd_addSprint = f'''INSERT INTO projeu_sprints(number_sprint, id_proj_fgkey, status_sprint, date_inic_sp, date_fim_sp) 
+                VALUES ({number_sprint_new}, (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{project_filter}'), '{type_sprint_new}', STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d'), STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d'));'''
+                
+                mycursor.execute(cmd_addSprint)
+                conexao.commit()
+                
+                if number_sprint_new == 1:
+                    cmdUP_stt_proj = f'UPDATE projeu_projetos SET status_proj = "Em Andamento" WHERE id_proj = {dadosOrigin[0][0]};'
+                    mycursor.execute(cmdUP_stt_proj)
+                    conexao.commit()
+                    
+                mycursor.close()
+                st.toast('Sucesso na adição da sprint!', icon='✅')
+                st.text(' ')
+                st.rerun()
+
+            if button_exSprint:
+                NoTentrg = False
+                if on_ex:
+                    mycursor = conexao.cursor()
+                    if len(EntregasBD) == 0:
+                        NoTentrg = True
+                    else:
+                        NoTentrg = True if number_sprint_new not in list(set([x[0] for x in EntregasBD])) else False
+                    
+                    if NoTentrg:
+                        cmdDEL = f'''DELETE FROM projeu_sprints 
+                                    WHERE number_sprint = {number_sprint_new} 
+                                    AND id_proj_fgkey = (SELECT id_proj FROM projeu_projetos 
+                                        WHERE name_proj = '{project_filter}') 
+                                    AND status_sprint = '{type_sprint_new}'
+                                    AND date_inic_sp = STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d')
+                                    AND date_fim_sp = STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d');'''                
+
+                        mycursor.execute(cmdDEL)
+                        conexao.commit()
+
+                        mycursor.close()
+                        st.toast('Excluido!', icon='✅') 
+                        st.rerun()
+                    else:
+                        st.toast('Primeiramente, é necessário excluir todas as atividades dessa sprint.', icon='❌')
+                else:
+                    st.toast('Primeiramente, ative a opção de excluir sprint.', icon='❌')
+
 
         func_split = lambda x: x.split(",") if x is not None else [x]
-        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP']
         if func_split(dadosOrigin[0][11])[0] != None:
             # ----> DADOS [NUMBER_SPRINT, STATUS_SPRINT,  DATA INC SPRINT, DATA FIM SPRINT, ID_SPRINT, CHECK_SPRINT]
             sprints = [[func_split(dadosOrigin[0][11])[x], param_sprint.index(func_split(dadosOrigin[0][12])[x]), func_split(dadosOrigin[0][13])[x], func_split(dadosOrigin[0][14])[x], func_split(dadosOrigin[0][27])[x], func_split(dadosOrigin[0][34])[x]] for x in range(len(func_split(dadosOrigin[0][11])))]
