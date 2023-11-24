@@ -984,7 +984,6 @@ elif authentication_status:
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
 
-                                st.info('TESTE')
                                 btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
                                 if btt_homo:
                                     if len(parec_homol) > 0:
@@ -1094,7 +1093,6 @@ elif authentication_status:
                                                             INSERT INTO projeu_premio_entr ({limp_columns(columns_p, range_aux)})
                                                             VALUES ({values});'''
                                                             
-                                                            st.info(cmd_insert_premio)
                                                             mycursor1.execute(cmd_insert_premio)
                                                             conexao.commit()
                                             
