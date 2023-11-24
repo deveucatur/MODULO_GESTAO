@@ -713,6 +713,7 @@ elif authentication_status:
                 mycursor.close()
                 st.toast('Sucesso na adição da sprint!', icon='✅')
                 st.text(' ')
+                
                 st.rerun()
 
             if button_exSprint:
@@ -847,25 +848,24 @@ elif authentication_status:
                                             with col1:
                                                 #, key=f'{idx_spr} {idx_parm}'
                                                 button_atual = st.form_submit_button('Atualizar', disabled=block_sprint)        
-                                            if str(matriUser).strip() == str(dadosOrigin[0][3]).strip():
-                                                with col2:
-                                                    # key=f'Finalizar Sprint {idx_spr} {idx_parm}',
-                                                    button_final = st.form_submit_button('Finalizar Sprint', disabled=block_sprint) 
-                                            
-                                                    if button_final:
-                                                        mycursor = conexao.cursor()
-                                                        columns_final = ['check_sprint', 'data_check']
-                                                        values_final = [0, f'"{datetime.today()}"']
+                                            with col2:
+                                                # key=f'Finalizar Sprint {idx_spr} {idx_parm}',
+                                                button_final = st.form_submit_button('Finalizar Sprint', disabled=block_sprint) 
+                                        
+                                                if button_final:
+                                                    mycursor = conexao.cursor()
+                                                    columns_final = ['check_sprint', 'data_check']
+                                                    values_final = [0, f'"{datetime.today()}"']
 
-                                                        for idx_column in range(len(columns_final)):
-                                                            cmd_final = f'''UPDATE projeu_sprints SET {columns_final[idx_column]} = {values_final[idx_column]} WHERE id_sprint = {int(id_sprint)};'''
-                                                            mycursor.execute(cmd_final)
-                                                            conexao.commit()
+                                                    for idx_column in range(len(columns_final)):
+                                                        cmd_final = f'''UPDATE projeu_sprints SET {columns_final[idx_column]} = {values_final[idx_column]} WHERE id_sprint = {int(id_sprint)};'''
+                                                        mycursor.execute(cmd_final)
+                                                        conexao.commit()
 
-                                                        mycursor.close()
-                                                        st.toast('Sprint Finalizada!', icon='✅')
-                                                        sleep(2)
-                                                        st.rerun()
+                                                    mycursor.close()
+                                                    st.toast('Sprint Finalizada!', icon='✅')
+                                                    sleep(2)
+                                                    st.rerun()
 
                                             if button_atual:
                                                 mycursor = conexao.cursor()
@@ -993,32 +993,31 @@ elif authentication_status:
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
 
-                                
                                 btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
                                 if btt_homo:
                                     if len(parec_homol) > 0:
-                                        try:
-                                            mycursor1 = conexao.cursor()
-                                            columns = ['tip_homolog', 'date_homolog', 'status_homolog',
-                                                        'parecer_homolog']
-                                            values = [f'"{type_homol}"', f'STR_TO_DATE("{date_homol}", "%Y-%m-%d")',
-                                                        f'"{stt_homol}"', f'"{parec_homol}"']
-                                            for idx_clm in range(len(columns)):
-                                                cmdHOMO = f'UPDATE projeu_sprints SET {columns[idx_clm]} = {values[idx_clm]} WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
-                                                
-                                                mycursor1.execute(cmdHOMO)
-                                                conexao.commit()
+                                        if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0:
+                                            try:
+                                                cont_erro = 0
+                                                mycursor1 = conexao.cursor()
+                                                columns = ['tip_homolog', 'date_homolog', 'status_homolog',
+                                                            'parecer_homolog']
+                                                values = [f'"{type_homol}"', f'STR_TO_DATE("{date_homol}", "%Y-%m-%d")',
+                                                            f'"{stt_homol}"', f'"{parec_homol}"']
+                                                for idx_clm in range(len(columns)):
+                                                    cmdHOMO = f'UPDATE projeu_sprints SET {columns[idx_clm]} = {values[idx_clm]} WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
+                                                    
+                                                    mycursor1.execute(cmdHOMO)
+                                                    conexao.commit()
 
-                                            if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
-                                                
-                                                if str(ddSprint[list([x[4] for x in ddSprint]).index(id_sprint)][5]) == str(0):
-                                                    if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None:
-                                                        
+                                                if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
+                                                    
+                                                    if str(ddSprint[list([x[4] for x in ddSprint]).index(id_sprint)][5]) == str(0):    
                                                         def trat_homol(name_hmo):
                                                             aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
-                                                                       'PÓS MVP': 'SPRINT PÓS MVP',
-                                                                       'MVP': 'MVP',
-                                                                       'ENTREGA FINAL': 'ENTREGA FINAL'}
+                                                                    'PÓS MVP': 'SPRINT PÓS MVP',
+                                                                    'MVP': 'MVP',
+                                                                    'ENTREGA FINAL': 'ENTREGA FINAL'}
                                                             
                                                             return aux_dic[str(name_hmo).strip().upper()]
                                                         
@@ -1061,8 +1060,6 @@ elif authentication_status:
                                                                                     entrega[0] #ID DA SPRINT
                                                                                     ] for entrega in [entr for entr in spEntregas if entr[1] != None]]
                                                             
-
-                                                            
                                                         else:
                                                             bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G', f'"{str(type_homol).strip().upper()}"']]
                                                             bonific_list_aux = [[[func_split(dadosOrigin[0][23])[y] for y in range(len(func_split(dadosOrigin[0][21]))) if func_split(dadosOrigin[0][21])[y] == x][0], bonific_calcul['ESPECIALISTA']['ValorPorEspecialist'], 'E', f'"{str(type_homol).strip().upper()}"'] for x in especialist_sprint]
@@ -1072,14 +1069,14 @@ elif authentication_status:
                                                             
                                                             bonific_list_aux1 = [[
                                                                                 f'(SELECT Matricula FROM projeu_users WHERE Nome = "{name}")',
-                                                                                 bonific_calcul['SQUAD'][name]['BonificacaoSprint'],
-                                                                                 'EX',
-                                                                                 f'"{str(type_homol).strip().upper()}"',
-                                                                                 bonific_calcul['SQUAD'][name]['HorasNormalTotal'],
-                                                                                 int(sum([x['Dificuldade'] for x in dict(bonific_calcul['SQUAD'][name]['Entregas']).values()]) / len(dict(bonific_calcul['SQUAD'][name]['Entregas']))),
-                                                                                 name,
-                                                                                 ddSprint[cont_sprint - 1][4]
-                                                                                 ] for name in dict(bonific_calcul['SQUAD']).keys()]
+                                                                                bonific_calcul['SQUAD'][name]['BonificacaoSprint'],
+                                                                                'EX',
+                                                                                f'"{str(type_homol).strip().upper()}"',
+                                                                                bonific_calcul['SQUAD'][name]['HorasNormalTotal'],
+                                                                                int(sum([x['Dificuldade'] for x in dict(bonific_calcul['SQUAD'][name]['Entregas']).values()]) / len(dict(bonific_calcul['SQUAD'][name]['Entregas']))),
+                                                                                name,
+                                                                                ddSprint[cont_sprint - 1][4]
+                                                                                ] for name in dict(bonific_calcul['SQUAD']).keys()]
                                                         bonific_list.extend(bonific_list_aux)
                                                         bonific_list.extend(bonific_list_aux1)
 
@@ -1108,18 +1105,22 @@ elif authentication_status:
 
                                                             mycursor1.execute(cmd_insert_premio)
                                                             conexao.commit()
-                                                        
+                                            
                                                     else:
-                                                        st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente', icon='❌')
+                                                        cont_erro =+ 1
+                                                        st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
+                                                    
+                                                mycursor1.close()
                                                 
-                                                else:
-                                                    st.toast('Primeiramente, é necessário finalizar a sprint antes de homologar', icon='❌')
-                                                
-                                            mycursor1.close()
-                                            st.toast('Dados de homologação atualizados', icon='✅')
-                                        except:
-                                            st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
-                                        st.rerun()
+                                            except:
+                                                cont_erro =+ 1
+                                                st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
+                                            if cont_erro < 1:
+                                                st.toast('Dados de homologação atualizados', icon='✅')
+                                        else:
+                                            cont_erro =+ 1
+                                            st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
+                                                    
                                     else:
                                         st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
 
