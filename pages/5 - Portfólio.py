@@ -998,8 +998,8 @@ elif authentication_status:
                                                 for idx_clm in range(len(columns)):
                                                     cmdHOMO = f'UPDATE projeu_sprints SET {columns[idx_clm]} = {values[idx_clm]} WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
                                                     
-                                                    #mycursor1.execute(cmdHOMO)
-                                                    #conexao.commit()
+                                                    mycursor1.execute(cmdHOMO)
+                                                    conexao.commit()
 
                                                 if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
                                                     
@@ -1030,7 +1030,8 @@ elif authentication_status:
                                                         bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], len(especialist_sprint), bonif_sprints)
 
                                                         
-                                                        st.write(bonific_calcul)
+                                                        #st.write(bonific_calcul)
+                                                        #st.success('FOI')
                                                         #SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU
                                                                 #-->  MATRICULA, VALOR DA BONIFICAÇÃO
                                                         if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP': 
@@ -1094,8 +1095,8 @@ elif authentication_status:
                                                             INSERT INTO projeu_premio_entr ({limp_columns(columns_p, range_aux)})
                                                             VALUES ({values});'''
 
-                                                            #mycursor1.execute(cmd_insert_premio)
-                                                            #conexao.commit()
+                                                            mycursor1.execute(cmd_insert_premio)
+                                                            conexao.commit()
                                             
                                                     else:
                                                         cont_erro =+ 1
