@@ -984,6 +984,7 @@ elif authentication_status:
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
 
+                                st.info('TESTE')
                                 btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
                                 if btt_homo:
                                     if len(parec_homol) > 0:
@@ -1030,8 +1031,6 @@ elif authentication_status:
                                                         bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], len(especialist_sprint), bonif_sprints)
 
                                                         
-                                                        #st.write(bonific_calcul)
-                                                        #st.success('FOI')
                                                         #SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU
                                                                 #-->  MATRICULA, VALOR DA BONIFICAÇÃO
                                                         if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP': 
@@ -1094,7 +1093,8 @@ elif authentication_status:
                                                             cmd_insert_premio = f'''
                                                             INSERT INTO projeu_premio_entr ({limp_columns(columns_p, range_aux)})
                                                             VALUES ({values});'''
-
+                                                            
+                                                            st.info(cmd_insert_premio)
                                                             mycursor1.execute(cmd_insert_premio)
                                                             conexao.commit()
                                             
@@ -1103,14 +1103,13 @@ elif authentication_status:
                                                         st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
                                                     
                                                 mycursor1.close()
-                                                
+                                            
                                             except:
                                                 cont_erro =+ 1
                                                 st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
                                             if cont_erro < 1:
                                                 st.toast('Dados de homologação atualizados', icon='✅')
                                         else:
-                                            cont_erro =+ 1
                                             st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
                                                     
                                     else:
