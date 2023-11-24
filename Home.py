@@ -134,14 +134,23 @@ fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+N
 
 mycursor = conexao.cursor()
 
-sqlProjetoLider = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_lider IS NULL OR c.check_lider = '' GROUP BY p.id_proj;"""
+sqlProjetoLider = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_lider IS NULL OR c.check_lider = 0 GROUP BY p.id_proj;"""
 mycursor.execute(sqlProjetoLider)
 projetoNomeLider = mycursor.fetchall()
 
-sqlProjetoGover = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_govern IS NULL OR c.check_govern = '' GROUP BY p.id_proj;"""
+sqlProjetoGover = f"""
+SELECT 
+	p.name_proj, 
+    p.id_proj
+FROM 
+	projeu_projetos p 
+JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey 
+WHERE c.check_govern IS NULL OR c.check_govern = 0 
+GROUP BY p.id_proj; """
 mycursor.execute(sqlProjetoGover)
 projetoNomeGover = mycursor.fetchall()
 
+#st.write(projetoNomeGover)
 sqlCanva = f"""SELECT 
 	id_proj, 
 	name_proj, 
@@ -278,7 +287,6 @@ elif authentication_status:
 
     st.text(' ')
 
-
     col1, col2 = st.columns([1, 1.7])
     with col1:    
         ddbox = [[], [['Projeto para teste', 'Projeto Teste 2', 'teste teste projeto 123']]]
@@ -308,7 +316,7 @@ elif authentication_status:
                 st.info("Você não possui atividades pendentes no momento.")
 
             for k in range(len(projetoNomeLider)):
-                with st.expander(f"Avaliar Complexidade | {projetoNomeLider[k][0]}"):
+                with st.expander(f"Avaliar Complexidade | {projetoNomeLider[k][0]} - Liderança"):
                     titleClass = ["Orientação do Projeto", "Impacto do Projeto"]
                     infoClass = [["Orientação para Inovação em Produtos/Serviços  atuais", "Orientação para desenvolvimento de novos Produtos/Serviços", "Orientação para Aumento de Receita", "Orientação para Aumento de Produtividade", "Orientação para Redução de Custos/Despesas", "Orientação para Transformação de processos de Negócio"],["Impacto na Percepção de Valor do Cliente", "Pressão Por Prazos", "Investimento necessário", "Nível de transformação organizacional", "Valor para o Negócio"]]
                     optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
@@ -417,17 +425,19 @@ elif authentication_status:
                         st.toast('Dados Atualizados!', icon='✅')
                         sleep(3)
                         st.rerun()
-        elif str(perfilUsuario).strip().upper() in ['GV', 'A']:
-            if len(projetoNomeGover) == 'None' or len(projetoNomeGover) <= 0:
+
+        if str(perfilUsuario).strip().upper() in ['GV', 'A']:
+            if projetoNomeGover == None or len(projetoNomeGover) <= 0:
                 st.info("Você não possui atividades pendentes no momento.")
 
+            
             for k in range(len(projetoNomeGover)):
-                with st.expander(f"Avaliar Complexidade | {projetoNomeLider[k][0]}"):
+                with st.expander(f"Avaliar Complexidade | {projetoNomeGover[k][0]} - Governança"):
                     titleClass = ["Escopo do Projeto", "Squads do Projeto"]
                     infoClass = [["Impacto do escopo no Planejamento Estratégico", "Incerteza do escopo", "Complexidade  do escopo"], ["Senioridade da Squad", "Senioridade do Especialista", "Senioridade do Gestor do Projeto"]]
                     optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
 
-                    font_TITLE(f'{projetoNomeLider[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
+                    font_TITLE(f'{projetoNomeGover[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
 
                     st.text(' ')
                     canva = [x for x in dadosCanva if x[1] == projetoNomeGover[k][0]][0]
@@ -473,24 +483,24 @@ elif authentication_status:
 
                     col1, col2, col3 = st.columns([1,1,0.6])
                     with col1:
-                        st.text_input('Gestor', gestores, key=f'{projetos} 1')
+                        st.text_input('Gestor', gestores, key=f'Gestor{projetos[0]} 1')
                     with col2:
-                        st.text_input('Macroprocesso', canva[11], key=f'{projetos} 2')#MACROPROCESSO
+                        st.text_input('Macroprocesso', canva[11], key=f'{projetos[0]} 2')#MACROPROCESSO
                     with col3:
-                        st.text_input('Investimento', investimentos[0], key=f'{projetos} 6')
+                        st.text_input('Investimento', investimentos[0], key=f'{projetos[0]} 6')
                         
-                    st.text_area('Programa', canva[12], key=f'{projetos} 3')#PROGRAMA
-                    st.text_input('MVP', mvps[0], key=f'{projetos} 4')
+                    st.text_area('Programa', canva[12], key=f'{projetos[0]} 3')#PROGRAMA
+                    st.text_input('MVP', mvps[0], key=f'{projetos[0]} 4')
                     
                     col1, col2 = st.columns([3,2])
                     with col1:
-                        st.multiselect('Squad', squads, squads, disabled=True, key=f'{projetos} 9')
+                        st.multiselect('Squad', squads, squads, disabled=True, key=f'{projetos[0]} 9')
                     with col2:
-                        st.text_input('Especialistas', especialistas, key=f'{projetos} 7')
+                        st.text_input('Especialistas', especialistas, key=f'{projetos[0]} 7')
                     
                     font_TITLE(f'Principais Entregas', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
-                    for entrg in entregas:
-                        st.text_input('Entregas', entrg, label_visibility='collapsed', key=f'{entrg} {projetos} 5')
+                    for entrg_idx in range(len(entregas)):
+                        st.text_input('Entregas', entregas[entrg_idx], label_visibility='collapsed', key=f'entrega{entrg_idx} {projetos[0]} 5')
     
                     st.text(' ')
                     notaGov = []
