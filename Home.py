@@ -1,5 +1,4 @@
 import streamlit as st
-from PIL import Image
 from utilR import font_TITLE, ninebox_home, css_9box_home, nineboxDatasUnidades_home
 from time import sleep
 import mysql.connector 
@@ -317,7 +316,6 @@ elif authentication_status:
                     font_TITLE(f'{projetoNomeLider[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 30, 'center')
 
                     canva = [x for x in dadosCanva if x[1] == projetoNomeLider[k][0]][0]
-                    
                     listaEquipe = []
                     gestores = []
                     especialistas = []
@@ -331,7 +329,7 @@ elif authentication_status:
                     metricas = [canva[5]] if canva[5] != None else " "
                     for i in range(len(canva[7].split(','))):
                         colab = str(canva[7]).split(',')[i]
-                        funcao = str(canva[7]).split(',')[i]
+                        funcao = str(canva[8]).split(',')[i]
                         listaEquipe.append([colab, funcao])
 
                     for i in range(len(listaEquipe)):
@@ -359,7 +357,7 @@ elif authentication_status:
 
                     col1, col2, col3 = st.columns([1,1,0.6])
                     with col1:
-                        st.text_input('Gestor', gestores, key=f'{projetos} 1')
+                        st.text_input('Gestor', gestores[0], key=f'{projetos} 1')
                     with col2:
                         st.text_input('Macroprocesso', canva[11], key=f'{projetos} 2')#MACROPROCESSO
                     with col3:
@@ -372,7 +370,7 @@ elif authentication_status:
                     with col1:
                         st.multiselect('Squad', squads, squads, disabled=True, key=f'{projetos} 9')
                     with col2:
-                        st.text_input('Especialistas', especialistas, key=f'{projetos} 7')
+                        st.text_input('Especialistas', str(especialistas).replace("[","").replace("]","").replace("'", ""), key=f'{projetos} 7')
                     
                     font_TITLE(f'Principais Entregas', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
                     for entrg_idx in range(len(entregas)):
@@ -408,6 +406,7 @@ elif authentication_status:
                     finalizar = st.button("Finalizar avaliação", key=f"notaLider_{k}")
 
                     if finalizar:
+                        mycursor = conexao.cursor()
                         colunas = ["grauProjeto", "complxdd", "check_lider", "id_edic_fgkey"]
                         dadosLider = [grauProjeto, f"'{complexidade}'", 1, matriUser]
 
@@ -521,6 +520,7 @@ elif authentication_status:
                     finalizar = st.button("Finalizar avaliação", key=f"notaGovernanca_{k}")
 
                     if finalizar:
+                        mycursor = conexao.cursor()
                         colunas = ["grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey"]
                         dadosGover = [grauEscopo, grauSquad, f"'{nivel}'", 1, matriUser]
 
