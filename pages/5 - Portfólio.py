@@ -627,7 +627,6 @@ elif authentication_status:
                     mycursor.execute(cmd_ex_equip)
                     conexao.commit()
                 
-                    st.rerun()
             
 
         with st.expander('Controle do Projeto', expanded=True): 
@@ -658,8 +657,6 @@ elif authentication_status:
                     
                     mycursor.close()
                     st.toast('Dados Atualizados!', icon='✅')
-                    sleep(1.3)
-                    st.rerun()
 
                 except:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
@@ -864,8 +861,6 @@ elif authentication_status:
 
                                                     mycursor.close()
                                                     st.toast('Sprint Finalizada!', icon='✅')
-                                                    sleep(2)
-                                                    st.rerun()
 
                                             if button_atual:
                                                 mycursor = conexao.cursor()
@@ -901,7 +896,6 @@ elif authentication_status:
 
                                                 mycursor.close()
                                                 st.toast('Dados Atualizados!', icon='✅')
-                                                st.rerun()
 
                                         else:
                                             button_inic_entreg = st.form_submit_button('Enviar')
@@ -927,7 +921,6 @@ elif authentication_status:
                                                 st.toast('Entregas Enviadas!', icon='✅')
                                                 mycursor.close()
                                                 sleep(3)
-                                                st.rerun()
                             
                             with tab2:
                                 font_TITLE('EXCLUIR', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
@@ -963,12 +956,10 @@ elif authentication_status:
 
                                             st.toast('Entrega Excluida!', icon='✅')
                                             mycursor.close()
-                                            sleep(1.3)
-                                            st.rerun()
+                  
                                         else:
                                             st.toast('Entrega não encontrada no banco de dados!', icon='❌')
 
-                                        st.rerun()
 
                             with tab3:
                                 font_TITLE('HOMOLOGAÇÃO', fonte_Projeto, "'Bebas Neue', sans-serif", 26, 'left')
