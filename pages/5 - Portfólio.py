@@ -605,8 +605,7 @@ elif authentication_status:
                                 conexao.commit()
                             
                         mycursor.close()
-                        st.rerun()
-                        st.toast('Dados Atualizados!', icon='✅') 
+                        st.toast('Equipe Atualizada!', icon='✅') 
             with tab2:
                 
                 font_TITLE('EXCLUIR COLABORADOR DA EQUIPE', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
