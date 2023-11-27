@@ -140,8 +140,6 @@ ORDER  BY projeu_porc_func.id_equip;"""
 mycursor.execute(consult4AUX)
 consulta4 = mycursor.fetchall()
 
-mycursor.close()
-
 ################### TRATAMENTO DOS DADOS ###################
     #RETORNO --->IDPROGRAMA,  NOME DO PROGRAMA,  MACROPROCESSO DE PROGRAMA    
 progrmBD = [[idPG, list(set([linh[1] for linh in consulta1 if linh[0] == idPG]))[0], list(set([linh1[2] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[3] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[4] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[5] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[10] for linh1 in consulta1 if linh1[0] == idPG]))[0]] for idPG in list(set([x[0] for x in consulta1]))]
@@ -159,6 +157,7 @@ for list11 in list(set([x[11] for x in consulta1])):
 comandUSERS = 'SELECT * FROM projeu_users;'
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
+mycursor.close()
 
 names = [x[2] for x in dadosUser]
 usernames = [x[3] for x in dadosUser]
