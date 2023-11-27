@@ -430,7 +430,7 @@ elif authentication_status:
                         sleep(3)
                         st.rerun()
 
-        if str(perfilUsuario).strip().upper() in ['GV', 'A']:
+        elif str(perfilUsuario).strip().upper() in ['GV', 'A']:
             if projetoNomeGover == None or len(projetoNomeGover) <= 0:
                 st.info("Você não possui atividades pendentes no momento.")
 
