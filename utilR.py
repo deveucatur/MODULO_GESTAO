@@ -1977,13 +1977,12 @@ class CalculoPrêmio:
         else:
             retorno = 'PRIMAIRAMENTE, É NECESSÁRIO CONSUMIR O BANCO DADOS PARA PEGAR AS ENTREGAS DO PROJETO'
         return retorno
-    
 
-def menuProjeuHtml():
+def menuProjeuHtml(nome):
     menuProjeu = f"""<head>
             <link rel="preconnect" href="https://fonts.googleapis.com">
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600&display=swap" rel="stylesheet">
+            <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700&display=swap" rel="stylesheet">
         </head>
         <body>
             <div class="fixed">
@@ -1992,12 +1991,13 @@ def menuProjeuHtml():
                         <h3>PROJEU</h3>
                     </div>
                     <div class="botoes">
-                        <a href="https://meusprojetos-mpjj.streamlit.app/"><button type="button" id="home">Home</button></a>
-                        <a href="https://meusprojetos-mpjj.streamlit.app/Meus_Projetos"><button type="button" id="projetos">Projetos</button></a>
-                        <a href="https://meusprojetos-mpjj.streamlit.app/Pr%C3%AAmio"><button type="button" id="premio">Prêmio</button></a>
+                        <a href="https://meusprojetos-mpjj.streamlit.app/" target="_self"><button type="button" id="home">Home</button></a>
+                        <a href="https://meusprojetos-mpjj.streamlit.app/Meus_Projetos" target="_self"><button type="button" id="projetos">Projetos</button></a>
+                        <a href="https://meusprojetos-mpjj.streamlit.app/Pr%C3%AAmio" target="_self"><button type="button" id="premio">Prêmio</button></a>
                     </div>
+                    <div class="nome"><p>{nome}</p></div>
                     <div class="icone">
-                        <button type="button"><img src="https://cdn-icons-png.flaticon.com/128/2400/2400721.png" alt="ícone de configurações para alteração do módulo de uso"></button>
+                        <button type="button"><img src="https://cdn-icons-png.flaticon.com/128/5261/5261124.png" alt="ícone de configurações para alteração do módulo de uso"></button>
                         <div class="modulo">
                             <a href="https://meusprojetos-mpjj.streamlit.app/"><button type="button">Módulo de Execução</button></a>
                             <a href="https://meusprojetos-mpjj-mg.streamlit.app/"><button type="button">Módulo de Gestão</button></a>
@@ -2006,7 +2006,6 @@ def menuProjeuHtml():
                 </div>
             </div>
         </body>"""
-
     return menuProjeu
 
 def menuProjeuCss():
@@ -2014,63 +2013,84 @@ def menuProjeuCss():
             position: fixed;
             top: 0;
             z-index: 999990;
-            width: 100%;
+            left: 50px;
+            right: 50px;
         }}
 
         .menu{{
             display: flex;
-            justify-content: space-between;
+            position: absolute;
             align-items: center;
-            background-color: #F5F4F4;
-            color: #F5F4F4;
+            background: linear-gradient(to bottom, #9fdafc, #bae6ff, #dbf2fe);
+            color: #fff;
             padding: 10px 20px;
             width: 100%;
             height: 60px;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }}
+
+        .logo,
+        .botoes{{
+            margin-right: auto;
         }}
 
         .logo img,
         .logo h3{{
             min-width: 40px;
             min-height: 40px;
-            font-family: 'Chakra Petch', sans-serif;
-            font-weight: bold;
-            font-size: 40px
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            font-size: 40px;
+            margin: 0;
         }}
 
         .botoes button{{
             margin-right: 10px;
-            padding: 10px 12px;
+            padding: 0px 10px;
             border: none;
-            border-radius: 5px;
-            background-color: #3b635a;
-            color: #fff;
+            background-color: transparent;
+            color: #000;
             cursor: pointer;
             font-weight: bold;
+            font-size: 16px;
+            transition: border-color 0.5s ease;
         }}
 
-        .icone img,
+        .nome p{{
+            margin-right: 50px;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 12px;
+        }}
+
+        .icone img{{
+            width: 35px;
+            height: 35px;
+        }}
+
         .icone button{{
-            background-color: #3b635a;
+            background-color: #9fdafc;
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            margin-right: 100px;
             cursor: pointer;
             border: none;
+            width: 40px;
+            height: 40px;
         }}
 
         .modulo{{
             display: none;
             position: absolute;
             top: auto;
-            right: 100px;
+            right: 0;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: #3b635a;
+            background-color: #9fdafc;
             height: auto;
             width: 175px;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 10px;
             margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }}
 
         .modulo button{{
@@ -2084,7 +2104,7 @@ def menuProjeuCss():
             position: absolute;
             border-left: 15px solid transparent;
             border-right: 15px solid transparent;
-            border-bottom: 20px solid #3b635a;
+            border-bottom: 20px solid #9fdafc;
             top: -15px;
             right: 25px
         }}
@@ -2102,17 +2122,44 @@ def menuProjeuCss():
             border: none;
             cursor: pointer;
             font-weight: bold;
-            color: #fff;
+            color: #000;
             margin-bottom: 5px;
         }}
 
-        .botoes button:hover,
+        .botoes button:hover{{
+            border: none;
+            border-bottom: 2px solid #9fdafc;
+            cursor: pointer;
+        }}
+
         .modulo button:hover{{
-            background-color: #466e67;
+            background-color: #91c1dd;
         }}
 
         .logo:hover{{
             text-decoration: underline;
+        }}
+        
+        @media screen and (max-width: 650px){{
+            .menu{{
+                flex-direction: column;
+                height: auto;
+            }}
+
+            .botoes{{
+                margin-top: 10px;
+            }}
+
+            button{{
+                margin: 5px 0;
+            }}
+
+            .icone{{
+                margin-top: 10px;
+            }}
+
+            .modulo{{
+                right: -20px;
+            }}
         }}"""
-    
     return styleMenuProjeu
