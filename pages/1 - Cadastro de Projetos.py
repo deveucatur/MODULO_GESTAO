@@ -114,11 +114,10 @@ elif authentication_status == None:
 elif authentication_status:
     matriUser = [x[1] for x in usersBD if x[3] == username][0]
     dados_user = [x for x in usersBD if str(x[1]).strip() == str(matriUser).strip()]
-
     user = [x[2] for x in usersBD if x[3] == username][0]
-    st.write(user)
 
-    # primeiroNome = user.split()[0]
+    primeiroNome = user.split()[0]
+    st.write(primeiroNome)
 
     menuHtml = menuProjeuHtml("primeiroNome")
     menuCss = menuProjeuCss()
