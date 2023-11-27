@@ -20,9 +20,10 @@ conexao = mysql.connector.connect(
 mycursor = conexao.cursor()
 
 st.set_page_config(
-page_title="9box | New User",
-page_icon=Image.open('imagens/icone.png'),
-layout="centered")
+    page_title="9box | New User",
+    page_icon=Image.open('imagens/icone.png'),
+    layout="centered",
+    initial_sidebar_state='collapsed')
 
 tab1, tab2 = st.tabs(['Novos Usuários', 'Usuários Criados'])
 

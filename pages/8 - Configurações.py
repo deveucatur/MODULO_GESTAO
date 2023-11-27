@@ -5,7 +5,11 @@ from util import string_to_datetime
 from utilR import CalculoPrêmio
 from datetime import date
 
-st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide")
+st.set_page_config(
+    page_title="Cadastro de Parâmetros", 
+    layout="wide",
+    initial_sidebar_state='collapsed')
+
 conexao = mysql.connector.connect(
     passwd='nineboxeucatur',
     port=3306,

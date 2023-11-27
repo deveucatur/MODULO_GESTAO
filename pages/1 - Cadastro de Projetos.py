@@ -10,7 +10,8 @@ icone = Image.open('imagens/icone.png')
 st.set_page_config(
     page_title="Cadastro de Projetos",
     page_icon=icone,
-    layout="wide")
+    layout="wide",
+    initial_sidebar_state='collapsed')
 
 ########CONECTANDO AO BANCO DE DADOS########
 conexao = mysql.connector.connect(

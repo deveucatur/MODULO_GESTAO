@@ -12,7 +12,8 @@ import streamlit_authenticator as stauth
 
 st.set_page_config(
     page_title="Gerir Projetos",
-    layout="wide")
+    layout="wide",
+    initial_sidebar_state='collapsed')
 
 conexao = mysql.connector.connect(
     passwd='nineboxeucatur',
