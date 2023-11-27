@@ -5,6 +5,7 @@ import mysql.connector
 from time import sleep
 from datetime import date
 import streamlit_authenticator as stauth
+from utilR import menuProjeuHtml, menuProjeuCss
 
 icone = Image.open('imagens/icone.png')
 st.set_page_config(
