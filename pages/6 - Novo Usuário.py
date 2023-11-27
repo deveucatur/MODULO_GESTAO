@@ -7,7 +7,7 @@ from PIL import Image
 import streamlit_authenticator as stauth
 import pandas as pd
 import mysql.connector
-from utilR import font_TITLE
+from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
 
 
 conexao = mysql.connector.connect(
@@ -24,6 +24,11 @@ st.set_page_config(
     page_icon=Image.open('imagens/icone.png'),
     layout="centered",
     initial_sidebar_state='collapsed')
+
+menuHtml = menuProjeuHtml("Rahyan")
+menuCss = menuProjeuCss()
+st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(['Novos Usuários', 'Usuários Criados'])
 

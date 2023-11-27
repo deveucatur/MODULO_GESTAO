@@ -2,7 +2,7 @@ import streamlit as st
 import mysql.connector
 from util import font_TITLE
 from util import string_to_datetime
-from utilR import CalculoPrêmio
+from utilR import CalculoPrêmio, menuProjeuHtml, menuProjeuCss
 from datetime import date
 
 st.set_page_config(
@@ -156,6 +156,12 @@ for list11 in list(set([x[11] for x in consulta1])):
        prog_pj.append(prog.strip()) 
 
 ################### APRESENTAÇÃO DO FRONT ###################
+
+menuHtml = menuProjeuHtml("Rahyan")
+menuCss = menuProjeuCss()
+st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('CADASTRO DE PARÂMETROS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
 

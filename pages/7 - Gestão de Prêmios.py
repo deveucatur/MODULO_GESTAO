@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 import mysql.connector
-from utilR import font_TITLE
+from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
 from time import sleep
 from datetime import datetime 
 from dateutil.relativedelta import relativedelta
@@ -30,6 +30,11 @@ conexao = mysql.connector.connect(
     )
 
 mycursor = conexao.cursor()
+
+menuHtml = menuProjeuHtml("Rahyan")
+menuCss = menuProjeuCss()
+st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('GESTÃO DE PRÊMIOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')

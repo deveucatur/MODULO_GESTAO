@@ -114,6 +114,11 @@ elif authentication_status:
     matriUser = [x[1] for x in usersBD if x[3] == username][0]
     dados_user = [x for x in usersBD if str(x[1]).strip() == str(matriUser).strip()]
 
+    menuHtml = menuProjeuHtml("Rahyan")
+    menuCss = menuProjeuCss()
+    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+
     if str(dados_user[0][8]).strip().upper() == 'A':
         fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');
         '''
