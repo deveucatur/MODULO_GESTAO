@@ -117,9 +117,8 @@ elif authentication_status:
     user = [x[2] for x in usersBD if x[3] == username][0]
 
     primeiroNome = user.split()[0]
-    st.write(primeiroNome)
 
-    menuHtml = menuProjeuHtml("primeiroNome")
+    menuHtml = menuProjeuHtml(primeiroNome)
     menuCss = menuProjeuCss()
     st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
     st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
