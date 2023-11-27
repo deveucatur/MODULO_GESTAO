@@ -114,6 +114,8 @@ elif authentication_status == None:
 elif authentication_status:
     matriUser = [x[1] for x in usersBD if x[3] == username][0]
     dados_user = [x for x in usersBD if str(x[1]).strip() == str(matriUser).strip()]
+
+    st.write(usersBD)
     # user = [x[2] for x in usersBD if x[3] == username][0]
 
     # primeiroNome = user.split()[0]
