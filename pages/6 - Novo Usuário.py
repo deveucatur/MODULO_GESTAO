@@ -25,7 +25,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state='collapsed')
 
-menuHtml = menuProjeuHtml("Rahyan")
+menuHtml = menuProjeuHtml("TESTE")
 menuCss = menuProjeuCss()
 st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
 st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
