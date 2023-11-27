@@ -22,7 +22,7 @@ mycursor = conexao.cursor()
 st.set_page_config(
     page_title="9box | New User",
     page_icon=Image.open('imagens/icone.png'),
-    layout="centered",
+    layout="wide",
     initial_sidebar_state='collapsed')
 
 menuHtml = menuProjeuHtml("Rahyan")
