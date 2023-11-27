@@ -4,6 +4,7 @@ from util import font_TITLE
 from util import string_to_datetime
 from utilR import CalculoPrêmio, menuProjeuHtml, menuProjeuCss
 from datetime import date
+import streamlit_authenticator as stauth
 
 st.set_page_config(
     page_title="Cadastro de Parâmetros", 
@@ -155,386 +156,426 @@ for list11 in list(set([x[11] for x in consulta1])):
     for prog in str(list11).split(','):
        prog_pj.append(prog.strip()) 
 
+comandUSERS = 'SELECT * FROM projeu_users;'
+mycursor.execute(comandUSERS)
+dadosUser = mycursor.fetchall()
+
+names = [x[2] for x in dadosUser]
+usernames = [x[3] for x in dadosUser]
+hashed_passwords = [x[7] for x in dadosUser]
+
+def convert_to_dict(names, usernames, passwords):
+    credentials = {"usernames": {}}
+    for name, username, password in zip(names, usernames, passwords):
+        user_credentials = {
+            "email":username,
+            "name": name,
+            "password": password
+        }
+        credentials["usernames"][username] = user_credentials
+    return credentials
+
+credentials = convert_to_dict(names, usernames, hashed_passwords)
+authenticator = stauth.Authenticate(credentials, "Teste", "abcde", 30)
+
+col1, col2,col3 = st.columns([1,3,1])
+with col2:
+    name, authentication_status, username = authenticator.login('Acesse o sistema PROJEU', 'main')
+
+if authentication_status == False:
+    with col2:
+        st.error('Email ou Senha Incorreto')
+elif authentication_status == None:
+    with col2:
+        st.warning('Insira seu Email e Senha')
+elif authentication_status:
+    with st.sidebar:
+        authenticator.logout('Logout', 'main')
+
+    user = [x[2] for x in dadosUser if x[3] == username][0]
+
+    primeiroNome = user.split()[0]
+
 ################### APRESENTAÇÃO DO FRONT ###################
 
-menuHtml = menuProjeuHtml("TESTE")
-menuCss = menuProjeuCss()
-st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
-st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+    menuHtml = menuProjeuHtml(primeiroNome)
+    menuCss = menuProjeuCss()
+    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
-fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
-font_TITLE('CADASTRO DE PARÂMETROS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
+    fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
+    font_TITLE('CADASTRO DE PARÂMETROS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
 
-ParamEscolh = st.selectbox("Escolha o parâmetro", ["Programas", "Prêmio", "Parâmetro Especial"])
-st.text(' ')
-if ParamEscolh == 'Programas':
-    col1, col2 = st.columns((3,1.7))
-    with col2:
-        st.text(' ')
-        st.dataframe({ "ID" :[x[0] for x in progrmBD],
-                "Nome" : [x[1] for x in progrmBD]})
-    with col1:
-        tab1, tab2, tab3 = st.tabs(["Adicionar", "Editar",  "Excluir"])
-        with tab1:
-            font_TITLE('ADICIONAR NOVO PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')  
-            NewProg = st.text_input("Nome Programa")
-            NewMacrop = st.selectbox('Macroprocesso', [x[1] for x in macroProcBD])
-            
-            colv, colv1, colv2 = st.columns([1,1,2])
-            with colv:
-                inic_pg = st.date_input('Início Programa')
-            with colv1:
-                fim_pg = st.date_input('Fim Programa')
-            with colv2:
-                status_pg = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'])
-
-            if st.button("Adicionar"):
-                if NewProg.strip().lower() not in list(set([str(x[1]).strip().lower() for x in progrmBD])):
-                    mycursor = conexao.cursor()
-                    cmd_add_prog = f"""INSERT INTO projeu_programas (nome_prog, macroprocesso_fgkey, inic_pg,fim_pg,status_pg)
-                                            VALUES (
-                                            '{NewProg}',
-                                            (SELECT id FROM projeu_macropr WHERE macroprocesso = '{NewMacrop}'),
-                                            '{inic_pg}',
-                                            '{fim_pg}',
-                                            '{status_pg}');"""
-                    
-                    mycursor.execute(cmd_add_prog)
-                    conexao.commit()
-                    mycursor.close()     
-                    st.toast('Sucesso na adição do novo programa.', icon='✅')
-                    st.rerun()
-                else:
-                    st.toast('Já existe um programa com um nome semelhante.', icon='❌')
-
-        with tab2:
-            font_TITLE('EDITAR PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')  
-            colA, colB = st.columns([1,8])
-            with colA: 
-                ED_idprogm = st.selectbox('ID', [x[0] for x in progrmBD], key='editar id')
-            with colB:
-                ED_progrm = st.text_input("Programa", [x[1] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar name')
-            
-            NewMacrop = st.selectbox('Macroprocesso', [x[1] for x in macroProcBD], list([x[1] for x in macroProcBD]).index([x[5] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0]), key='editar macro')
-            colv, colv1, colv2 = st.columns([1,1,2])
-            with colv:
-                ED_inic_pgE = st.date_input('Início Programa', [string_to_datetime(x[2]) if x[2] != None and x[2] != '' else date.today() for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar inic')
-            with colv1:
-                ED_fim_pgE = st.date_input('Fim Programa', [string_to_datetime(x[3]) if x[3] != None and x[3] != '' else date.today() for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar fim')
-            with colv2:
-                ED_status_pgE = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'],list(['ATIVO', 'DESATIVO', 'CANCELADO']).index([x[4] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0]),key='editar stats')
-           
-            if st.button("Editar"):
-                mycursor = conexao.cursor()
-
-                values = [f'"{ED_progrm}"', f'(SELECT id FROM projeu_macropr WHERE macroprocesso = "{NewMacrop}")', f'"{ED_inic_pgE}"', f'"{ED_fim_pgE}"', f'"{ED_status_pgE}"']
-                columns = ["nome_prog", "macroprocesso_fgkey", "inic_pg", "fim_pg", "status_pg"]
-                for colum_idx in range(len(columns)):
-                    cmd_up_pg = f'UPDATE projeu_programas SET {columns[colum_idx]} = {values[colum_idx]} WHERE id_prog = {ED_idprogm};'
-                    mycursor.execute(cmd_up_pg)
-                    conexao.commit()
+    ParamEscolh = st.selectbox("Escolha o parâmetro", ["Programas", "Prêmio", "Parâmetro Especial"])
+    st.text(' ')
+    if ParamEscolh == 'Programas':
+        col1, col2 = st.columns((3,1.7))
+        with col2:
+            st.text(' ')
+            st.dataframe({ "ID" :[x[0] for x in progrmBD],
+                    "Nome" : [x[1] for x in progrmBD]})
+        with col1:
+            tab1, tab2, tab3 = st.tabs(["Adicionar", "Editar",  "Excluir"])
+            with tab1:
+                font_TITLE('ADICIONAR NOVO PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')  
+                NewProg = st.text_input("Nome Programa")
+                NewMacrop = st.selectbox('Macroprocesso', [x[1] for x in macroProcBD])
                 
-                st.toast('Sucesso na atualização do programa.', icon='✅')  
+                colv, colv1, colv2 = st.columns([1,1,2])
+                with colv:
+                    inic_pg = st.date_input('Início Programa')
+                with colv1:
+                    fim_pg = st.date_input('Fim Programa')
+                with colv2:
+                    status_pg = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'])
+
+                if st.button("Adicionar"):
+                    if NewProg.strip().lower() not in list(set([str(x[1]).strip().lower() for x in progrmBD])):
+                        mycursor = conexao.cursor()
+                        cmd_add_prog = f"""INSERT INTO projeu_programas (nome_prog, macroprocesso_fgkey, inic_pg,fim_pg,status_pg)
+                                                VALUES (
+                                                '{NewProg}',
+                                                (SELECT id FROM projeu_macropr WHERE macroprocesso = '{NewMacrop}'),
+                                                '{inic_pg}',
+                                                '{fim_pg}',
+                                                '{status_pg}');"""
+                        
+                        mycursor.execute(cmd_add_prog)
+                        conexao.commit()
+                        mycursor.close()     
+                        st.toast('Sucesso na adição do novo programa.', icon='✅')
+                        st.rerun()
+                    else:
+                        st.toast('Já existe um programa com um nome semelhante.', icon='❌')
+
+            with tab2:
+                font_TITLE('EDITAR PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')  
+                colA, colB = st.columns([1,8])
+                with colA: 
+                    ED_idprogm = st.selectbox('ID', [x[0] for x in progrmBD], key='editar id')
+                with colB:
+                    ED_progrm = st.text_input("Programa", [x[1] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar name')
+                
+                NewMacrop = st.selectbox('Macroprocesso', [x[1] for x in macroProcBD], list([x[1] for x in macroProcBD]).index([x[5] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0]), key='editar macro')
+                colv, colv1, colv2 = st.columns([1,1,2])
+                with colv:
+                    ED_inic_pgE = st.date_input('Início Programa', [string_to_datetime(x[2]) if x[2] != None and x[2] != '' else date.today() for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar inic')
+                with colv1:
+                    ED_fim_pgE = st.date_input('Fim Programa', [string_to_datetime(x[3]) if x[3] != None and x[3] != '' else date.today() for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar fim')
+                with colv2:
+                    ED_status_pgE = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'],list(['ATIVO', 'DESATIVO', 'CANCELADO']).index([x[4] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0]),key='editar stats')
+            
+                if st.button("Editar"):
+                    mycursor = conexao.cursor()
+
+                    values = [f'"{ED_progrm}"', f'(SELECT id FROM projeu_macropr WHERE macroprocesso = "{NewMacrop}")', f'"{ED_inic_pgE}"', f'"{ED_fim_pgE}"', f'"{ED_status_pgE}"']
+                    columns = ["nome_prog", "macroprocesso_fgkey", "inic_pg", "fim_pg", "status_pg"]
+                    for colum_idx in range(len(columns)):
+                        cmd_up_pg = f'UPDATE projeu_programas SET {columns[colum_idx]} = {values[colum_idx]} WHERE id_prog = {ED_idprogm};'
+                        mycursor.execute(cmd_up_pg)
+                        conexao.commit()
+                    
+                    st.toast('Sucesso na atualização do programa.', icon='✅')  
+                    mycursor.close()
+                    st.rerun()
+
+            with tab3:
+                font_TITLE('EXCLUIR PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
+                colA, colB = st.columns([1,8])
+                with colB:
+                    EX_progrm = st.selectbox("Programa", [x[1] for x in progrmBD], key='excluir name')
+                with colA:  
+                    EX_idprogm = st.text_input('ID', [x[0] for x in progrmBD if str(x[1]) == EX_progrm][0], key='excluir id', disabled=True)
+                
+                NewMacrop = st.selectbox('Macroprocesso', [x[1] for x in macroProcBD], list([x[1] for x in macroProcBD]).index([x[5] for x in progrmBD if str(x[0]) == str(EX_idprogm)][0]), key='excluir macro' ,disabled=True)
+                colv, colv1, colv2 = st.columns([1,1,2])
+                with colv:
+                    EX_inic_pgE = st.date_input('Início Programa', [string_to_datetime(x[2]) if x[2] != None and x[2] != '' else date.today() for x in progrmBD if str(x[0]) == str(EX_idprogm)][0], key='excluir inic' ,disabled=True)
+                with colv1:
+                    EX_fim_pgE = st.date_input('Fim Programa', [string_to_datetime(x[3]) if x[3] != None and x[3] != '' else date.today() for x in progrmBD if str(x[0]) == str(EX_idprogm)][0], key='excluir fim',disabled=True)
+                with colv2:
+                    EX_status_pgE = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'],list(['ATIVO', 'DESATIVO', 'CANCELADO']).index([x[4] for x in progrmBD if str(x[0]) == str(EX_idprogm)][0]),key='excluir stats',disabled=True)
+            
+                if st.button("Excluir"):
+                    if EX_progrm not in prog_pj:
+                        mycursor = conexao.cursor()
+
+                        id_prog = [str(x[6]) for x in progrmBD if x[1] == EX_progrm][0]
+                        cmd_ex_pg = f'DELETE FROM projeu_programas WHERE id_prog = {id_prog};'
+                        mycursor.execute(cmd_ex_pg)
+                        conexao.commit()
+                        mycursor.close()     
+                        st.toast('Sucesso ao excluir o programa.', icon='✅')
+                        
+                        st.rerun()
+                    else:
+                        st.toast('Há projetos vinculados a esse programa, assim, tornando impossível a exclusão do programa.', icon='❌')
+
+    elif ParamEscolh == 'Prêmio':
+        tab1, tab2, tab3 = st.tabs(["Valor Total", "Prêmio por Sprint", "Prêmio por Função"])
+        
+        with tab1:
+            col1, col2 = st.columns([1, 0.5])
+
+            with col1:
+                st.text(' ')
+                font_TITLE('VALOR BASE POR PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
+                
+                typ_proj_event = typ_proj = st.selectbox('Tipo de Projeto', [x[1] for x in typProgBD], list([x[1] for x in typProgBD]).index('Estratégico'), key='TYP PROJ VALOR TOTAL')
+                complx_event = st.selectbox('Complexidade Projeto', list(set([x[2] for x in consulta3])), key='COMPLX VALOR TOTAL')
+                
+                dados_dql_param2 = [x for x in consulta3 if x[1] == typ_proj and x[2] == complx_event]
+                col_aux, col_aux1 = st.columns([1,8])
+                with col_aux:
+                    id_valor_event = st.text_input('Id Valor', dados_dql_param2[0][0], disabled=True)
+                with col_aux1:
+                    valor_base = st.number_input('Valor Base', min_value=0.00, step=0.01, value=float(dados_dql_param2[0][3]))
+
+            with col2:
+                st.text(' ')
+                st.dataframe({'ID': [x[0] for x in consulta3 if x[1] == typ_proj],
+                            'TIPO PROJETO': [x[1] for x in consulta3 if x[1] == typ_proj],
+                            'COMPLEXIDADE PROJETO': [x[2] for x in consulta3 if x[1] == typ_proj],
+                            'VALOR BASE': [x[3] for x in consulta3 if x[1] == typ_proj]})
+            
+            btt_ValorTotal = st.button('Atualizar', key='btt_ValorTotal')
+            if btt_ValorTotal:
+                mycursor = conexao.cursor()
+                cmdUP_vlb = f'UPDATE projeu_premio_base SET valor_base = {float(valor_base)} WHERE id_premiob = {id_valor_event};'
+                mycursor.execute(cmdUP_vlb)
+                conexao.commit()
+                
+                st.toast('Sucesso! Valor base atualizado.', icon='✅')
                 mycursor.close()
                 st.rerun()
 
-        with tab3:
-            font_TITLE('EXCLUIR PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
-            colA, colB = st.columns([1,8])
-            with colB:
-                EX_progrm = st.selectbox("Programa", [x[1] for x in progrmBD], key='excluir name')
-            with colA:  
-                EX_idprogm = st.text_input('ID', [x[0] for x in progrmBD if str(x[1]) == EX_progrm][0], key='excluir id', disabled=True)
-            
-            NewMacrop = st.selectbox('Macroprocesso', [x[1] for x in macroProcBD], list([x[1] for x in macroProcBD]).index([x[5] for x in progrmBD if str(x[0]) == str(EX_idprogm)][0]), key='excluir macro' ,disabled=True)
-            colv, colv1, colv2 = st.columns([1,1,2])
-            with colv:
-                EX_inic_pgE = st.date_input('Início Programa', [string_to_datetime(x[2]) if x[2] != None and x[2] != '' else date.today() for x in progrmBD if str(x[0]) == str(EX_idprogm)][0], key='excluir inic' ,disabled=True)
-            with colv1:
-                EX_fim_pgE = st.date_input('Fim Programa', [string_to_datetime(x[3]) if x[3] != None and x[3] != '' else date.today() for x in progrmBD if str(x[0]) == str(EX_idprogm)][0], key='excluir fim',disabled=True)
-            with colv2:
-                EX_status_pgE = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'],list(['ATIVO', 'DESATIVO', 'CANCELADO']).index([x[4] for x in progrmBD if str(x[0]) == str(EX_idprogm)][0]),key='excluir stats',disabled=True)
-           
-            if st.button("Excluir"):
-                if EX_progrm not in prog_pj:
-                    mycursor = conexao.cursor()
+        with tab2:
+            col1, col2 = st.columns([1.1, 1])
+            with col1:
+                st.text(' ')
+                font_TITLE('ESCOLHA DO PRÊMIO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
 
-                    id_prog = [str(x[6]) for x in progrmBD if x[1] == EX_progrm][0]
-                    cmd_ex_pg = f'DELETE FROM projeu_programas WHERE id_prog = {id_prog};'
-                    mycursor.execute(cmd_ex_pg)
-                    conexao.commit()
-                    mycursor.close()     
-                    st.toast('Sucesso ao excluir o programa.', icon='✅')
-                    
-                    st.rerun()
-                else:
-                    st.toast('Há projetos vinculados a esse programa, assim, tornando impossível a exclusão do programa.', icon='❌')
-
-elif ParamEscolh == 'Prêmio':
-    tab1, tab2, tab3 = st.tabs(["Valor Total", "Prêmio por Sprint", "Prêmio por Função"])
-    
-    with tab1:
-        col1, col2 = st.columns([1, 0.5])
-
-        with col1:
-            st.text(' ')
-            font_TITLE('VALOR BASE POR PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
-            
-            typ_proj_event = typ_proj = st.selectbox('Tipo de Projeto', [x[1] for x in typProgBD], list([x[1] for x in typProgBD]).index('Estratégico'), key='TYP PROJ VALOR TOTAL')
-            complx_event = st.selectbox('Complexidade Projeto', list(set([x[2] for x in consulta3])), key='COMPLX VALOR TOTAL')
-            
-            dados_dql_param2 = [x for x in consulta3 if x[1] == typ_proj and x[2] == complx_event]
-            col_aux, col_aux1 = st.columns([1,8])
-            with col_aux:
-                id_valor_event = st.text_input('Id Valor', dados_dql_param2[0][0], disabled=True)
-            with col_aux1:
-                valor_base = st.number_input('Valor Base', min_value=0.00, step=0.01, value=float(dados_dql_param2[0][3]))
-
-        with col2:
-            st.text(' ')
-            st.dataframe({'ID': [x[0] for x in consulta3 if x[1] == typ_proj],
-                          'TIPO PROJETO': [x[1] for x in consulta3 if x[1] == typ_proj],
-                          'COMPLEXIDADE PROJETO': [x[2] for x in consulta3 if x[1] == typ_proj],
-                          'VALOR BASE': [x[3] for x in consulta3 if x[1] == typ_proj]})
+                typ_proj = st.selectbox('Tipo de Projeto', list(set([x[1] for x in consulta2])))
+                event_spr = st.selectbox('Tipo Evento', list(set([x[3] for x in consulta2])))
+                event_complx = st.selectbox('Complexidade', list(set([x[2] for x in consulta2])), key='UP COMPLX')
         
-        btt_ValorTotal = st.button('Atualizar', key='btt_ValorTotal')
-        if btt_ValorTotal:
-            mycursor = conexao.cursor()
-            cmdUP_vlb = f'UPDATE projeu_premio_base SET valor_base = {float(valor_base)} WHERE id_premiob = {id_valor_event};'
-            mycursor.execute(cmdUP_vlb)
-            conexao.commit()
+            with col2:
+                st.dataframe({'ID': [x[0] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
+                            'TIPO PROJETO': [x[1] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
+                            'EVENTO': [x[3] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
+                            'COMPLEXIDADE': [x[2] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
+                            'PORCENTUAL': [x[4] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
+                            'QNTD EVENTOS': [x[5] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr]})
+
+            st.divider()
+            dados_dql_param = [x for x in consulta2 if x[1] == typ_proj and x[3] == event_spr and x[2] == event_complx]
+            font_TITLE('MUDAR PARA ', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')
             
-            st.toast('Sucesso! Valor base atualizado.', icon='✅')
-            mycursor.close()
-            st.rerun()
+            id_prem = st.text_input('ID Prêmio', [x[0] for x in dados_dql_param][0], disabled=True)
+            qntd_event = st.number_input('Quantidade Eventos', min_value=1, step=1, value=int([x[5] for x in dados_dql_param if x[0] == int(id_prem)][0]))
+            porct_event = st.number_input('Porcentagem', min_value=0.00, step=0.01, max_value=1.00, value=float([x[4] for x in dados_dql_param if x[0] == int(id_prem)][0]))
 
-    with tab2:
-        col1, col2 = st.columns([1.1, 1])
-        with col1:
-            st.text(' ')
-            font_TITLE('ESCOLHA DO PRÊMIO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
-
-            typ_proj = st.selectbox('Tipo de Projeto', list(set([x[1] for x in consulta2])))
-            event_spr = st.selectbox('Tipo Evento', list(set([x[3] for x in consulta2])))
-            event_complx = st.selectbox('Complexidade', list(set([x[2] for x in consulta2])), key='UP COMPLX')
-    
-        with col2:
-            st.dataframe({'ID': [x[0] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
-                          'TIPO PROJETO': [x[1] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
-                          'EVENTO': [x[3] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
-                          'COMPLEXIDADE': [x[2] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
-                          'PORCENTUAL': [x[4] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
-                          'QNTD EVENTOS': [x[5] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr]})
-
-        st.divider()
-        dados_dql_param = [x for x in consulta2 if x[1] == typ_proj and x[3] == event_spr and x[2] == event_complx]
-        font_TITLE('MUDAR PARA ', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')
-        
-        id_prem = st.text_input('ID Prêmio', [x[0] for x in dados_dql_param][0], disabled=True)
-        qntd_event = st.number_input('Quantidade Eventos', min_value=1, step=1, value=int([x[5] for x in dados_dql_param if x[0] == int(id_prem)][0]))
-        porct_event = st.number_input('Porcentagem', min_value=0.00, step=0.01, max_value=1.00, value=float([x[4] for x in dados_dql_param if x[0] == int(id_prem)][0]))
-
-        bttUP_premio = st.button('Atualizar', key='bttUP_premio')
-        if bttUP_premio:
-            mycursor = conexao.cursor()
-            columns = ['porc', 'qntd_event']
-            values = [porct_event, qntd_event]
-            for idx_column in range(len(columns)):
-                cmdUP_premio = f"UPDATE projeu_param_premio SET {columns[idx_column]} = {values[idx_column]} WHERE id_pp = {id_prem};"
-            
-                mycursor.execute(cmdUP_premio)
-                conexao.commit()
-            
-            st.toast('Prêmio Atualizado', icon='✅')
-            mycursor.close()
-            st.rerun()
-
-    with tab3:        
-        col1, col2 = st.columns([2, 0.7])
-        with col1:
-            st.text(' ')
-            font_TITLE('PRÊMIO POR FUNÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')
-            typFUN_proj = st.selectbox('Função', list(set([x[1] for x in consulta4])))
-            complxFUN_proj = st.selectbox('Complexidade', list(set([x[2] for x in consulta4])))
-
-            dados_dql_param3 = [x for x in consulta4 if x[1] == typFUN_proj and x[2] == complxFUN_proj]
-            col_aux, col_aux1 = st.columns([1,8])
-            with col_aux:
-                idFUN_porc = st.text_input('ID', dados_dql_param3[0][0] , disabled=True)
-            with col_aux1:
-                UPporcFUN = st.number_input('Porcentagem', min_value=0.00, step=0.01, max_value=1.00, value=float(dados_dql_param3[0][3]))
-
-        with col2:
-            st.text(' ')
-            st.dataframe({'ID': [x[0] for x in consulta4 if x[1] == typFUN_proj],
-                          'FUNÇÃO': [x[1] for x in consulta4 if x[1] == typFUN_proj],
-                          'COMPLEXIDADE': [x[2] for x in consulta4 if x[1] == typFUN_proj],
-                          'PORCENTUAL': [x[3] for x in consulta4 if x[1] == typFUN_proj]})
-                          
-        btt_FUN = st.button('Atualizar', key='btt_FUN')
-        if btt_FUN:
-            mycursor = conexao.cursor()
-            cmdFUN_UP = f"UPDATE projeu_porc_func SET porcentual = {float(UPporcFUN)} WHERE id_equip = {idFUN_porc};"
-            
-            mycursor.execute(cmdFUN_UP)
-            conexao.commit()
-
-            mycursor.close()
-            
-            st.toast('Prêmio por função atualizado com sucesso.', icon='✅')  
-            st.rerun()
-
-elif ParamEscolh == "Parâmetro Especial":
-    st.text(' ')
-    st.divider()
-
-    projeto_user = st.selectbox('Projeto', list(set([x[1] for x in proj_difBD])))
-
-    dados_proj = [x for x in proj_difBD if str(x[1]).strip() == str(projeto_user).strip()]
-    
-
-    #INFORMAÇÕES DAS PREMIAÇÕES
-    fcalculo1 = CalculoPrêmio(projeto_user, f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}', dados_proj[0][2])
-
-    valorbase = fcalculo1.valorEvento()
-
-    investi_event = {event: valorbase[event]['ValorEvento'] for event in list(valorbase.keys())}
-    
-    if dados_proj[0][15] != None and dados_proj[0][15] != '' and dados_proj[0][16] != None and dados_proj[0][16] != '':
-        col1, col2 = st.columns(2)
-        with col1:
-            colaux1, colaux2 = st.columns([1.3, 2])    
-            with colaux1:                                                           
-                typ_proj = st.text_input('Tipo Projeto', dados_proj[0][2])
-            with colaux2:
-                MacroProjeto = st.text_input('Macroprocesso', dados_proj[0][3])    
-
-            colG1, colG2 = st.columns([1,3]) 
-            with colG2:
-                gestorProjeto = st.text_input('Gestor do Projeto', dados_proj[0][6])
-            with colG1:
-                matric_gestor = st.text_input('Matricula Gestor', dados_proj[0][5])
-            
-        with col2:
-            nomePrograma = st.text_input('Programa', dados_proj[0][4])
-
-            colA, colB = st.columns([2,1]) 
-            with colA:
-                complex_proj = st.text_input('Complexidade', f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}')
-            with colB:
-                ivsProget = st.text_input('Investimento', sum(list(investi_event.values())), placeholder='R$ 0,00')
-        
-        st.text(' ')
-        st.divider()
-        col1, col2, col3, col4, col5 = st.columns([3, 0.2, 3, 0.2, 3])
-        with col1:
-            font_TITLE('VALOR POR EVENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
-
-            colA, colB = st.columns([2,1])
-            with colA:
-                st.caption('Evento')
-            with colB:
-                st.caption('Valor')
-
-            for event, valor in investi_event.items():
-                with colA:
-                    st.text_input('', event, label_visibility="collapsed", key=f'EVENTO {event}')
-                with colB:
-                    st.text_input('VALOR', valor, label_visibility="collapsed", key=f'VALOR {event}')
-        
-        with col3:
-            font_TITLE('PORCENTAGEM EVENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
-            
-            porc_event = {event: fcalculo1.param_eventos(event)['Porcentagem'][list(fcalculo1.param_eventos(event)['Complexidade']).index(f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}')] for event in list(valorbase.keys())}
-
-            colA, colB = st.columns([2,1])
-            with colA:
-                st.caption('Evento')
-            with colB:
-                st.caption('Porcentagem')
-
-            event_porc = {}
-            for event, valor in porc_event.items():
-                with colA:
-                    st.text_input('', event, label_visibility="collapsed", key=f'EVENTO 1{event}')
-                with colB:
-                    valor_event = st.text_input('', valor, label_visibility="collapsed", key=f'VALOR 1{event}')
-        
-                event_porc[event] = float(valor_event) if valor_event.replace('.', '', 1).isnumeric() else 0
-
-        with col5:
-            font_TITLE('PORCENTAGEM EQUIPE', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
-
-            dados_equipe = [[x[1], x[3]] for x in consulta4 if str(x[2]).strip() == f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}']
-
-            colA, colB = st.columns([2,1])
-            with colA:
-                st.caption('Função')
-            with colB:
-                st.caption('Porcentagem')
-
-            equip_porc = {}
-            for list_idx in range(len(dados_equipe)):
-                with colA:
-                    st.text_input('', dados_equipe[list_idx][0], label_visibility="collapsed", key=f'EVENTO 2{list_idx}')
-                with colB:
-                    vlr_equip = st.text_input('', dados_equipe[list_idx][1], label_visibility="collapsed", key=f'VALOR 2{list_idx}')
-
-                equip_porc[dados_equipe[list_idx][0]] = float(vlr_equip) if vlr_equip.replace('.', '', 1).isnumeric() else 0
-
-        st.text(' ')
-        st.text(' ')
-        
-        button_att_proj = st.button('Atualizar')
-        if button_att_proj: 
-    
-            if int(sum(list(porc_event.values()))) == 1 and int(sum(list(equip_porc.values()))) == 1:
+            bttUP_premio = st.button('Atualizar', key='bttUP_premio')
+            if bttUP_premio:
                 mycursor = conexao.cursor()
-                if float(ivsProget) <= sum(list(investi_event.values())):
-                    if dados_proj[0][7] != None and dados_proj[0][7] != ' ':
-                        columns = ['valor_base', 'porc_pre_mvp', 'porc_mvp', 'porc_pos_mvp', 'porc_entrega', 'porc_gestor', 'porc_espec', 'porc_squad']
-                        values = [ivsProget, event_porc['SPRINT PRÉ MVP'], event_porc['MVP'], event_porc['SPRINT PÓS MVP'], event_porc['ENTREGA FINAL'], equip_porc['GESTOR'], equip_porc['ESPECIALISTA'], equip_porc['SQUAD']]
-                        
-                        for idx_columns in range(len(columns)):
-                            cmd = f'UPDATE projeu_premio_proj_diferent SET {columns[idx_columns]} = {values[idx_columns]} WHERE id_pppd = {dados_proj[0][17]};'
+                columns = ['porc', 'qntd_event']
+                values = [porct_event, qntd_event]
+                for idx_column in range(len(columns)):
+                    cmdUP_premio = f"UPDATE projeu_param_premio SET {columns[idx_column]} = {values[idx_column]} WHERE id_pp = {id_prem};"
+                
+                    mycursor.execute(cmdUP_premio)
+                    conexao.commit()
+                
+                st.toast('Prêmio Atualizado', icon='✅')
+                mycursor.close()
+                st.rerun()
+
+        with tab3:        
+            col1, col2 = st.columns([2, 0.7])
+            with col1:
+                st.text(' ')
+                font_TITLE('PRÊMIO POR FUNÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')
+                typFUN_proj = st.selectbox('Função', list(set([x[1] for x in consulta4])))
+                complxFUN_proj = st.selectbox('Complexidade', list(set([x[2] for x in consulta4])))
+
+                dados_dql_param3 = [x for x in consulta4 if x[1] == typFUN_proj and x[2] == complxFUN_proj]
+                col_aux, col_aux1 = st.columns([1,8])
+                with col_aux:
+                    idFUN_porc = st.text_input('ID', dados_dql_param3[0][0] , disabled=True)
+                with col_aux1:
+                    UPporcFUN = st.number_input('Porcentagem', min_value=0.00, step=0.01, max_value=1.00, value=float(dados_dql_param3[0][3]))
+
+            with col2:
+                st.text(' ')
+                st.dataframe({'ID': [x[0] for x in consulta4 if x[1] == typFUN_proj],
+                            'FUNÇÃO': [x[1] for x in consulta4 if x[1] == typFUN_proj],
+                            'COMPLEXIDADE': [x[2] for x in consulta4 if x[1] == typFUN_proj],
+                            'PORCENTUAL': [x[3] for x in consulta4 if x[1] == typFUN_proj]})
+                            
+            btt_FUN = st.button('Atualizar', key='btt_FUN')
+            if btt_FUN:
+                mycursor = conexao.cursor()
+                cmdFUN_UP = f"UPDATE projeu_porc_func SET porcentual = {float(UPporcFUN)} WHERE id_equip = {idFUN_porc};"
+                
+                mycursor.execute(cmdFUN_UP)
+                conexao.commit()
+
+                mycursor.close()
+                
+                st.toast('Prêmio por função atualizado com sucesso.', icon='✅')  
+                st.rerun()
+
+    elif ParamEscolh == "Parâmetro Especial":
+        st.text(' ')
+        st.divider()
+
+        projeto_user = st.selectbox('Projeto', list(set([x[1] for x in proj_difBD])))
+
+        dados_proj = [x for x in proj_difBD if str(x[1]).strip() == str(projeto_user).strip()]
+        
+
+        #INFORMAÇÕES DAS PREMIAÇÕES
+        fcalculo1 = CalculoPrêmio(projeto_user, f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}', dados_proj[0][2])
+
+        valorbase = fcalculo1.valorEvento()
+
+        investi_event = {event: valorbase[event]['ValorEvento'] for event in list(valorbase.keys())}
+        
+        if dados_proj[0][15] != None and dados_proj[0][15] != '' and dados_proj[0][16] != None and dados_proj[0][16] != '':
+            col1, col2 = st.columns(2)
+            with col1:
+                colaux1, colaux2 = st.columns([1.3, 2])    
+                with colaux1:                                                           
+                    typ_proj = st.text_input('Tipo Projeto', dados_proj[0][2])
+                with colaux2:
+                    MacroProjeto = st.text_input('Macroprocesso', dados_proj[0][3])    
+
+                colG1, colG2 = st.columns([1,3]) 
+                with colG2:
+                    gestorProjeto = st.text_input('Gestor do Projeto', dados_proj[0][6])
+                with colG1:
+                    matric_gestor = st.text_input('Matricula Gestor', dados_proj[0][5])
+                
+            with col2:
+                nomePrograma = st.text_input('Programa', dados_proj[0][4])
+
+                colA, colB = st.columns([2,1]) 
+                with colA:
+                    complex_proj = st.text_input('Complexidade', f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}')
+                with colB:
+                    ivsProget = st.text_input('Investimento', sum(list(investi_event.values())), placeholder='R$ 0,00')
+            
+            st.text(' ')
+            st.divider()
+            col1, col2, col3, col4, col5 = st.columns([3, 0.2, 3, 0.2, 3])
+            with col1:
+                font_TITLE('VALOR POR EVENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
+
+                colA, colB = st.columns([2,1])
+                with colA:
+                    st.caption('Evento')
+                with colB:
+                    st.caption('Valor')
+
+                for event, valor in investi_event.items():
+                    with colA:
+                        st.text_input('', event, label_visibility="collapsed", key=f'EVENTO {event}')
+                    with colB:
+                        st.text_input('VALOR', valor, label_visibility="collapsed", key=f'VALOR {event}')
+            
+            with col3:
+                font_TITLE('PORCENTAGEM EVENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
+                
+                porc_event = {event: fcalculo1.param_eventos(event)['Porcentagem'][list(fcalculo1.param_eventos(event)['Complexidade']).index(f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}')] for event in list(valorbase.keys())}
+
+                colA, colB = st.columns([2,1])
+                with colA:
+                    st.caption('Evento')
+                with colB:
+                    st.caption('Porcentagem')
+
+                event_porc = {}
+                for event, valor in porc_event.items():
+                    with colA:
+                        st.text_input('', event, label_visibility="collapsed", key=f'EVENTO 1{event}')
+                    with colB:
+                        valor_event = st.text_input('', valor, label_visibility="collapsed", key=f'VALOR 1{event}')
+            
+                    event_porc[event] = float(valor_event) if valor_event.replace('.', '', 1).isnumeric() else 0
+
+            with col5:
+                font_TITLE('PORCENTAGEM EQUIPE', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
+
+                dados_equipe = [[x[1], x[3]] for x in consulta4 if str(x[2]).strip() == f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}']
+
+                colA, colB = st.columns([2,1])
+                with colA:
+                    st.caption('Função')
+                with colB:
+                    st.caption('Porcentagem')
+
+                equip_porc = {}
+                for list_idx in range(len(dados_equipe)):
+                    with colA:
+                        st.text_input('', dados_equipe[list_idx][0], label_visibility="collapsed", key=f'EVENTO 2{list_idx}')
+                    with colB:
+                        vlr_equip = st.text_input('', dados_equipe[list_idx][1], label_visibility="collapsed", key=f'VALOR 2{list_idx}')
+
+                    equip_porc[dados_equipe[list_idx][0]] = float(vlr_equip) if vlr_equip.replace('.', '', 1).isnumeric() else 0
+
+            st.text(' ')
+            st.text(' ')
+            
+            button_att_proj = st.button('Atualizar')
+            if button_att_proj: 
+        
+                if int(sum(list(porc_event.values()))) == 1 and int(sum(list(equip_porc.values()))) == 1:
+                    mycursor = conexao.cursor()
+                    if float(ivsProget) <= sum(list(investi_event.values())):
+                        if dados_proj[0][7] != None and dados_proj[0][7] != ' ':
+                            columns = ['valor_base', 'porc_pre_mvp', 'porc_mvp', 'porc_pos_mvp', 'porc_entrega', 'porc_gestor', 'porc_espec', 'porc_squad']
+                            values = [ivsProget, event_porc['SPRINT PRÉ MVP'], event_porc['MVP'], event_porc['SPRINT PÓS MVP'], event_porc['ENTREGA FINAL'], equip_porc['GESTOR'], equip_porc['ESPECIALISTA'], equip_porc['SQUAD']]
+                            
+                            for idx_columns in range(len(columns)):
+                                cmd = f'UPDATE projeu_premio_proj_diferent SET {columns[idx_columns]} = {values[idx_columns]} WHERE id_pppd = {dados_proj[0][17]};'
+                                mycursor.execute(cmd)
+                                conexao.commit()
+                                
+                        else:
+                            cmd = f'''
+                            INSERT INTO projeu_premio_proj_diferent (
+                                id_proj_fgkey,
+                                valor_base,
+                                porc_pre_mvp,
+                                porc_mvp,
+                                porc_pos_mvp,
+                                porc_entrega,
+                                porc_gestor,
+                                porc_espec,
+                                porc_squad,
+                                complex_fgkey
+                            ) 
+                            VALUES (
+                                {dados_proj[0][0]},
+                                {ivsProget},
+                                {event_porc['SPRINT PRÉ MVP']},
+                                {event_porc['MVP']},
+                                {event_porc['SPRINT PÓS MVP']},
+                                {event_porc['ENTREGA FINAL']},
+                                {equip_porc['GESTOR']},
+                                {equip_porc['ESPECIALISTA']},
+                                {equip_porc['SQUAD']},
+                                {dados_proj[0][18]}
+                                );'''
+                            
                             mycursor.execute(cmd)
                             conexao.commit()
                             
+                        mycursor.close() 
                     else:
-                        cmd = f'''
-                        INSERT INTO projeu_premio_proj_diferent (
-                            id_proj_fgkey,
-                            valor_base,
-                            porc_pre_mvp,
-                            porc_mvp,
-                            porc_pos_mvp,
-                            porc_entrega,
-                            porc_gestor,
-                            porc_espec,
-                            porc_squad,
-                            complex_fgkey
-                        ) 
-                        VALUES (
-                            {dados_proj[0][0]},
-                            {ivsProget},
-                            {event_porc['SPRINT PRÉ MVP']},
-                            {event_porc['MVP']},
-                            {event_porc['SPRINT PÓS MVP']},
-                            {event_porc['ENTREGA FINAL']},
-                            {equip_porc['GESTOR']},
-                            {equip_porc['ESPECIALISTA']},
-                            {equip_porc['SQUAD']},
-                            {dados_proj[0][18]}
-                            );'''
-                        
-                        mycursor.execute(cmd)
-                        conexao.commit()
-                        
-                    mycursor.close() 
+                        st.toast(f'O investimento total não pode ser maior que R${sum(list(investi_event.values()))}', icon='❌')
                 else:
-                    st.toast(f'O investimento total não pode ser maior que R${sum(list(investi_event.values()))}', icon='❌')
-            else:
-                st.toast('A soma das porcentagens dos eventos e das equipe tem que ser igual a 1.', icon='❌')
-        #bonific_calcul = fcalculo1.CalculaSprint(valorbase['SPRINT PÓS MVP']['ValorPorSprint'], 2, 1)
-#
-        #st.write(bonific_calcul)
+                    st.toast('A soma das porcentagens dos eventos e das equipe tem que ser igual a 1.', icon='❌')
+            #bonific_calcul = fcalculo1.CalculaSprint(valorbase['SPRINT PÓS MVP']['ValorPorSprint'], 2, 1)
+    #
+            #st.write(bonific_calcul)

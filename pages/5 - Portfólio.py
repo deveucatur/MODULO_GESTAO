@@ -357,8 +357,11 @@ elif authentication_status:
         authenticator.logout('Logout', 'main')
 
     matriUser = [x[1] for x in dadosUser if x[3] == username][0]
+    user = [x[2] for x in dadosUser if x[3] == username][0]
 
-    menuHtml = menuProjeuHtml("TESTE")
+    primeiroNome = user.split()[0]
+
+    menuHtml = menuProjeuHtml(primeiroNome)
     menuCss = menuProjeuCss()
     st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
     st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
