@@ -773,7 +773,7 @@ elif authentication_status:
                 if len(ddSprint)> 0:
                     font_TITLE(f'{param_sprint[idx_parm]}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
 
-                    for idx_spr in list(set([x[0] for x in SprintsEntregs])):
+                    for idx_spr in sorted(list(set([x[0] for x in SprintsEntregs]))):
                         listDadosAux = []
                         cont_sprint += 1
 
