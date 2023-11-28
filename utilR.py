@@ -1991,12 +1991,12 @@ def menuProjeuHtml(nome):
                         <h3>PROJEU</h3>
                     </div>
                     <div class="botoes">
-                        <a href="https://meusprojetos-mpjj-mg.streamlit.app/" target="_self"><button type="button" id="home">Home</button></a>
+                        <!-- <a href="https://meusprojetos-mpjj-mg.streamlit.app/" target="_self"><button type="button" id="home">Home</button></a>
                         <a href="https://meusprojetos-mpjj-mg.streamlit.app/Cadastro_de_Projetos" target="_self"><button type="button" id="projetos">Projetos</button></a>
                         <a href="https://meusprojetos-mpjj-mg.streamlit.app/Portf%C3%B3lio" target="_self"><button type="button" id="portfolio">Portfólio</button></a>
                         <a href="https://meusprojetos-mpjj-mg.streamlit.app/Novo_Usu%C3%A1rio" target="_self"><button type="button" id="usuario">Usuários</button></a>
                         <a href="https://meusprojetos-mpjj-mg.streamlit.app/Gest%C3%A3o_de_Pr%C3%AAmios" target="_self"><button type="button" id="premio">Prêmios</button></a>
-                        <a href="https://meusprojetos-mpjj-mg.streamlit.app/Configura%C3%A7%C3%B5es" target="_self"><button type="button" id="config">Configurações</button></a>
+                        <a href="https://meusprojetos-mpjj-mg.streamlit.app/Configura%C3%A7%C3%B5es" target="_self"><button type="button" id="config">Configurações</button></a> -->
                     </div>
                     <div class="nome"><p>{nome}</p></div>
                     <div class="icone">
