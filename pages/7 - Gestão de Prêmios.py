@@ -71,6 +71,8 @@ elif authentication_status:
 
     matricul_user = [x[1] for x in dadosUser if x[3] == username][0]
 
+    matricul_user = 56126
+
     primeiroNome = user.split()[0]
 
     menuHtml = menuProjeuHtml(primeiroNome)
@@ -269,26 +271,28 @@ elif authentication_status:
                                 st.caption('Valor Total')
 
                             for name, dd_name in premios_pessoa_sequencia.items():                        
-                                with col0:
-                                    empresa_number = st.text_input('', 'EUCATUR', label_visibility='collapsed', key=f'Empresa{proj_name}- pessoa {name} - sprint{sprint}')
-                                with col1:
-                                    funcao = st.text_input('', dd_name[1], label_visibility='collapsed', key=f'Funcao{proj_name}- pessoa {name}- sprint{sprint}')
-                                with col2:
-                                    matricula_pessoa = st.text_input('', dd_name[0][0][4] if len(dd_name[0]) > 0 else 0, label_visibility='collapsed', key=f'Unidade{proj_name} - pessoa {name}- sprint{sprint}')
-                                with col3:
-                                    nome_pessoa = st.text_input('', name, label_visibility='collapsed', key=f'Matricula{proj_name} - pessoa {name}- sprint{sprint}')
-                                with col4:
-                                    qntd_atdd = st.text_input('', len(list(set([str(x[3]).strip() for x in dd_name[0] if x[3] != None]))) if len(dd_name[0]) > 0 else 0, label_visibility='collapsed', key=f'Nome{proj_name} - pessoa {name}- sprint{sprint}')
-                                with col5:
-                                    if len(dd_name[0]) > 0:
-                                        if dd_name[0][0][7] == None and dd_name[0][0][8] != None:
-                                            hrs_pes_totl =  dd_name[0][0][8] / dd_name[0][0][9]
-                                        else:
-                                            hrs_pes_totl = sum([x[7] if x[7] != None else 0 for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0
-                                
-                                    horas_pessoa = st.text_input('', hrs_pes_totl, label_visibility='collapsed', key=f'Cargo{proj_name} - pessoa {name}- sprint{sprint}')
-                                with col6:
-                                    valor_total_pessoa = st.text_input('', sum([x[10] for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0, label_visibility='collapsed', key=f'Valor{proj_name} - pessoa {name}- sprint{sprint}')
+                                if len(dd_name[0]):
+                                    with col0:
+                                        empresa_number = st.text_input('', 'EUCATUR', label_visibility='collapsed', key=f'Empresa{proj_name}- pessoa {name} - sprint{sprint}')
+                                    with col1:
+                                        funcao = st.text_input('', dd_name[1], label_visibility='collapsed', key=f'Funcao{proj_name}- pessoa {name}- sprint{sprint}')
+                                    with col2:
+                                        
+                                        matricula_pessoa = st.text_input('', dd_name[0][0][4] if len(dd_name[0]) > 0 else 0, label_visibility='collapsed', key=f'Unidade{proj_name} - pessoa {name}- sprint{sprint}')
+                                    with col3:
+                                        nome_pessoa = st.text_input('', name, label_visibility='collapsed', key=f'Matricula{proj_name} - pessoa {name}- sprint{sprint}')
+                                    with col4:
+                                        qntd_atdd = st.text_input('', len(list(set([str(x[3]).strip() for x in dd_name[0] if x[3] != None]))) if len(dd_name[0]) > 0 else 0, label_visibility='collapsed', key=f'Nome{proj_name} - pessoa {name}- sprint{sprint}')
+                                    with col5:
+                                        if len(dd_name[0]) > 0:
+                                            if dd_name[0][0][7] == None and dd_name[0][0][8] != None:
+                                                hrs_pes_totl =  dd_name[0][0][8] / dd_name[0][0][9]
+                                            else:
+                                                hrs_pes_totl = sum([x[7] if x[7] != None else 0 for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0
+                                    
+                                        horas_pessoa = st.text_input('', hrs_pes_totl, label_visibility='collapsed', key=f'Cargo{proj_name} - pessoa {name}- sprint{sprint}')
+                                    with col6:
+                                        valor_total_pessoa = st.text_input('', sum([x[10] for x in dd_name[0]]) if len(dd_name[0]) > 0  else 0, label_visibility='collapsed', key=f'Valor{proj_name} - pessoa {name}- sprint{sprint}')
 
                             font_TITLE('VALOR POR ENTREGA', fonte_Projeto,"'Bebas Neue', sans-serif", 20, 'left', '#228B22')
                             col0, col1, col11, col2, col3, col4, col5 = st.columns([0.14, 0.32, 0.22, 1, 0.14, 0.22, 0.17])
