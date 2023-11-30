@@ -880,6 +880,7 @@ elif authentication_status:
                                                 mycursor = conexao.cursor()
 
                                                 for list_atual in listDadosAux:
+                                                    list_atual[0] = list_atual[0].replace('"', "'")
                                                     if list_atual[5] != None: #SE A ENTREGA DA "list_atual" JÁ ESTIVER DENTRO DO BANCO DE DADOS SOMENTE VAI ATUALIZAR AS INFORMAÇÕES SOBRE A ENTREGA
                                                         columnsUP = ['nome_Entrega', 'executor', 'hra_necess', 'stt_entrega', 'compl_entrega']
 
@@ -919,6 +920,7 @@ elif authentication_status:
 
                                                 for table_name in tables:
                                                     for list_atual in listDadosAux:
+                                                        list_atual[0] = list_atual[0].replace('"', "'")
                                                         cmd_insert = f'''
                                                             INSERT INTO {table_name} (id_sprint, nome_Entrega, executor, hra_necess, stt_entrega, compl_entrega) 
                                                                 values((SELECT id_sprint FROM projeu_sprints WHERE number_sprint = {spEntregas[0][0]}  
