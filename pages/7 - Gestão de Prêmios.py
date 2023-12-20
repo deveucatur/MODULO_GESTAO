@@ -336,7 +336,7 @@ elif authentication_status:
                                 conexao.commit()
 
                                 st.toast('Prêmio Aprovado!', icon='✅')
-                                sleep(5)
+                                sleep(2)
                                 mycursor.close()
                                 st.rerun()
 
