@@ -70,9 +70,7 @@ elif authentication_status:
     user = [x[2] for x in dadosUser if x[3] == username][0]
 
     matricul_user = [x[1] for x in dadosUser if x[3] == username][0]
-
-    matricul_user = 56126
-
+    
     primeiroNome = user.split()[0]
 
     menuHtml = menuProjeuHtml(primeiroNome)
@@ -82,7 +80,6 @@ elif authentication_status:
 
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
     font_TITLE('GESTÃO DE PRÊMIOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
-
 
     cmd_premio = f"""
     SELECT 
@@ -406,15 +403,14 @@ elif authentication_status:
 
                     mycursor.close()
                     st.toast('Prêmio Consolidado!', icon='✅')
-                    sleep(4)
+                    sleep(1)
                     
-                    sum_horas = 0
-                    sum_valor = 0
                     fun_digits = lambda x, y=[6, 4, 2, 4, 2, 4, 1, 2, 16]: [f'{"0"*(int(y[idx])-len(str(x[idx])))}{str(x[idx])}' for idx in range(len(x))]
 
                     hoje = datetime.today() + relativedelta(months=1)        
                     #ENVIADO EMAIL PARA O DEPARTAMENTO PESSOAL
                     dados_by_empres = {name_empr: {mat: [x for x in dadosBD if str(x[14]).strip() == str(name_empr).strip() and str(x[4]).strip() == str(mat).strip()] for mat in list(set([x[4] for x in dadosBD if str(x[14]).strip() == str(name_empr).strip()]))} for name_empr in list(set([dd[14] for dd in dadosBD if str(dd[13]).strip().upper() != 'PJ']))}
+                    
                     for cod_empres, dd_empres in dados_by_empres.items():
                         
                         #CRIANDO ARQUIVO TEMPORÁRIO TXT
@@ -424,18 +420,16 @@ elif authentication_status:
                             for matric_colab, dd_consolid in dd_empres.items():
                                 horas_colab = sum([int(x[7]) if x[7] != None else 0 for x in dd_consolid])
                                 valor_colab = sum([x[10] for x in dd_consolid])
-
-                                sum_horas += horas_colab
-                                sum_valor += valor_colab
                                 
-                                dd_txt = fun_digits([matric_colab, '1204', hoje.month, hoje.year,hoje.month, hoje.year, 0, 5, str(round(sum_valor, 2)).replace('.', ',')])
+                                dd_txt = fun_digits([matric_colab, '1204', hoje.month, hoje.year,hoje.month, hoje.year, 0, 5, str(round(valor_colab, 2)).replace('.', ',')])
 
-                                info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}'''
+                                info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}\n'''
+                            
                             temp_file.write(info_txt)
                             arquivo_temporario = temp_file.name
                         
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='processos.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                        enviar_email(destino='processos4.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
                     
                     #ENVIADO EMAIL PARA OS PJ
                     consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
@@ -443,7 +437,7 @@ elif authentication_status:
                         by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
                     
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='processos.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
+                        enviar_email(destino='processos4.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
 
                         sleep(1)
                     st.rerun()
