@@ -360,12 +360,12 @@ elif authentication_status:
     matriUser = [x[1] for x in dadosUser if x[3] == username][0]
     user = [x[2] for x in dadosUser if x[3] == username][0]
 
-    #primeiroNome = user.split()[0]
-#
-    #menuHtml = menuProjeuHtml(primeiroNome)
-    #menuCss = menuProjeuCss()
-    #st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
-    #st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+    primeiroNome = user.split()[0]
+
+    menuHtml = menuProjeuHtml(primeiroNome)
+    menuCss = menuProjeuCss()
+    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
     font_TITLE('GERIR PORTFÓLIO', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
@@ -424,6 +424,7 @@ elif authentication_status:
                                 compl_entrega AS COMPLEXIDADE,
                                 stt_entrega AS STATUS,
                                 id_entr,
+                                id_sprint,
                                 (SELECT Matricula FROM projeu_users WHERE id_user = executor) AS MATRICULA_EXECUTOR
                             FROM projeu_entregas_planejamento 
                                 WHERE 
@@ -433,7 +434,7 @@ elif authentication_status:
                                         WHERE id_proj_fgkey = (
                                             SELECT id_proj 
                                             FROM projeu_projetos 
-                                            WHERE name_proj = '{project_filter}'
+                                            WHERE name_proj LIKE '%{str(project_filter).strip()}%'
                                             ) 
                                         );"""
 
@@ -445,6 +446,14 @@ elif authentication_status:
                                 compl_entrega AS COMPLEXIDADE,
                                 stt_entrega AS STATUS,
                                 id_entr,
+                                (
+                                    SELECT 
+                                        id_sprint 
+                                    FROM 
+                                        projeu_sprints 
+                                    WHERE 
+                                        id_sprint = projeu_entregas.id_sprint
+                                ) AS ID_SPRINT,
                                 (SELECT Matricula FROM projeu_users WHERE id_user = executor) AS MATRICULA_EXECUTOR
                             FROM projeu_entregas 
                                 WHERE 
@@ -454,7 +463,7 @@ elif authentication_status:
                                         WHERE id_proj_fgkey = (
                                             SELECT id_proj 
                                             FROM projeu_projetos 
-                                            WHERE name_proj = '{project_filter}'
+                                            WHERE name_proj LIKE '%{str(project_filter).strip()}%'
                                             ) 
                                         );"""
         
@@ -674,25 +683,28 @@ elif authentication_status:
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
             maior_idx = max([param_sprint.index(x)+1 if x != None else 0 for x in func_split(dadosOrigin[0][12])])
-            
+ 
             if None in func_split(dadosOrigin[0][11]):
                 on_ex = False
             else:    
                 on_ex = st.toggle('Excluir sprint')
 
-            listAddSprOF_EX = [len([x for x in func_split(dadosOrigin[0][11]) if x != None]) + 1, param_sprint[:maior_idx+1], datetime.today()]
+            listAddSprOF_EX = [max([int(x) for x in func_split(dadosOrigin[0][11]) if x != None]), param_sprint[:maior_idx+1], datetime.today()]
+            
             listAddSprON_EX = [[int(x) if x != None else '' for x in func_split(dadosOrigin[0][11])], func_split(dadosOrigin[0][12]), [string_to_datetime(x) if x != None and x != " " else datetime.today() for x in func_split(dadosOrigin[0][13])]]
 
             disabledON = True if on_ex else False
             disabledOF = False if on_ex else True
 
             col0, col1, col2, col3 = st.columns([0.5,3,1,1])
-            with col0:
-                number_sprint_new = int(st.text_input('Sprint', max(listAddSprON_EX[0]) if on_ex else listAddSprOF_EX[0], disabled=True))
             with col1:
-                type_sprint_new = st.selectbox('Tipo', [listAddSprON_EX[1][listAddSprON_EX[0].index(number_sprint_new)]] if on_ex else listAddSprOF_EX[1], disabled=disabledON)
+                type_sprint_new = st.selectbox('Tipo', [listAddSprON_EX[1][listAddSprON_EX[0].index(max(listAddSprON_EX[0]))]] if on_ex else listAddSprOF_EX[1], disabled=disabledON)
+            with col0:
+                number_sprt =listAddSprOF_EX[0] + 1 if type_sprint_new != 'MVP' else None
+                number_sprint_new = st.text_input('Sprint', max(listAddSprON_EX[0]) if on_ex else number_sprt, disabled=True)
+
             with col2:
-                dat_inc_new = st.date_input('Início', value=listAddSprON_EX[2][listAddSprON_EX[0].index(number_sprint_new)] if on_ex else listAddSprOF_EX[2], disabled=disabledON)
+                dat_inc_new = st.date_input('Início', value=listAddSprON_EX[2][listAddSprON_EX[0].index(max(listAddSprON_EX[0]))] if on_ex else listAddSprOF_EX[2], disabled=disabledON)
             with col3:
                 dat_fim_new = st.date_input('Fim', value=dat_inc_new + timedelta(days=14), disabled=True)
 
@@ -704,8 +716,15 @@ elif authentication_status:
             
             if button_addSprint:
                 mycursor = conexao.cursor()
-                cmd_addSprint = f'''INSERT INTO projeu_sprints(number_sprint, id_proj_fgkey, status_sprint, date_inic_sp, date_fim_sp) 
-                VALUES ({number_sprint_new}, (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{project_filter}'), '{type_sprint_new}', STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d'), STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d'));'''
+                columns = 'id_proj_fgkey, status_sprint, date_inic_sp, date_fim_sp'
+                values = f'''(SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(project_filter).strip()}%'), '{type_sprint_new}', STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d'), STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d')'''
+                
+                if number_sprint_new != None:
+                    columns += ', number_sprint'
+                    values += f', {number_sprint_new}'
+
+                cmd_addSprint = f'''INSERT INTO projeu_sprints({columns}) 
+                VALUES ({values});'''
                 
                 mycursor.execute(cmd_addSprint)
                 conexao.commit()
@@ -719,22 +738,25 @@ elif authentication_status:
                 st.toast('Sucesso na adição da sprint!', icon='✅')
                 st.text(' ')
                 
+                sleep(1.5)
                 st.rerun()
 
             if button_exSprint:
-                NoTentrg = False
+                NotEntrg = False
                 if on_ex:
                     mycursor = conexao.cursor()
+
+                    #CHECANDO SE HÁ ENTREGAS VINCULADAS A SPRINT
                     if len(EntregasBD) == 0:
-                        NoTentrg = True
+                        NotEntrg = True
                     else:
-                        NoTentrg = True if number_sprint_new not in list(set([x[0] for x in EntregasBD])) else False
+                        NotEntrg = True if number_sprint_new not in list(set([x[0] for x in EntregasBD])) else False
                     
-                    if NoTentrg:
+                    if NotEntrg:
                         cmdDEL = f'''DELETE FROM projeu_sprints 
-                                    WHERE number_sprint = {number_sprint_new} 
+                                    WHERE number_sprint = {listAddSprOF_EX[0]} 
                                     AND id_proj_fgkey = (SELECT id_proj FROM projeu_projetos 
-                                        WHERE name_proj = '{project_filter}') 
+                                        WHERE name_proj LIKE '%{str(project_filter).strip()}%') 
                                     AND status_sprint = '{type_sprint_new}'
                                     AND date_inic_sp = STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d')
                                     AND date_fim_sp = STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d');'''                
@@ -744,24 +766,26 @@ elif authentication_status:
 
                         mycursor.close()
                         st.toast('Excluido!', icon='✅') 
+
+                        sleep(1.5)
                         st.rerun()
                     else:
                         st.toast('Primeiramente, é necessário excluir todas as atividades dessa sprint.', icon='❌')
                 else:
                     st.toast('Primeiramente, ative a opção de excluir sprint.', icon='❌')
 
-
         func_split = lambda x: x.split(",") if x is not None else [x]
         if func_split(dadosOrigin[0][11])[0] != None:
             # ----> DADOS [NUMBER_SPRINT, STATUS_SPRINT,  DATA INC SPRINT, DATA FIM SPRINT, ID_SPRINT, CHECK_SPRINT]
-            sprints = [[func_split(dadosOrigin[0][11])[x], param_sprint.index(func_split(dadosOrigin[0][12])[x]), func_split(dadosOrigin[0][13])[x], func_split(dadosOrigin[0][14])[x], func_split(dadosOrigin[0][27])[x], func_split(dadosOrigin[0][34])[x]] for x in range(len(func_split(dadosOrigin[0][11])))]
+            sprints = [[func_split(dadosOrigin[0][11])[x], func_split(dadosOrigin[0][12])[x], func_split(dadosOrigin[0][13])[x], func_split(dadosOrigin[0][14])[x], func_split(dadosOrigin[0][27])[x], func_split(dadosOrigin[0][34])[x]] for x in range(len(func_split(dadosOrigin[0][11])))]
 
             for idx_parm in range(len(param_sprint)):
-                ddSprint = [sprints[x] for x in range(len(sprints)) if str(sprints[x][1]) == str(idx_parm)] #DESCOBRINDO QUAL A SPRINT DAQUELE STATUS
+                #INFORMAÇÕES DAS SPRINTS DAQUELE EVENTO
+                ddSprint = [sprints[x] for x in range(len(sprints)) if str(sprints[x][1]) == str(param_sprint[idx_parm])] #DESCOBRINDO QUAL A SPRINT DAQUELE STATUS
 
                 #FUNÇÃO PARA LIMPAR AS ENTREGAS DAQUELA SPRINT
                 # ----> DADOS [NUMBER_SPRINT, NOME_ENTREGA, EXECUTOR, HORAS, COMPLEXIDADE, STATUS]
-                SpritNotEntreg = [[int(sprt), None, None, 0 , '---', '🟨 Backlog', None] for sprt in [i[0] for i in ddSprint] if sprt not in list(set([ab_x[0] for ab_x in EntregasBD]))]
+                SpritNotEntreg = [[int(sprt[0]), None, None, 0 , '---', '🟨 Backlog', None, int(sprt[1])] for sprt in [[i[0], i[4]] for i in ddSprint] if sprt not in list(set([ab_x[0] for ab_x in EntregasBD]))]
                 
                 SprintsEntregs = [list(x) for x in EntregasBD if str(x[0]) in [str(i[0]) for i in ddSprint]]
                 SprintsEntregs.extend(SpritNotEntreg)
@@ -772,17 +796,22 @@ elif authentication_status:
                 if len(ddSprint)> 0:
                     font_TITLE(f'{param_sprint[idx_parm]}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
 
-                    for idx_spr in sorted(list(set([x[0] for x in SprintsEntregs]))):
+                                                    #COLOCANDO EM ORDEM CRESCENTE AS SPRINTS
+                    for idx_spr_tupl in sorted(list(set([(x[7], x[0]) for x in SprintsEntregs])), key=lambda x: x[1]):
+                        idx_spr = idx_spr_tupl[0]
                         listDadosAux = []
                         cont_sprint += 1
 
-                        with st.expander(f'Sprint {idx_spr}'):
-                            id_sprint = [x[4] for x in  ddSprint if str(x[0]).strip() == str(idx_spr).strip()][0]
+                        name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] != 'MVP' else 'Evento - MVP'
+                        with st.expander(name_expander):
+                            id_sprint = idx_spr
                             #FILTRANDO ENTREGAS DAQUELA SPRINT
-                            spEntregas = [x for x in SprintsEntregs if x[0] == idx_spr]
-                            spEntregasPlan = [x for x in SprintsEntregsPlan if x[0] == idx_spr]
 
-                            block_sprint = True if str(ddSprint[list(x[4] for x in ddSprint).index(id_sprint)][5]) == str(0) else False
+                            spEntregas = [x for x in SprintsEntregs if x[7] == idx_spr]
+
+                            spEntregasPlan = [x for x in SprintsEntregsPlan if x[8] == idx_spr]
+
+                            block_sprint = True if str(ddSprint[list(x[4] for x in ddSprint).index(str(id_sprint))][5]) == str(0) else False
 
                             #PREPARANDO OS DADOS PARA APRESENTAR NO CARD DA SPRINT
                             contagem_dif = Counter([x[4] for x in spEntregas])                
@@ -837,13 +866,12 @@ elif authentication_status:
                                             with col2:
                                                 opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando',  '🟩 Concluído']
                                                 status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
-                                                
                                                 opc_colb = func_split(dadosOrigin[0][21])
                                                 colab_entreg = st.selectbox('Colaborador', opc_colb, opc_colb.index(spEntregas[ativIDX][2]) if spEntregas[ativIDX][2] != None and spEntregas[ativIDX][2] != '' else 0, key=f'colab{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
-                                    
 
                                             listDadosAux.append([name_entreg, colab_entreg, horas_entreg, status_entreg, compl_entreg, spEntregas[ativIDX][6]]) 
                                         
+                                        st.write(spEntregas)
                                         listDadosAux = [x for x in listDadosAux if x[0] != '' and x[0] != None]
                                         entrgasBD_by_sprint = [x for x in EntregasBD if str(x[0]).strip() == str(idx_spr).strip()]
 
@@ -851,10 +879,8 @@ elif authentication_status:
                                         if len(entrgasBD_by_sprint) > 0:
                                             col1, col2, col3 = st.columns([1,3,7])
                                             with col1:
-                                                #, key=f'{idx_spr} {idx_parm}'
                                                 button_atual = st.form_submit_button('Atualizar', disabled=block_sprint)        
                                             with col2:
-                                                # key=f'Finalizar Sprint {idx_spr} {idx_parm}',
                                                 button_final = st.form_submit_button('Finalizar Sprint', disabled=block_sprint) 
                                         
                                                 if button_final:
@@ -870,7 +896,7 @@ elif authentication_status:
                                                     mycursor.close()
                                                     st.toast('Sprint Finalizada!', icon='✅')
 
-
+                                            st.write(spEntregas)
                                             if button_atual:
                                                 mycursor = conexao.cursor()
 
@@ -902,7 +928,6 @@ elif authentication_status:
                                                                 mycursor.execute(cmd_insert)
                                                                 conexao.commit()
 
-
                                                 mycursor.close()
                                                 st.toast('Dados Atualizados!', icon='✅')
 
@@ -916,9 +941,7 @@ elif authentication_status:
                                                     for list_atual in listDadosAux:
                                                         cmd_insert = f'''
                                                             INSERT INTO {table_name} (id_sprint, nome_Entrega, executor, hra_necess, stt_entrega, compl_entrega) 
-                                                                values((SELECT id_sprint FROM projeu_sprints WHERE number_sprint = {spEntregas[0][0]}  
-                                                                    AND id_proj_fgkey = 
-                                                                        (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{dadosOrigin[0][1]}') LIMIT 1),
+                                                                 values({spEntregas[0][0]},
                                                                         "{limp_entrg(list_atual[0])}", 
                                                                         (SELECT id_user FROM projeu_users WHERE Nome = '{list_atual[1]}' LIMIT 1),
                                                                         {list_atual[2]},
@@ -930,11 +953,10 @@ elif authentication_status:
                                                 st.toast('Entregas Enviadas!', icon='✅')
                                                 mycursor.close()
 
-
                             with tab2:
-                                font_TITLE('EXCLUIR', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
-                                
                                 if len(spEntregas) > 0:
+                                    font_TITLE('EXCLUIR', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')
+                                
                                     atvdd_exc = st.selectbox('Atividade', [x[1] for x in spEntregas if x[1] != None and x[1] != ' '], key=f'NameExAtivid {idx_spr} - {idx_parm}')
 
                                     col_sel0, col_sel1, col_sel2, col_sel3 = st.columns([3,1,1,1])
@@ -992,7 +1014,7 @@ elif authentication_status:
                                 st.caption('Parecer Homologação')
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
-
+                                
                                 btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
                                 if btt_homo:
                                     if len(parec_homol) > 0:
@@ -1028,7 +1050,7 @@ elif authentication_status:
 
                                                 if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
                                                     
-                                                    if str(ddSprint[list([x[4] for x in ddSprint]).index(id_sprint)][5]) == str(0):   
+                                                    if str(ddSprint[list([x[4] for x in ddSprint]).index(str(id_sprint))][5]) == str(0):   
     
                                                         premio_aux = CalculoPrêmio(
                                                             str(project_filter).strip(),
@@ -1036,10 +1058,10 @@ elif authentication_status:
     
                                                         valores = premio_aux.valorEvento()
 
-                                                        bonif_sprints = [idx_spr] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
+                                                        bonif_sprints = [int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
                                                         
                                                         bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], bonif_sprints)
-
+                                                        
                                                         ################### SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU ###################
                                                                                                     
                                                         if str(type_homol).strip() != 'MVP' and str(dadosOrigin[0][38]) != '1': #AQUI É ONDE É TRATADO OS DADOS DE EVENTOS TRADICIONAIS - PRÉ-MVP E PÓS-MVP
@@ -1098,18 +1120,15 @@ elif authentication_status:
                                                         
                                                         for entr_premio in bonific_list:
                                                             range_aux = 4
-                                                            values = f"""(SELECT id_sprint FROM projeu_sprints WHERE number_sprint = {idx_spr}  
-                                                                        AND id_proj_fgkey = 
-                                                                            (SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{dadosOrigin[0][1]}%') LIMIT 1),
-                                                                            {round(float(entr_premio[1]), 2)},
-                                                                            (SELECT id_user FROM projeu_users WHERE Matricula = {entr_premio[0]}), 
-                                                                            '{entr_premio[2]}'
+                                                            values = f"""{idx_spr},
+                                                                        {round(float(entr_premio[1]), 2)},
+                                                                        (SELECT id_user FROM projeu_users WHERE Matricula = {entr_premio[0]}), 
+                                                                        '{entr_premio[2]}'
                                                                         """
                                                             if len(entr_premio) > 3:
                                                                 range_aux = 5
                                                                 values += f""", {entr_premio[3]}"""
                                                             
-                                                            st.warning(len(entr_premio))
                                                             if len(entr_premio) > 4:
                                                                 range_aux = 8
                                                                 values += f""", {entr_premio[4]}, {entr_premio[5]}"""
@@ -1349,7 +1368,7 @@ elif authentication_status:
                                     st.text(' ')
                             with tab4:
                                 #OBSERVAÇÃO DA SPRINT SELECIONADA
-                                obsv_sprint = [x for x in ObservBD if x[2] == idx_spr]
+                                obsv_sprint = [x for x in ObservBD if x[1] == idx_spr]
                                 if len(obsv_sprint)>0:
                                     font_TITLE('Histórico de Observações', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')
                                     for idx_spt in range(len(obsv_sprint)):
