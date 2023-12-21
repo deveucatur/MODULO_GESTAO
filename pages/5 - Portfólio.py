@@ -872,7 +872,6 @@ elif authentication_status:
 
                                             listDadosAux.append([name_entreg, colab_entreg, horas_entreg, status_entreg, compl_entreg, spEntregas[ativIDX][6]]) 
                                         
-                                        st.write(spEntregas)
                                         listDadosAux = [x for x in listDadosAux if x[0] != '' and x[0] != None]
                                         entrgasBD_by_sprint = [x for x in EntregasBD if str(x[0]).strip() == str(idx_spr).strip()]
 
@@ -897,7 +896,6 @@ elif authentication_status:
                                                     mycursor.close()
                                                     st.toast('Sprint Finalizada!', icon='✅')
 
-                                            st.write(spEntregas)
                                             if button_atual:
                                                 mycursor = conexao.cursor()
 
