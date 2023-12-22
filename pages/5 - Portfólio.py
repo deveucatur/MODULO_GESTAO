@@ -360,12 +360,12 @@ elif authentication_status:
     matriUser = [x[1] for x in dadosUser if x[3] == username][0]
     user = [x[2] for x in dadosUser if x[3] == username][0]
 
-    primeiroNome = user.split()[0]
-
-    menuHtml = menuProjeuHtml(primeiroNome)
-    menuCss = menuProjeuCss()
-    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
-    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+    #primeiroNome = user.split()[0]
+#
+    #menuHtml = menuProjeuHtml(primeiroNome)
+    #menuCss = menuProjeuCss()
+    #st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+    #st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
     font_TITLE('GERIR PORTFÓLIO', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
@@ -689,7 +689,7 @@ elif authentication_status:
             else:    
                 on_ex = st.toggle('Excluir sprint')
 
-            listAddSprOF_EX = [max([int(x) for x in func_split(dadosOrigin[0][11]) if x != None]), param_sprint[:maior_idx+1], datetime.today()]
+            listAddSprOF_EX = [max([int(x) for x in func_split(dadosOrigin[0][11]) if x != None]) if len([int(x) for x in func_split(dadosOrigin[0][11]) if x != None]) != 0 else 0, param_sprint[:maior_idx+1], datetime.today()]
             
             listAddSprON_EX = [[int(x) if x != None else '' for x in func_split(dadosOrigin[0][11])], func_split(dadosOrigin[0][12]), [string_to_datetime(x) if x != None and x != " " else datetime.today() for x in func_split(dadosOrigin[0][13])]]
 
