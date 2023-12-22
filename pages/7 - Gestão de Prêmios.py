@@ -429,7 +429,7 @@ elif authentication_status:
                             arquivo_temporario = temp_file.name
                         
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='processos4.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                        enviar_email(destino='processos.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
                     
                     #ENVIADO EMAIL PARA OS PJ
                     consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
