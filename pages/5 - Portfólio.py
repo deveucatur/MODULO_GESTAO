@@ -866,14 +866,13 @@ elif authentication_status:
                                             with col2:
                                                 opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando',  '🟩 Concluído']
                                                 status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
-                        
                                                 opc_colb = func_split(dadosOrigin[0][21])
                                                 colab_entreg = st.selectbox('Colaborador', opc_colb, opc_colb.index(spEntregas[ativIDX][2]) if spEntregas[ativIDX][2] != None and spEntregas[ativIDX][2] != '' else 0, key=f'colab{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
 
                                             listDadosAux.append([name_entreg, colab_entreg, horas_entreg, status_entreg, compl_entreg, spEntregas[ativIDX][6]]) 
                                         
                                         listDadosAux = [x for x in listDadosAux if x[0] != '' and x[0] != None]
-                                        entrgasBD_by_sprint = [x for x in EntregasBD if str(x[0]).strip() == str(idx_spr).strip()]
+                                        entrgasBD_by_sprint = [x for x in EntregasBD if str(x[7]).strip() == str(idx_spr).strip()]
 
                                         limp_entrg = lambda entr: str(entr).strip().replace('"', "'")
                                         if len(entrgasBD_by_sprint) > 0:
@@ -1262,7 +1261,7 @@ elif authentication_status:
                                                                                         5] != '' else 0],
                                                                       key=f'Realiz status{idx_spr}  - {idx_parm} - {ativIDX}',
                                                                       label_visibility="collapsed")
-                                    
+
                                     with col5:
                                         opc_compl = ['Fácil', 'Médio', 'Difícil']
                                         compl_entreg = st.text_input('Compl.', opc_compl[
@@ -1378,4 +1377,4 @@ elif authentication_status:
                                 
                                 font_TITLE('ADCIONAR OBSERVAÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
                                 obs_sprt = st.text_area('awdadad',label_visibility="collapsed", key=f'OBSERVAÇAÕ{idx_spr}')
-                                btt_homo = st.button('Enviar', key=f'btt obsrv {idx_spr}')
+                                btt_obs = st.button('Enviar', key=f'btt obsrv {idx_spr}')
