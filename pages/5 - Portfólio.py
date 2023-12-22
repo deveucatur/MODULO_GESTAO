@@ -948,6 +948,16 @@ elif authentication_status:
 
                                                         mycursor.execute(cmd_insert)
                                                         conexao.commit()
+
+                                                for i in range(len(especialist_sprint)):
+                                                    cmd_insert = f"""INSERT INTO projeu_especialist_sprint VALUES
+                                                    (null, 
+                                                    {spEntregas[0][0]}, 
+                                                    (SELECT id_user FROM projeu_users WHERE Nome = '{especialist_sprint[i]}'), 
+                                                    'A');"""
+                                                    mycursor.execute(cmd_insert)
+                                                    conexao.commit()
+                                                    
                                                 st.toast('Entregas Enviadas!', icon='✅')
                                                 mycursor.close()
 
