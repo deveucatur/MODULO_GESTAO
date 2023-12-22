@@ -678,7 +678,7 @@ elif authentication_status:
                 except:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
-        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP']
+        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
@@ -865,7 +865,8 @@ elif authentication_status:
 
                                             with col2:
                                                 opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando',  '🟩 Concluído']
-                                                status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
+                                                #status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
+                                                status_entreg = ''
                                                 opc_colb = func_split(dadosOrigin[0][21])
                                                 colab_entreg = st.selectbox('Colaborador', opc_colb, opc_colb.index(spEntregas[ativIDX][2]) if spEntregas[ativIDX][2] != None and spEntregas[ativIDX][2] != '' else 0, key=f'colab{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
 
@@ -1017,7 +1018,7 @@ elif authentication_status:
                                 if btt_homo:
                                     if len(parec_homol) > 0:
                                         if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0:
-                                            try:
+                                            #try:
                                                 def trat_homol(name_hmo):
                                                     aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
                                                             'PÓS MVP': 'SPRINT PÓS MVP',
@@ -1063,20 +1064,18 @@ elif authentication_status:
                                                         ################### SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU ###################
                                                                                                     
                                                         if str(type_homol).strip() != 'MVP' and str(dadosOrigin[0][38]) != '1': #AQUI É ONDE É TRATADO OS DADOS DE EVENTOS TRADICIONAIS - PRÉ-MVP E PÓS-MVP
-                                                            
                                                             #PEGANDO OS DADOS DOS GESTORES
                                                             bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G']]
                                                             
                                                             #PEGANDO OS DADOS DOS ESPECIALISTAS
                                                             bonific_list_aux = [[f'{matr}', f'{float(list(dict(value).values())[0])}', 'E'] for matr, value in dict(bonific_calcul['ESPECIALISTA']['ValorParaMVP']).items()]
 
-                                                            st.error(bonific_list_aux)
                                                             columns_p = ['id_sprint_fgkey', 'valor',
                                                                         'bonificado_fgkey', 'funcao_premio', 'id_entreg_fgkey',
                                                                         'hrs_normalizadas', 'dificuldade']
 
                                                             #PEGANDO OS DADOS DA SQUAD
-                                                            bonific_list_aux1 = [[entrega[7], #MATRICULA
+                                                            bonific_list_aux1 = [[entrega[8], #MATRICULA
                                                                                     bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Bonificação'], #VALOR DA BONIFICAÇÃO
                                                                                     'EX',
                                                                                     entrega[6], #ID DA ENTREGA
@@ -1084,7 +1083,7 @@ elif authentication_status:
                                                                                     bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Dificuldade'], #DIFICULDADE
                                                                                     entrega[2], #NOME DA PESSOA
                                                                                     entrega[0] #ID DA SPRINT
-                                                                                    ] for entrega in [entr for entr in spEntregas if entr[1] != None]]
+                                                                                 ] for entrega in [entr for entr in spEntregas if entr[1] != None]]
                                                             
                                                         else: #AQUI PARA CASO SEJA MVP OU ENTREGA FINAL
 
@@ -1100,7 +1099,7 @@ elif authentication_status:
                                                             
                                                             #PEGANDO OS DADOS DA SQUAD
                                                             bonific_list_aux1 = [[
-                                                                                f'(SELECT Matricula FROM projeu_users WHERE Nome = "{name}")',
+                                                                                f'(SELECT Matricula FROM projeu_users WHERE Nome LIKE "%{str(name).strip()}%")',
                                                                                 bonific_calcul['SQUAD'][name]['BonificacaoSprint'],
                                                                                 'EX',
                                                                                 f'"{str(type_homol).strip().upper()}"',
@@ -1146,11 +1145,11 @@ elif authentication_status:
                                                         st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
                                                     
                                                 mycursor1.close()
-                                            except:
-                                                cont_erro =+ 1
-                                                st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
-                                            if cont_erro < 1:
-                                                st.toast('Dados de homologação atualizados', icon='✅')
+                                            #except:
+                                            #    cont_erro =+ 1
+                                            #    st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
+                                            #if cont_erro < 1:
+                                            #    st.toast('Dados de homologação atualizados', icon='✅')
                                         else:
                                             st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
                                                     
@@ -1202,13 +1201,14 @@ elif authentication_status:
                                                                      label_visibility="collapsed")
                                     with col2:
                                         opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando', '🟩 Concluído']
-                                        status_entreg = st.text_input('Status', opc_stt[opc_stt.index(
-                                            str(spEntregasPlan[ativIDX][5]).strip()) if spEntregasPlan[ativIDX][
-                                                                                            5] != None and
-                                                                                        spEntregasPlan[ativIDX][
-                                                                                            5] != '' else 0],
-                                                                      key=f'Planj status{idx_spr}  - {idx_parm} - {ativIDX}',
-                                                                      label_visibility="collapsed")
+                                        #status_entreg = st.text_input('Status', opc_stt[opc_stt.index(
+                                        #    str(spEntregasPlan[ativIDX][5]).strip()) if spEntregasPlan[ativIDX][
+                                        #                                                    5] != None and
+                                        #                                                spEntregasPlan[ativIDX][
+                                        #                                                    5] != '' else 0],
+                                        #                              key=f'Planj status{idx_spr}  - {idx_parm} - {ativIDX}',
+                                        #                              label_visibility="collapsed")
+                                        status_entreg = ''
                                     with col5:
                                         opc_compl = ['Fácil', 'Médio', 'Difícil']
                                         compl_entreg = st.text_input('Compl.', opc_compl[
@@ -1255,12 +1255,13 @@ elif authentication_status:
                                                                      label_visibility="collapsed")
                                     with col2:
                                         opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando', '🟩 Concluído']
-                                        status_entreg = st.text_input('Status', opc_stt[opc_stt.index(
-                                            str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and
-                                                                                    spEntregas[ativIDX][
-                                                                                        5] != '' else 0],
-                                                                      key=f'Realiz status{idx_spr}  - {idx_parm} - {ativIDX}',
-                                                                      label_visibility="collapsed")
+                                        #status_entreg = st.text_input('Status', opc_stt[opc_stt.index(
+                                        #    str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and
+                                        #                                            spEntregas[ativIDX][
+                                        #                                                5] != '' else 0],
+                                        #                              key=f'Realiz status{idx_spr}  - {idx_parm} - {ativIDX}',
+                                        #                              label_visibility="collapsed")
+                                        status_entreg = ''
 
                                     with col5:
                                         opc_compl = ['Fácil', 'Médio', 'Difícil']
