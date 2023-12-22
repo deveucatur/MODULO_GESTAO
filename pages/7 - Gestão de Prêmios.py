@@ -437,7 +437,7 @@ elif authentication_status:
                         by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
                     
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='processos4.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
+                        enviar_email(destino='processos.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
 
                         sleep(1)
                     st.rerun()
