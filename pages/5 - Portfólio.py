@@ -58,9 +58,9 @@ SELECT
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as fim_sprint,
     (
-        SELECT GROUP_CONCAT(status_homolog) 
-        FROM projeu_sprints 
-        WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
+        SELECT GROUP_CONCAT(COALESCE(status_homolog, 'NULL'))
+    FROM projeu_sprints 
+    WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as status_homolog_sprint,
     (
         SELECT GROUP_CONCAT(nome_Entrega) 
@@ -360,12 +360,12 @@ elif authentication_status:
     matriUser = [x[1] for x in dadosUser if x[3] == username][0]
     user = [x[2] for x in dadosUser if x[3] == username][0]
 
-    #primeiroNome = user.split()[0]
-#
-    #menuHtml = menuProjeuHtml(primeiroNome)
-    #menuCss = menuProjeuCss()
-    #st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
-    #st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+    primeiroNome = user.split()[0]
+
+    menuHtml = menuProjeuHtml(primeiroNome)
+    menuCss = menuProjeuCss()
+    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
     font_TITLE('GERIR PORTFÓLIO', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
@@ -798,7 +798,7 @@ elif authentication_status:
 
                                                     #COLOCANDO EM ORDEM CRESCENTE AS SPRINTS
                     for idx_spr_tupl in sorted(list(set([(x[7], x[0]) for x in SprintsEntregs])), key=lambda x: x[1]):
-                        idx_spr = idx_spr_tupl[0]
+                        idx_spr = idx_spr_tupl[0] #IDX_SPR É O ID DA SPRINT
                         listDadosAux = []
                         cont_sprint += 1
 
@@ -948,16 +948,6 @@ elif authentication_status:
 
                                                         mycursor.execute(cmd_insert)
                                                         conexao.commit()
-
-                                                for i in range(len(especialist_sprint)):
-                                                    cmd_insert = f"""INSERT INTO projeu_especialist_sprint VALUES
-                                                    (null, 
-                                                    {spEntregas[0][0]}, 
-                                                    (SELECT id_user FROM projeu_users WHERE Nome = '{especialist_sprint[i]}'), 
-                                                    'A');"""
-                                                    mycursor.execute(cmd_insert)
-                                                    conexao.commit()
-                                                    
                                                 st.toast('Entregas Enviadas!', icon='✅')
                                                 mycursor.close()
 
@@ -1023,147 +1013,155 @@ elif authentication_status:
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
                                 
-                                btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
-                                if btt_homo:
-                                    if len(parec_homol) > 0:
-                                        if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0:
-                                            #try:
-                                                def trat_homol(name_hmo):
-                                                    aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
-                                                            'PÓS MVP': 'SPRINT PÓS MVP',
-                                                            'MVP': 'MVP',
-                                                            'ENTREGA FINAL': 'ENTREGA FINAL'}
-                                                    
-                                                    retorno = aux_dic[str(name_hmo).strip().upper()]
-                                                    if str(dadosOrigin[0][38]) == '1':
-                                                        retorno = 'ENTREGA FINAL'
 
-                                                    return retorno
-                                                
-                                                type_homol = trat_homol(type_homol)
-                                                
-                                                cont_erro = 0
-                                                mycursor1 = conexao.cursor()
-                                                columns = ['tip_homolog', 'date_homolog', 'status_homolog',
-                                                            'parecer_homolog']
-                                                
-                                                values = [f'"{type_homol}"', f'STR_TO_DATE("{date_homol}", "%Y-%m-%d")',
-                                                            f'"{stt_homol}"', f'"{parec_homol}"']
-                                                
-                                                for idx_clm in range(len(columns)):
-                                                    cmdHOMO = f'UPDATE projeu_sprints SET {columns[idx_clm]} = {values[idx_clm]} WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
-                                                    
-                                                    mycursor1.execute(cmdHOMO)
-                                                    conexao.commit()
+                                stt_homol_bd = [func_split(dadosOrigin[0][15])[x] for x in range(len(func_split(dadosOrigin[0][27]))) if str(func_split(dadosOrigin[0][27])[x]).strip() == str(idx_spr).strip()][0]
+                                if str(stt_homol_bd).strip() != 'HOMOLOGADO':
+                                    btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
 
-                                                if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
-                                                    
-                                                    if str(ddSprint[list([x[4] for x in ddSprint]).index(str(id_sprint))][5]) == str(0):   
-    
-                                                        premio_aux = CalculoPrêmio(
-                                                            str(project_filter).strip(),
-                                                            str(f'{dadosOrigin[0][36]} {dadosOrigin[0][37]}').upper(), dadosOrigin[0][4])
-    
-                                                        valores = premio_aux.valorEvento()
-
-                                                        bonif_sprints = [int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
-                                                        
-                                                        bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], bonif_sprints)
-                                                        
-                                                        ################### SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU ###################
-                                                                                                    
-                                                        if str(type_homol).strip() != 'MVP' and str(dadosOrigin[0][38]) != '1': #AQUI É ONDE É TRATADO OS DADOS DE EVENTOS TRADICIONAIS - PRÉ-MVP E PÓS-MVP
-                                                            #PEGANDO OS DADOS DOS GESTORES
-                                                            bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G']]
-                                                            
-                                                            #PEGANDO OS DADOS DOS ESPECIALISTAS
-                                                            bonific_list_aux = [[f'{matr}', f'{float(list(dict(value).values())[0])}', 'E'] for matr, value in dict(bonific_calcul['ESPECIALISTA']['ValorParaMVP']).items()]
-
-                                                            columns_p = ['id_sprint_fgkey', 'valor',
-                                                                        'bonificado_fgkey', 'funcao_premio', 'id_entreg_fgkey',
-                                                                        'hrs_normalizadas', 'dificuldade']
-
-                                                            #PEGANDO OS DADOS DA SQUAD
-                                                            bonific_list_aux1 = [[entrega[8], #MATRICULA
-                                                                                    bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Bonificação'], #VALOR DA BONIFICAÇÃO
-                                                                                    'EX',
-                                                                                    entrega[6], #ID DA ENTREGA
-                                                                                    bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['HorasNormalizadas'], #HORAS NORMALIZADAS
-                                                                                    bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Dificuldade'], #DIFICULDADE
-                                                                                    entrega[2], #NOME DA PESSOA
-                                                                                    entrega[0] #ID DA SPRINT
-                                                                                 ] for entrega in [entr for entr in spEntregas if entr[1] != None]]
-                                                            
-                                                        else: #AQUI PARA CASO SEJA MVP OU ENTREGA FINAL
-
-                                                            #PEGANDO OS DADOS DOS GESTORES
-                                                            bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G', f'"{str(type_homol).strip().upper()}"']] 
-
-                                                            #PEGANDO OS DADOS DOS ESPECIALISTAS
-                                                            bonific_list_aux = [[f'{matr}', f'{float(list(dict(value).values())[0])}', 'E', f'"{str(type_homol).strip().upper()}"'] for matr, value in dict(bonific_calcul['ESPECIALISTA']['ValorParaMVP']).items()]
-
-                                                            columns_p = ['id_sprint_fgkey', 'valor',
-                                                                        'bonificado_fgkey', 'funcao_premio', 'opcional_evento',
-                                                                        'hrs_normalizadas', 'dificuldade', 'opcional_hrs_necess']
-                                                            
-                                                            #PEGANDO OS DADOS DA SQUAD
-                                                            bonific_list_aux1 = [[
-                                                                                f'(SELECT Matricula FROM projeu_users WHERE Nome LIKE "%{str(name).strip()}%")',
-                                                                                bonific_calcul['SQUAD'][name]['BonificacaoSprint'],
-                                                                                'EX',
-                                                                                f'"{str(type_homol).strip().upper()}"',
-                                                                                bonific_calcul['SQUAD'][name]['HorasNormalTotal'],
-                                                                                int(sum([x['Dificuldade'] for x in dict(bonific_calcul['SQUAD'][name]['Entregas']).values()]) / len(dict(bonific_calcul['SQUAD'][name]['Entregas']))),
-                                                                                name,
-                                                                                ddSprint[cont_sprint - 1][4],
-                                                                                sum([x['Horas'] for x in dict(bonific_calcul['SQUAD'][name]['Entregas']).values()])
-                                                                                ] for name in dict(bonific_calcul['SQUAD']).keys()]
-                                                        
-                                                        bonific_list.extend(bonific_list_aux)
-                                                        bonific_list.extend(bonific_list_aux1)
-                                                        
-                                                        limp_columns = lambda list_columns, range: str(list_columns[:range]).replace("'", "").replace("[", "").replace("]","")
-                                                        
-                                                        for entr_premio in bonific_list:
-                                                            range_aux = 4
-                                                            values = f"""{idx_spr},
-                                                                        {round(float(entr_premio[1]), 2)},
-                                                                        (SELECT id_user FROM projeu_users WHERE Matricula = {entr_premio[0]}), 
-                                                                        '{entr_premio[2]}'
-                                                                        """
-                                                            if len(entr_premio) > 3:
-                                                                range_aux = 5
-                                                                values += f""", {entr_premio[3]}"""
-                                                            
-                                                            if len(entr_premio) > 4:
-                                                                range_aux = 8
-                                                                values += f""", {entr_premio[4]}, {entr_premio[5]}"""
-                                                            
-                                                            if len(entr_premio) > 8:
-                                                                values += f', {entr_premio[8]}'
-            
-                                                            cmd_insert_premio = f'''
-                                                            INSERT INTO projeu_premio_entr ({limp_columns(columns_p, range_aux)})
-                                                            VALUES ({values});'''
-                                                            
-                                                            mycursor1.execute(cmd_insert_premio)
-                                                            conexao.commit()
-                                            
-                                                    else:
-                                                        cont_erro =+ 1
-                                                        st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
-                                                    
-                                                mycursor1.close()
-                                            #except:
-                                            #    cont_erro =+ 1
-                                            #    st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
-                                            #if cont_erro < 1:
-                                            #    st.toast('Dados de homologação atualizados', icon='✅')
+                                    if btt_homo:
+                                        if param_sprint[idx_parm] == 'ENTREGA FINAL' and str(dadosOrigin[0][38]) != '1':
+                                            st.toast('Primeramente, é necessário finalizar o projeto.', icon='❌')
                                         else:
-                                            st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
+                                            if len(parec_homol) > 0:
+                                                if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0:
+                                                    try:
+                                                        def trat_homol(name_hmo):
+                                                            aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
+                                                                    'PÓS MVP': 'SPRINT PÓS MVP',
+                                                                    'MVP': 'MVP',
+                                                                    'ENTREGA FINAL': 'ENTREGA FINAL'}
+                                                            
+                                                            retorno = aux_dic[str(name_hmo).strip().upper()]
+                                                            if str(dadosOrigin[0][38]) == '1':
+                                                                retorno = 'ENTREGA FINAL'
+
+                                                            return retorno
+                                                        
+                                                        type_homol = trat_homol(type_homol)
+                                                        
+                                                        cont_erro = 0
+                                                        mycursor1 = conexao.cursor()
+                                                        columns = ['tip_homolog', 'date_homolog', 'status_homolog',
+                                                                    'parecer_homolog']
+                                                        
+                                                        values = [f'"{type_homol}"', f'STR_TO_DATE("{date_homol}", "%Y-%m-%d")',
+                                                                    f'"{stt_homol}"', f'"{parec_homol}"']
+                                                        
+                                                        for idx_clm in range(len(columns)):
+                                                            cmdHOMO = f'UPDATE projeu_sprints SET {columns[idx_clm]} = {values[idx_clm]} WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
+                                                            
+                                                            mycursor1.execute(cmdHOMO)
+                                                            conexao.commit()
+
+                                                        if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
+                                                            
+                                                            if str(ddSprint[list([x[4] for x in ddSprint]).index(str(id_sprint))][5]) == str(0):   
+            
+                                                                premio_aux = CalculoPrêmio(
+                                                                    str(project_filter).strip(),
+                                                                    str(f'{dadosOrigin[0][36]} {dadosOrigin[0][37]}').upper(), dadosOrigin[0][4])
+            
+                                                                valores = premio_aux.valorEvento()
+
+                                                                bonif_sprints = [int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'ENTREGA FINAL' else [int(x) for x in func_split(dadosOrigin[0][11])]
+                                                                
+                                                                bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], bonif_sprints)
+                                                                
+                                                                ################### SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU ###################
+                                                                                                            
+                                                                if str(type_homol).strip() != 'MVP' and str(dadosOrigin[0][38]) != '1': #AQUI É ONDE É TRATADO OS DADOS DE EVENTOS TRADICIONAIS - PRÉ-MVP E PÓS-MVP
+                                                                    #PEGANDO OS DADOS DOS GESTORES
+                                                                    
+                                                                    bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G']]
+                                                                    
+                                                                    #PEGANDO OS DADOS DOS ESPECIALISTAS
+                                                                    bonific_list_aux = [[f'{matr}', f'{float(list(dict(value).values())[0])}', 'E'] for matr, value in dict(bonific_calcul['ESPECIALISTA']['ValorParaMVP']).items()]
+
+                                                                    columns_p = ['id_sprint_fgkey', 'valor',
+                                                                                'bonificado_fgkey', 'funcao_premio', 'id_entreg_fgkey',
+                                                                                'hrs_normalizadas', 'dificuldade']
+
+                                                                    #PEGANDO OS DADOS DA SQUAD
+                                                                    bonific_list_aux1 = [[entrega[8], #MATRICULA
+                                                                                            bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Bonificação'], #VALOR DA BONIFICAÇÃO
+                                                                                            'EX',
+                                                                                            entrega[6], #ID DA ENTREGA
+                                                                                            bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['HorasNormalizadas'], #HORAS NORMALIZADAS
+                                                                                            bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Dificuldade'], #DIFICULDADE
+                                                                                            entrega[2], #NOME DA PESSOA
+                                                                                            entrega[0] #ID DA SPRINT
+                                                                                        ] for entrega in [entr for entr in spEntregas if entr[1] != None]]
+                                                                    
+                                                                else: #AQUI PARA CASO SEJA MVP OU ENTREGA FINAL
+
+                                                                    #PEGANDO OS DADOS DOS GESTORES
+                                                                    bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G', f'"{str(type_homol).strip().upper()}"']] 
+
+                                                                    #PEGANDO OS DADOS DOS ESPECIALISTAS
+                                                                    bonific_list_aux = [[f'{matr}', f'{float(list(dict(value).values())[0])}', 'E', f'"{str(type_homol).strip().upper()}"'] for matr, value in dict(bonific_calcul['ESPECIALISTA']['ValorParaMVP']).items()]
+
+                                                                    columns_p = ['id_sprint_fgkey', 'valor',
+                                                                                'bonificado_fgkey', 'funcao_premio', 'opcional_evento',
+                                                                                'hrs_normalizadas', 'dificuldade', 'opcional_hrs_necess']
+                                                                    
+                                                                    #PEGANDO OS DADOS DA SQUAD
+                                                                    bonific_list_aux1 = [[
+                                                                                        f'(SELECT Matricula FROM projeu_users WHERE Nome LIKE "%{str(name).strip()}%")',
+                                                                                        bonific_calcul['SQUAD'][name]['BonificacaoSprint'],
+                                                                                        'EX',
+                                                                                        f'"{str(type_homol).strip().upper()}"',
+                                                                                        bonific_calcul['SQUAD'][name]['HorasNormalTotal'],
+                                                                                        int(sum([x['Dificuldade'] for x in dict(bonific_calcul['SQUAD'][name]['Entregas']).values()]) / len(dict(bonific_calcul['SQUAD'][name]['Entregas']))),
+                                                                                        name,
+                                                                                        ddSprint[cont_sprint - 1][4],
+                                                                                        sum([x['Horas'] for x in dict(bonific_calcul['SQUAD'][name]['Entregas']).values()])
+                                                                                        ] for name in dict(bonific_calcul['SQUAD']).keys()]
+                                                                
+                                                                bonific_list.extend(bonific_list_aux)
+                                                                bonific_list.extend(bonific_list_aux1)
+                                                                
+                                                                limp_columns = lambda list_columns, range: str(list_columns[:range]).replace("'", "").replace("[", "").replace("]","")
+                                                                
+                                                                for entr_premio in bonific_list:
+                                                                    range_aux = 4
+                                                                    values = f"""{idx_spr},
+                                                                                {round(float(entr_premio[1]), 2)},
+                                                                                (SELECT id_user FROM projeu_users WHERE Matricula = {entr_premio[0]}), 
+                                                                                '{entr_premio[2]}'
+                                                                                """
+                                                                    if len(entr_premio) > 3:
+                                                                        range_aux = 5
+                                                                        values += f""", {entr_premio[3]}"""
+                                                                    
+                                                                    if len(entr_premio) > 4:
+                                                                        range_aux = 8
+                                                                        values += f""", {entr_premio[4]}, {entr_premio[5]}"""
+                                                                    
+                                                                    if len(entr_premio) > 8:
+                                                                        values += f', {entr_premio[8]}'
+                    
+                                                                    cmd_insert_premio = f'''
+                                                                    INSERT INTO projeu_premio_entr ({limp_columns(columns_p, range_aux)})
+                                                                    VALUES ({values});'''
+                                                                    
+                                                                    mycursor1.execute(cmd_insert_premio)
+                                                                    conexao.commit()
                                                     
-                                    else:
-                                        st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
+                                                            else:
+                                                                cont_erro =+ 1
+                                                                st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
+                                                            
+                                                        mycursor1.close()
+                                                    except:
+                                                        cont_erro =+ 1
+                                                        st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
+                                                    if cont_erro < 1:
+                                                        st.toast('Dados de homologação atualizados', icon='✅')
+                                                else:
+                                                    st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
+                                                            
+                                            else:
+                                                st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
 
                                 st.text(' ')
                                 st.divider()
@@ -1217,6 +1215,7 @@ elif authentication_status:
                                                                                             5] != '' else 0],
                                                                       key=f'Planj status{idx_spr}  - {idx_parm} - {ativIDX}',
                                                                       label_visibility="collapsed")
+                                        
                                     with col5:
                                         opc_compl = ['Fácil', 'Médio', 'Difícil']
                                         compl_entreg = st.text_input('Compl.', opc_compl[
@@ -1386,3 +1385,23 @@ elif authentication_status:
                                 font_TITLE('ADCIONAR OBSERVAÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
                                 obs_sprt = st.text_area('awdadad',label_visibility="collapsed", key=f'OBSERVAÇAÕ{idx_spr}')
                                 btt_obs = st.button('Enviar', key=f'btt obsrv {idx_spr}')
+            
+            if str(matriUser).strip() == str(dadosOrigin[0][3]).strip():
+                if str(dadosOrigin[0][24]).strip() in ['Em Andamento'] and 'ENTREGA FINAL' in [str(x).strip().upper() for x in func_split(dadosOrigin[0][12])]:
+                    button_final_proj = st.button('Finalizar Projeto', key='FINAL DO PROJETO')
+                
+                    if button_final_proj:
+                        mycursor = conexao.cursor()
+
+                        cmd_final_proj1 = f'UPDATE projeu_projetos SET check_proj = 1 WHERE id_proj = {dadosOrigin[0][0]};'           
+                        mycursor.execute(cmd_final_proj1)
+                        conexao.commit()
+
+                        cmd_final_proj2 = f'UPDATE projeu_projetos SET status_proj = "Concluído" WHERE id_proj = {dadosOrigin[0][0]};'           
+                        mycursor.execute(cmd_final_proj2)
+                        conexao.commit()
+
+                        st.toast('Projeto Finalizado!', icon='✅')
+                        mycursor.close()
+                        sleep(1.5)
+                        st.rerun()
