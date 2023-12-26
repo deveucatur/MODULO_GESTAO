@@ -802,7 +802,7 @@ elif authentication_status:
                         listDadosAux = []
                         cont_sprint += 1
 
-                        name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] != 'MVP' else 'Evento - MVP'
+                        name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] not in ('MVP', 'ENTREGA FINAL') else f'Evento - {param_sprint[idx_parm]}'
                         with st.expander(name_expander):
                             id_sprint = idx_spr
                             #FILTRANDO ENTREGAS DAQUELA SPRINT
