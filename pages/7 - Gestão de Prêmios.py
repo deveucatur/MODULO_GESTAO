@@ -233,7 +233,13 @@ elif authentication_status:
                     dd_premio_sprint = {number_sp: [x for x in dd_premio if str(x[1]).strip() == str(number_sp).strip()] for number_sp in list(set([x[1] for x in dd_premio]))}
                     
                     for sprint, dd_sprint in dd_premio_sprint.items():
-                        with st.expander(f'{proj_name} - Sprint {sprint}'):
+                        name_expander = f'Sprint {sprint}'
+                        if sprint == 0:
+                            name_expander = 'Evento MVP'
+                        elif 'ENTREGA FINAL' in [str(x[15]).strip().upper() for x in dd_sprint]:
+                            name_expander = 'Entrega Final'
+                        
+                        with st.expander(f'{proj_name} - {name_expander}'):
                             
                             def colabs_proj(matricula = 0):
                                 dados_by_project = [x for x in equipeBD if str(x[1]).lower().strip() == str(proj_name).strip().lower()]
