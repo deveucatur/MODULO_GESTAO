@@ -1,16 +1,11 @@
 import streamlit as st
 import mysql.connector
 from util import font_TITLE
-from util import string_to_datetime
-from utilR import CalculoPrêmio, menuProjeuHtml, menuProjeuCss
+from util import string_to_datetime, CalculoPrêmio
 from datetime import date
 import streamlit_authenticator as stauth
 
-st.set_page_config(
-    page_title="Cadastro de Parâmetros", 
-    layout="wide",
-    initial_sidebar_state='collapsed')
-
+st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide")
 conexao = mysql.connector.connect(
     passwd='nineboxeucatur',
     port=3306,
@@ -21,6 +16,11 @@ conexao = mysql.connector.connect(
 
 ####### CONCULTA BAGUNÇADA DE DADOS GERAIS SOBRE OS PROGRAMAS #######
 mycursor = conexao.cursor()
+
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV');"
+mycursor.execute(comandUSERS)
+dadosUser = mycursor.fetchall()
+
 consult1AUX = """
             SELECT 
                 T2.id_prog AS idTIPOPROG,
@@ -140,6 +140,8 @@ ORDER  BY projeu_porc_func.id_equip;"""
 mycursor.execute(consult4AUX)
 consulta4 = mycursor.fetchall()
 
+mycursor.close()
+
 ################### TRATAMENTO DOS DADOS ###################
     #RETORNO --->IDPROGRAMA,  NOME DO PROGRAMA,  MACROPROCESSO DE PROGRAMA    
 progrmBD = [[idPG, list(set([linh[1] for linh in consulta1 if linh[0] == idPG]))[0], list(set([linh1[2] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[3] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[4] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[5] for linh1 in consulta1 if linh1[0] == idPG]))[0], list(set([linh1[10] for linh1 in consulta1 if linh1[0] == idPG]))[0]] for idPG in list(set([x[0] for x in consulta1]))]
@@ -153,11 +155,6 @@ prog_pj = []
 for list11 in list(set([x[11] for x in consulta1])):
     for prog in str(list11).split(','):
        prog_pj.append(prog.strip()) 
-
-comandUSERS = 'SELECT * FROM projeu_users;'
-mycursor.execute(comandUSERS)
-dadosUser = mycursor.fetchall()
-mycursor.close()
 
 names = [x[2] for x in dadosUser]
 usernames = [x[3] for x in dadosUser]
@@ -191,17 +188,7 @@ elif authentication_status:
     with st.sidebar:
         authenticator.logout('Logout', 'main')
 
-    user = [x[2] for x in dadosUser if x[3] == username][0]
-
-    primeiroNome = user.split()[0]
-
-################### APRESENTAÇÃO DO FRONT ###################
-
-    menuHtml = menuProjeuHtml(primeiroNome)
-    menuCss = menuProjeuCss()
-    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
-    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
-
+    ################### APRESENTAÇÃO DO FRONT ###################
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
     font_TITLE('CADASTRO DE PARÂMETROS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
 
@@ -533,7 +520,7 @@ elif authentication_status:
                     if float(ivsProget) <= sum(list(investi_event.values())):
                         if dados_proj[0][7] != None and dados_proj[0][7] != ' ':
                             columns = ['valor_base', 'porc_pre_mvp', 'porc_mvp', 'porc_pos_mvp', 'porc_entrega', 'porc_gestor', 'porc_espec', 'porc_squad']
-                            values = [ivsProget, event_porc['SPRINT PRÉ MVP'], event_porc['MVP'], event_porc['SPRINT PÓS MVP'], event_porc['ENTREGA FINAL'], equip_porc['GESTOR'], equip_porc['ESPECIALISTA'], equip_porc['SQUAD']]
+                            values = [ivsProget, event_porc['PRÉ MVP'], event_porc['MVP'], event_porc['PÓS MVP'], event_porc['ENTREGA FINAL'], equip_porc['GESTOR'], equip_porc['ESPECIALISTA'], equip_porc['SQUAD']]
                             
                             for idx_columns in range(len(columns)):
                                 cmd = f'UPDATE projeu_premio_proj_diferent SET {columns[idx_columns]} = {values[idx_columns]} WHERE id_pppd = {dados_proj[0][17]};'
@@ -557,9 +544,9 @@ elif authentication_status:
                             VALUES (
                                 {dados_proj[0][0]},
                                 {ivsProget},
-                                {event_porc['SPRINT PRÉ MVP']},
+                                {event_porc['PRÉ MVP']},
                                 {event_porc['MVP']},
-                                {event_porc['SPRINT PÓS MVP']},
+                                {event_porc['PÓS MVP']},
                                 {event_porc['ENTREGA FINAL']},
                                 {equip_porc['GESTOR']},
                                 {equip_porc['ESPECIALISTA']},
@@ -575,6 +562,4 @@ elif authentication_status:
                         st.toast(f'O investimento total não pode ser maior que R${sum(list(investi_event.values()))}', icon='❌')
                 else:
                     st.toast('A soma das porcentagens dos eventos e das equipe tem que ser igual a 1.', icon='❌')
-            #bonific_calcul = fcalculo1.CalculaSprint(valorbase['SPRINT PÓS MVP']['ValorPorSprint'], 2, 1)
-    #
-            #st.write(bonific_calcul)
+     
