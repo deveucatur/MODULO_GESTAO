@@ -203,7 +203,7 @@ JOIN
 mycursor.execute(sqlCanva)
 dadosCanva = mycursor.fetchall()
 
-comandUSERS = 'SELECT * FROM projeu_users;'
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV');"
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 
