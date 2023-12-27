@@ -1,6 +1,5 @@
 import datetime
 import streamlit as st
-import pandas as pd
 from util import font_TITLE, string_to_datetime, cardGRANDE, displayInd, ninebox, css_9box, nineboxDatasUnidades, CalculoPrêmio
 from time import sleep
 import mysql.connector
@@ -177,9 +176,10 @@ GROUP BY
 mycursor.execute(comand)
 ddPaging = mycursor.fetchall()
 
-comandUSERS = 'SELECT * FROM projeu_users;'
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV');"
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
+
 
 mycursor.execute("""SELECT Matricula, 
                  Nome FROM projeu_users;"""
@@ -866,6 +866,7 @@ elif authentication_status:
                                             with col2:
                                                 opc_stt = ['🟨 Backlog', '🟥 Impeditivo', '🟦 Executando',  '🟩 Concluído']
                                                 status_entreg = st.selectbox('Status', opc_stt, opc_stt.index(str(spEntregas[ativIDX][5]).strip()) if spEntregas[ativIDX][5] != None and spEntregas[ativIDX][5] != '' else 0, key=f'status{idx_spr}  - {idx_parm} - {ativIDX}', disabled=block_sprint, label_visibility="collapsed")
+                                                
                                                 opc_colb = func_split(dadosOrigin[0][21])
                                                 colab_entreg = st.selectbox('Colaborador', opc_colb, opc_colb.index(spEntregas[ativIDX][2]) if spEntregas[ativIDX][2] != None and spEntregas[ativIDX][2] != '' else 0, key=f'colab{idx_spr} - {ativIDX} - {idx_parm}',disabled=block_sprint, label_visibility="collapsed")
 
@@ -1371,6 +1372,7 @@ elif authentication_status:
 
                                     st.text(' ')
                                     st.text(' ')
+
                             with tab4:
                                 #OBSERVAÇÃO DA SPRINT SELECIONADA
                                 obsv_sprint = [x for x in ObservBD if x[1] == idx_spr]
