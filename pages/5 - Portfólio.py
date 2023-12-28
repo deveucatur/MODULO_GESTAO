@@ -482,6 +482,20 @@ elif authentication_status:
                                 projeu_sprints PS ON id_sprint = id_sprint_fgkey
                             WHERE 
                                 PS.id_sprint IN ({dadosOrigin[0][27] if dadosOrigin[0][27] != None else 'null'});"""
+        
+        cmd_sp_by_sprint = f'''
+                            SELECT 
+                                PEE.id_sp,
+                                PS.number_sprint,
+                                PEE.id_sprt_fgkey,
+                                PU.id_user,
+                                PU.Matricula,
+                                PU.Nome,
+                                PEE.status_sp
+                            FROM projeu_especialist_sprint AS PEE
+                            JOIN projeu_users PU ON PU.id_user = PEE.id_colab_fgkey
+                            JOIN projeu_sprints PS ON PS.id_sprint = PEE.id_sprt_fgkey
+                            WHERE PS.id_proj_fgkey = {str(dadosOrigin[0][0]).strip()} AND PEE.status_sp = 'A';'''
 
     st.text(' ')
     st.text(' ')
@@ -492,13 +506,17 @@ elif authentication_status:
         EntregasPlanjBD = mycursor.fetchall()
 
         #CONSULTANDO OS DADOS DAS ENTREGAS
-        mycursor = conexao.cursor()  
         mycursor.execute(cmd_entregas)
         EntregasBD = mycursor.fetchall()
         
         #CONSULTANDO OS DADOS DE OBSERVAÇÕES
         mycursor.execute(cmd_observcao)
         ObservBD = mycursor.fetchall()
+
+        #CONSULTANDO OS ESPECIALISTAS DAS SPRINTS
+        mycursor.execute(cmd_sp_by_sprint)
+        speac_sprintBD = mycursor.fetchall()
+
         mycursor.close()
         
         font_TITLE(f'{dadosOrigin[0][1]}', fonte_Projeto,"'Bebas Neue', sans-serif", 31, 'center', '#228B22')
@@ -738,7 +756,7 @@ elif authentication_status:
                 st.toast('Sucesso na adição da sprint!', icon='✅')
                 st.text(' ')
                 
-                sleep(1.5)
+                sleep(0.6)
                 st.rerun()
 
             if button_exSprint:
@@ -767,7 +785,7 @@ elif authentication_status:
                         mycursor.close()
                         st.toast('Excluido!', icon='✅') 
 
-                        sleep(1.5)
+                        sleep(0.6)
                         st.rerun()
                     else:
                         st.toast('Primeiramente, é necessário excluir todas as atividades dessa sprint.', icon='❌')
@@ -827,10 +845,30 @@ elif authentication_status:
                                 font_TITLE('ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ2:
                                 font_TITLE('STATUS DO PROJETO - EM ANDAMENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
-                                
-                            especialist_proj = [list(func_split(dadosOrigin[0][21]))[x] for x in range(len(func_split(dadosOrigin[0][22]))) if str(list(func_split(dadosOrigin[0][22]))[x]).upper() == 'ESPECIALISTA']
-                            especialist_sprint = st.multiselect('Especialistas',especialist_proj, especialist_proj, key=f'especialista multi{idx_spr}')
+
+                            spc_from_sprintBD = [x for x in speac_sprintBD if str(x[2]).strip() == str(idx_spr).strip()]
                             
+                            especialist_proj = [list(func_split(dadosOrigin[0][21]))[x] for x in range(len(func_split(dadosOrigin[0][22]))) if str(list(func_split(dadosOrigin[0][22]))[x]).upper() == 'ESPECIALISTA']
+                            
+                            especialist_sprint = st.multiselect('Especialistas',especialist_proj, [str(x[5]).strip() for x in spc_from_sprintBD], key=f'especialista multi{idx_spr}')
+
+                            def check_sps_sprt(especialist):
+                                especialist = str(especialist).strip()
+
+                                #ESTÁ DENTRO DA BASE DE DADOS DE ESPECIALISTAS DA SPRINT MAS NÃO ESTÁ DENTRO DOS ESPECIALISTAS SELECIONADOS - (EXCLUÍDO)
+                                if especialist in [str(x[5]).strip() for x in spc_from_sprintBD] and especialist not in [str(x).strip() for x in especialist_sprint]:
+                                    cmd = f'UPDATE projeu_especialist_sprint SET status_sp = "I" WHERE id_sp = {[x[0] for x in spc_from_sprintBD if str(x[5]).strip() == especialist][0]};'
+                                
+                                #ESPECIALISTAS SELECIONADO QUE NÃO ESTÁ DENTRO DA BASE DE ESPECIALISTAS - (ADCIONADO)
+                                elif especialist not in [str(x[5]).strip() for x in spc_from_sprintBD]:
+                                    cmd = f'''INSERT INTO projeu_especialist_sprint(id_sprt_fgkey, id_colab_fgkey, status_sp) 
+                                                VALUES (
+                                                    "{str(idx_spr).strip()}",
+                                                    (SELECT PUI.id_user FROM projeu_users PUI WHERE PUI.Nome LIKE "%{especialist}%"), 
+                                                    "A");'''
+                                
+                                return cmd
+
                             st.text(' ')
                             spEntregas = [x for x in spEntregas if x[1] != None and x[2] != None and x[3] != None]
                             
@@ -876,6 +914,11 @@ elif authentication_status:
                                         entrgasBD_by_sprint = [x for x in EntregasBD if str(x[7]).strip() == str(idx_spr).strip()]
 
                                         limp_entrg = lambda entr: str(entr).strip().replace('"', "'")
+
+                                        dif = list(set(especialist_sprint) - set([str(x[5]).strip() for x in spc_from_sprintBD])) #DESCOBRINDO SE FOI ADCIONADO ALGUM ESPECIALISTA DA SPRINT
+                                        dif1 = list(set([str(x[5]).strip() for x in spc_from_sprintBD]) - set(especialist_sprint)) #DESCOBRINDO SE FOI EXCLUIDO ALGUM ESPECIALISTA A SPRINT
+
+                                        especialist_dif = list(dif + dif1)
                                         if len(entrgasBD_by_sprint) > 0:
                                             col1, col2, col3 = st.columns([1,3,7])
                                             with col1:
@@ -927,6 +970,11 @@ elif authentication_status:
                                                                 mycursor.execute(cmd_insert)
                                                                 conexao.commit()
 
+                                                    for spec in especialist_dif:
+                                                        cmd_especialist = check_sps_sprt(spec)
+                                                        mycursor.execute(cmd_especialist)
+                                                        conexao.commit()
+
                                                 mycursor.close()
                                                 st.toast('Dados Atualizados!', icon='✅')
 
@@ -949,6 +997,12 @@ elif authentication_status:
 
                                                         mycursor.execute(cmd_insert)
                                                         conexao.commit()
+
+                                                for spec in especialist_dif:
+                                                    cmd_especialist = check_sps_sprt(spec)
+                                                    mycursor.execute(cmd_especialist)
+                                                    conexao.commit()
+
                                                 st.toast('Entregas Enviadas!', icon='✅')
                                                 mycursor.close()
 
@@ -1216,7 +1270,7 @@ elif authentication_status:
                                                                                             5] != '' else 0],
                                                                       key=f'Planj status{idx_spr}  - {idx_parm} - {ativIDX}',
                                                                       label_visibility="collapsed")
-                                        
+
                                     with col5:
                                         opc_compl = ['Fácil', 'Médio', 'Difícil']
                                         compl_entreg = st.text_input('Compl.', opc_compl[
@@ -1405,5 +1459,5 @@ elif authentication_status:
 
                         st.toast('Projeto Finalizado!', icon='✅')
                         mycursor.close()
-                        sleep(1.5)
+                        sleep(0.6)
                         st.rerun()
