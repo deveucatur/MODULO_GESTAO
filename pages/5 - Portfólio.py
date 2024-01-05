@@ -485,7 +485,7 @@ elif authentication_status:
                             JOIN 
                                 projeu_sprints PS ON id_sprint = id_sprint_fgkey
                             WHERE 
-                                PS.id_sprint IN ({dadosOrigin[0][27].replace(';', ',') if dadosOrigin[0][27] != None else 'null'});"""
+                                PS.id_sprint IN ({dadosOrigin[0][27].replace('~/>', ',') if dadosOrigin[0][27] != None else 'null'});"""
 
     st.text(' ')
     st.text(' ')
