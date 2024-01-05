@@ -163,14 +163,14 @@ sqlCanva = f"""SELECT
     nome_mvp, produto_mvp, 
     (
 		SELECT 
-			GROUP_CONCAT(name_metric) 
+			GROUP_CONCAT(name_metric SEPARATOR '~/>') 
 		FROM projeu_metricas 
         WHERE id_prj_fgkey = projeu_projetos.id_proj
 	) AS metricas, 
     result_esperad, 
     (
         SELECT 
-            GROUP_CONCAT(Nome) 
+            GROUP_CONCAT(Nome SEPARATOR '~/>') 
         FROM projeu_users 
         WHERE id_user IN (
                             SELECT 
@@ -182,7 +182,7 @@ sqlCanva = f"""SELECT
     ) AS colaborador, 
     (
         SELECT 
-            GROUP_CONCAT(papel) 
+            GROUP_CONCAT(papel SEPARATOR '~/>') 
         FROM 
             projeu_registroequipe 
         WHERE 
@@ -190,7 +190,7 @@ sqlCanva = f"""SELECT
     ) AS papel, 
     (
         SELECT 
-            GROUP_CONCAT(entreg) 
+            GROUP_CONCAT(entreg SEPARATOR '~/>') 
         FROM 
             projeu_princEntregas 
         WHERE id_proj_fgkey = projeu_projetos.id_proj
