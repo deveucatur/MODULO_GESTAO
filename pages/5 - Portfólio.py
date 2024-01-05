@@ -6,7 +6,7 @@ from time import sleep
 import mysql.connector
 from datetime import date, timedelta, datetime
 from collections import Counter
-from util import PlotCanvas, menuProjeuHtml, menuProjeuCss
+from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss
 import streamlit_authenticator as stauth
 
 
