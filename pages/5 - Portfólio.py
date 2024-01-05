@@ -42,32 +42,32 @@ SELECT
     projeu_projetos.result_esperad as objetivo_projet,
     projeu_projetos.produto_entrega_final,
     (
-        SELECT GROUP_CONCAT(number_sprint SEPARATOR ';') 
+        SELECT GROUP_CONCAT(number_sprint SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as number_sprint,
     (
-        SELECT GROUP_CONCAT(status_sprint SEPARATOR ';') 
+        SELECT GROUP_CONCAT(status_sprint SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as status_sprint,
     (
-        SELECT GROUP_CONCAT(date_inic_sp SEPARATOR ';') 
+        SELECT GROUP_CONCAT(date_inic_sp SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as inic_sprint,
     (
-        SELECT GROUP_CONCAT(date_fim_sp SEPARATOR ';') 
+        SELECT GROUP_CONCAT(date_fim_sp SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as fim_sprint,
     (
-        SELECT GROUP_CONCAT(status_homolog SEPARATOR ';') 
+        SELECT GROUP_CONCAT(status_homolog SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as status_homolog_sprint,
     (
-        SELECT GROUP_CONCAT(nome_Entrega SEPARATOR ';') 
+        SELECT GROUP_CONCAT(nome_Entrega SEPARATOR '~/>') 
         FROM projeu_entregas 
         WHERE projeu_entregas.id_sprint IN (
             SELECT id_sprint 
@@ -76,7 +76,7 @@ SELECT
         )
     ) as entrega_name,
     (
-        SELECT GROUP_CONCAT(executor SEPARATOR ';') 
+        SELECT GROUP_CONCAT(executor SEPARATOR '~/>') 
         FROM projeu_entregas 
         WHERE projeu_entregas.id_sprint IN (
             SELECT id_sprint 
@@ -85,7 +85,7 @@ SELECT
         )
     ) as executor_entrega,
     (
-        SELECT GROUP_CONCAT(hra_necess SEPARATOR ';') 
+        SELECT GROUP_CONCAT(hra_necess SEPARATOR '~/>') 
         FROM projeu_entregas 
         WHERE projeu_entregas.id_sprint IN (
             SELECT id_sprint 
@@ -94,7 +94,7 @@ SELECT
         )
     ) as hrs_entrega,
     (
-        SELECT GROUP_CONCAT(compl_entrega SEPARATOR ';') 
+        SELECT GROUP_CONCAT(compl_entrega SEPARATOR '~/>') 
         FROM projeu_entregas 
         WHERE projeu_entregas.id_sprint IN (
             SELECT id_sprint 
@@ -103,13 +103,13 @@ SELECT
         )
     ) as complex_entreg,
     (
-        SELECT GROUP_CONCAT(id_registro SEPARATOR ';') 
+        SELECT GROUP_CONCAT(id_registro SEPARATOR '~/>') 
         FROM projeu_registroequipe 
         WHERE projeu_registroequipe.id_projeto = projeu_projetos.id_proj
         AND projeu_registroequipe.status_reg = 'A'
     ) as id_registro,
     (
-        SELECT GROUP_CONCAT(Nome SEPARATOR ';') 
+        SELECT GROUP_CONCAT(Nome SEPARATOR '~/>') 
         FROM projeu_users 
         WHERE id_user IN (
             SELECT id_colab 
@@ -119,14 +119,14 @@ SELECT
         )
     ) as colaborador,
     (
-        SELECT GROUP_CONCAT(papel SEPARATOR ';') 
+        SELECT GROUP_CONCAT(papel SEPARATOR '~/>') 
         FROM projeu_registroequipe 
         WHERE projeu_registroequipe.id_projeto = projeu_projetos.id_proj
         AND projeu_registroequipe.status_reg = 'A'
     ) as PAPEL,
     (
         SELECT 
-            GROUP_CONCAT(Matricula SEPARATOR ';') AS MATRICULA_EQUIPE
+            GROUP_CONCAT(Matricula SEPARATOR '~/>') AS MATRICULA_EQUIPE
         FROM projeu_users AS PU
         INNER JOIN projeu_registroequipe AS PR ON PU.id_user = PR.id_colab 
         WHERE PR.id_projeto = projeu_projetos.id_proj
@@ -136,7 +136,7 @@ SELECT
     projeu_projetos.produto_mvp AS PRODUTO_MVP,
     projeu_projetos.prazo_entreg_final,
     (
-        SELECT GROUP_CONCAT(id_sprint SEPARATOR ';') 
+        SELECT GROUP_CONCAT(id_sprint SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as id_sprint,
@@ -146,25 +146,25 @@ SELECT
     projeu_projetos.status_proj,
     (
 		SELECT 
-			GROUP_CONCAT(entreg SEPARATOR ';')
+			GROUP_CONCAT(entreg SEPARATOR '~/>')
 		FROM projeu_princEntregas 
 		WHERE id_proj_fgkey = projeu_projetos.id_proj
 	) AS PRINCIPAIS_ENTREGAS,
     (
 		SELECT 
-			GROUP_CONCAT(name_metric SEPARATOR ';') 
+			GROUP_CONCAT(name_metric SEPARATOR '~/>') 
 		FROM projeu_metricas 
 		WHERE id_prj_fgkey = projeu_projetos.id_proj
 	) AS METRICAS,
     (
 		SELECT 
-			GROUP_CONCAT(projeu_sprints.check_sprint SEPARATOR ';') 
+			GROUP_CONCAT(projeu_sprints.check_sprint SEPARATOR '~/>') 
 		FROM projeu_sprints 
 		WHERE id_proj_fgkey = projeu_projetos.id_proj
 	) AS CHECK_SPRINT,
     (
 		SELECT 
-			GROUP_CONCAT(projeu_sprints.data_check SEPARATOR ';') 
+			GROUP_CONCAT(projeu_sprints.data_check SEPARATOR '~/>') 
 		FROM projeu_sprints 
 		WHERE id_proj_fgkey = projeu_projetos.id_proj
 	) AS DATA_CHECK,
@@ -364,12 +364,12 @@ elif authentication_status:
     matriUser = [x[1] for x in dadosUser if x[3] == username][0]
     user = [x[2] for x in dadosUser if x[3] == username][0]
 
-    primeiroNome = user.split()[0]
-
-    menuHtml = menuProjeuHtml(primeiroNome)
-    menuCss = menuProjeuCss()
-    st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
-    st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
+    #primeiroNome = user.split()[0]
+#
+    #menuHtml = menuProjeuHtml(primeiroNome)
+    #menuCss = menuProjeuCss()
+    #st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+    #st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
     font_TITLE('GERIR PORTFÓLIO', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
@@ -382,9 +382,9 @@ elif authentication_status:
     with col1:
         displayInd('Total', f'{len(id_projcts:=list(set([x[0] for x in ddPaging])))}', 1, 3)
     with col2:
-        displayInd('Não Iniciado', f'{len(list(set([x[0] for x in ddPaging if x[13] == None or string_to_datetime(str(x[13]).split(";")[0]) > date.today()])))}', 1, 3)
+        displayInd('Não Iniciado', f'{len(list(set([x[0] for x in ddPaging if x[13] == None or string_to_datetime(str(x[13]).split("~/>")[0]) > date.today()])))}', 1, 3)
     with col3:
-        displayInd('Em Andamento', f'{len(list(set([x[0] for x in ddPaging if x[13] != None and string_to_datetime(str(x[13]).split(";")[0]) < date.today() and x[24] != "Concluído"])))}', 1, 3)
+        displayInd('Em Andamento', f'{len(list(set([x[0] for x in ddPaging if x[13] != None and string_to_datetime(str(x[13]).split("~/>")[0]) < date.today() and x[24] != "Concluído"])))}', 1, 3)
     with col4:
         displayInd('Paralisado', f'{len([x[1] for x in ddPaging if str(x[31]).strip() == "Paralisado"])}', 1, 3)
     with col5:
@@ -512,8 +512,8 @@ elif authentication_status:
         investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != "None" else " "
         gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != "None" else " "
         
-        pessoas = str(dadosOrigin[0][21]).split(';') if dadosOrigin[0][21] != None else ''
-        funcao = str(dadosOrigin[0][22]).split(';') if dadosOrigin[0][22] != None else ''
+        pessoas = str(dadosOrigin[0][21]).split('~/>') if dadosOrigin[0][21] != None else ''
+        funcao = str(dadosOrigin[0][22]).split('~/>') if dadosOrigin[0][22] != None else ''
         equipBD = [[pessoas[x], funcao[x]] for x in range(len(pessoas))]
 
         resultados = []
@@ -524,13 +524,13 @@ elif authentication_status:
                 resultados = " "
         
         if dadosOrigin[0][32] != None:
-            entregas = str(dadosOrigin[0][32]).split(';')
+            entregas = str(dadosOrigin[0][32]).split('~/>')
         else:
             entregas = ' '
 
-        metricas = str(dadosOrigin[0][33]).split(';') if dadosOrigin[0][33] != None else ' '
-        prodProjetos = str(dadosOrigin[0][10]).split(';') if dadosOrigin[0][10] != None else " "
-        prodMvps = str(dadosOrigin[0][25]).split(';') if dadosOrigin[0][24] != None else " "
+        metricas = str(dadosOrigin[0][33]).split('~/>') if dadosOrigin[0][33] != None else ' '
+        prodProjetos = str(dadosOrigin[0][10]).split('~/>') if dadosOrigin[0][10] != None else " "
+        prodMvps = str(dadosOrigin[0][25]).split('~/>') if dadosOrigin[0][24] != None else " "
         
     #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos
         canvas = PlotCanvas(projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, [x[0] for x in equipBD if x[1] == 'Especialista'], [x[0] for x in equipBD if x[1] == 'Executor'], entregas, investimentos)
@@ -554,9 +554,9 @@ elif authentication_status:
         with col2:
             displayInd('Progresso do Projeto', f'{50}%', 1, 3)
         with col3:
-            displayInd('Sprint Atual', f'{len(str(dadosOrigin[0][11]).split(";"))}', 1, 3)
+            displayInd('Sprint Atual', f'{len(str(dadosOrigin[0][11]).split("~/>"))}', 1, 3)
         with col4:
-            displayInd('Total de Horas', f'{sum([int(x) for x in str(dadosOrigin[0][18]).split(";")]) if dadosOrigin[0][18] != None else 0}', 1, 3)
+            displayInd('Total de Horas', f'{sum([int(x) for x in str(dadosOrigin[0][18]).split("~/>")]) if dadosOrigin[0][18] != None else 0}', 1, 3)
 
         st.text(' ')
         dados_control = [string_to_datetime(dadosOrigin[0][28]) if dadosOrigin[0][28] != None else None,  
@@ -565,7 +565,7 @@ elif authentication_status:
                         dadosOrigin[0][31]]
 
         st.text(' ')
-        func_split = lambda x: x.split(";") if x is not None else [x]
+        func_split = lambda x: x.split("~/>") if x is not None else [x]
         #ESPAÇO PARA MANIPULAR OS COLABORADORES VINCULADOS À AQUELE PROJETO
         with st.expander('Equipe do Projeto'):
             matriculasEQUIP = func_split(dadosOrigin[0][23])
@@ -777,7 +777,7 @@ elif authentication_status:
                 else:
                     st.toast('Primeiramente, ative a opção de excluir sprint.', icon='❌')
 
-        func_split = lambda x: x.split(";") if x is not None else [x]
+        func_split = lambda x: x.split("~/>") if x is not None else [x]
         if func_split(dadosOrigin[0][11])[0] != None:
             # ----> DADOS [NUMBER_SPRINT, STATUS_SPRINT,  DATA INC SPRINT, DATA FIM SPRINT, ID_SPRINT, CHECK_SPRINT]
             sprints = [[func_split(dadosOrigin[0][11])[x], func_split(dadosOrigin[0][12])[x], func_split(dadosOrigin[0][13])[x], func_split(dadosOrigin[0][14])[x], func_split(dadosOrigin[0][27])[x], func_split(dadosOrigin[0][34])[x]] for x in range(len(func_split(dadosOrigin[0][11])))]
