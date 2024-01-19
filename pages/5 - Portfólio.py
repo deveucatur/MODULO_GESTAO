@@ -8,7 +8,7 @@ from datetime import date, timedelta, datetime
 from collections import Counter
 from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss
 import streamlit_authenticator as stauth
-
+import plotly.graph_objects as go
 
 st.set_page_config(
     page_title="Gerir Projetos",
@@ -194,7 +194,12 @@ SELECT
 			GROUP_CONCAT(status_metric SEPARATOR '~/>') 
 		FROM projeu_metricas 
 		WHERE id_prj_fgkey = projeu_projetos.id_proj
-	) AS STATUS_METRICAS
+	) AS STATUS_METRICAS,
+	(
+        SELECT GROUP_CONCAT(date_homolog SEPARATOR '~/>') 
+        FROM projeu_sprints 
+        WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
+    ) as date_homolog_sprint
 FROM 
     projeu_projetos
 JOIN 
@@ -204,6 +209,26 @@ GROUP BY
 
 mycursor.execute(comand)
 ddPaging = mycursor.fetchall()
+
+
+consult2AUX = '''
+SELECT 
+	projeu_param_premio.id_pp,
+    TYP.type_proj,
+    PCP.nome_parm,
+    projeu_param_premio.typ_event,
+    CAST(projeu_param_premio.porc AS DECIMAL(10, 2)) AS porc,
+    projeu_param_premio.qntd_event 
+FROM 
+	projeu_param_premio
+JOIN 
+	projeu_type_proj TYP ON projeu_param_premio.typ_proj_fgkey = TYP.id_type
+JOIN 
+	projeu_compl_param PCP ON projeu_param_premio.complx_param_fgkey = PCP.id_compl_param;
+'''
+mycursor.execute(consult2AUX)
+param_premiosBD = mycursor.fetchall()
+
 
 comandUSERS = 'SELECT * FROM projeu_users;'
 mycursor.execute(comandUSERS)
@@ -722,6 +747,120 @@ elif authentication_status:
                         string_to_datetime(dadosOrigin[0][30]) if dadosOrigin[0][30] != None else None, 
                         dadosOrigin[0][31]]
 
+
+        #st.write(dadosOrigin)
+        ################################## APRESENTAÇÃO DO GRÁFICO EM LINHA DO DESVIO EM DIAS ##################################
+        dificuldade_proj = f'{dadosOrigin[0][36]} {dadosOrigin[0][37]}'
+        type_proj = str(dadosOrigin[0][4]).strip()
+
+        dat_inic_sprt = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][13]).split("~/>"))]  if dadosOrigin[0][13] != None else [None]
+
+        dat_fim_sprt = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][14]).split("~/>"))]  if dadosOrigin[0][13] != None else [None]
+        dat_homol = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][43]).split("~/>"))]  if dadosOrigin[0][13] != None else [None]
+
+        
+        dif_desvio_sprints = [int((dat_inic_sprt[x + 1] - dat_fim_sprt[x]).days) if x < int(len(dat_inic_sprt)-1) else 0 for x in range(len(dat_fim_sprt))]
+        dif_desvio_homolog = [int((dat_homol[x] - dat_fim_sprt[x]).days) if dat_homol[x] != None else 0 for x in range(len(dat_homol))]
+        
+        ########## PREPARAÇÃO DOS DADOS DO PROJETO ##########
+                              #id_sprint                                                         number_sprint                      evento                                                       data_inicio_sprint                                                                                          id_proj                 nome_projeto
+        dados_for_grafic_aux = [[list(str(dadosOrigin[0][27]).split('~/>'))[x], list(str(dadosOrigin[0][11]).split('~/>'))[x], list(str(dadosOrigin[0][12]).split("~/>"))[x], datetime.strptime(list(str(dadosOrigin[0][13]).split('~/>'))[x], "%Y-%m-%d").date() if dadosOrigin[0][13] != None else 0, dadosOrigin[0][0], str(dadosOrigin[0][1]).strip()] for x in range(len(list(str(dadosOrigin[0][11]).split('~/>'))))]
+
+        dd_proj_grafic = {}
+        for list_sprt in dados_for_grafic_aux:
+            name_dic = f'SPRINT {str(list_sprt[2]).strip()} - {list_sprt[1]}' if str(list_sprt[2]).strip() not in ['MVP', 'ENTREGA FINAL'] else str(list_sprt[2]).strip()
+            dd_proj_grafic[name_dic] = list_sprt[3]
+
+        dd_proj_grafic = {} if list(dd_proj_grafic.values())[0] == 0 else dd_proj_grafic
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            displayInd('Desvio entre Sprints (Média)', round(sum([x for x in dif_desvio_sprints if x != None]) / len([x for x in dif_desvio_sprints if x != None]), 2), 1, 3,padding=1.7, id=2)
+            displayInd('Desvio Sprint X Homologação (Média)', round(sum(dif_desvio_homolog) / len(dif_desvio_homolog), 2), 1, 3,padding=1.7, id=2)
+
+        with col2:
+            def fqntd_sprints_por_event(typ_proj, complexid):
+                typ_proj = str(typ_proj).strip()
+                complexid = str(complexid).strip().upper()
+                
+                eventos = ['SPRINT PRÉ MVP', 'MVP', 'SPRINT PÓS MVP', 'ENTREGA FINAL']
+                
+                sprints_proj = {event: sum([x[5] for x in param_premiosBD if x[1] == typ_proj and x[2] == complexid and str(x[3]).strip() == str(event).strip()]) for event in eventos}
+                
+                return sprints_proj
+
+
+            def tratar_number_sprint():
+                dic_aux = {}
+                sprints_by_event = fqntd_sprints_por_event(type_proj, dificuldade_proj)
+                cont_sprint = 0
+                list_sprint = []
+                for key, value in dict(sprints_by_event).items():
+                    for sprt_aux in range(value):
+                        cont_sprint += 1
+                        list_sprint.append(cont_sprint)
+                        
+                    dic_aux[str(key).strip()] = list_sprint[-value:]
+
+                return dic_aux
+
+
+            def retornar_evento(number_sprint):
+                sprints_and_events = tratar_number_sprint()
+                spt_evet_user = {evt: sprts for evt, sprts in dict(sprints_and_events).items() if int(number_sprint) in sprts}
+
+                return spt_evet_user
+
+
+            def pausa_sprints(evento):
+                pausa_by_evento = {'SPRINT PRÉ MVP': 20,
+                                'MVP': 10,
+                                'SPRINT PÓS MVP': 20,
+                                'ENTREGA FINAL': 5}
+                return pausa_by_evento[str(evento).strip().upper()]
+
+
+            sprints_by_evnt = fqntd_sprints_por_event(type_proj, dificuldade_proj)
+
+            inic_proj = datetime.strptime(list(str(dadosOrigin[0][13]).split("~/>"))[0], "%Y-%m-%d").date() if dadosOrigin[0][13] != None else datetime.strptime(list(str(dadosOrigin[0][29]).split("~/>"))[0], "%Y-%m-%d").date()
+            
+            PrazosProjOriginal = {}
+
+            soma_aux = 0
+            for key, values in sprints_by_evnt.items():
+                for a in range(values):
+                    
+                    if key not in ['MVP', 'ENTREGA FINAL']:
+                        soma_aux += 1
+                        name_event = f'{key} - {soma_aux}'
+                    else:
+                        name_event = str(key).strip()
+                        
+                    PrazosProjOriginal[name_event] = inic_proj
+                    
+                    inic_proj += timedelta(days=pausa_sprints(key))
+
+            linha1_x = list(PrazosProjOriginal.keys())
+            linha1_y = list(PrazosProjOriginal.values())
+
+            linha2_x = list(dd_proj_grafic.keys())
+            linha2_y = list(dd_proj_grafic.values())
+
+            fig = go.Figure()
+
+            fig.add_trace(go.Scatter(x=linha1_x, y=linha1_y, mode='lines+markers', name='Ideal'))
+            fig.add_trace(go.Scatter(x=linha2_x, y=linha2_y, mode='lines+markers', name=f'{str(dadosOrigin[0][1]).strip()}'))
+
+            fig.update_layout(
+                                    xaxis_title='Sprints',
+                                    yaxis_title='Datas',
+                                    title='Desvio do Projeto',
+                                    legend=dict(x=0.2, y=1.15, orientation='h')
+                                )
+
+            fig.update_yaxes(tickformat='%y/%m/%d')
+
+            st.plotly_chart(fig, use_container_width=True)
+
         st.text(' ')
         func_split = lambda x: x.split("~/>") if x is not None else [x]
         #ESPAÇO PARA MANIPULAR OS COLABORADORES VINCULADOS À AQUELE PROJETO
@@ -738,7 +877,7 @@ elif authentication_status:
                     qntd_clb = st.number_input('Quantidade', min_value=0, step=1)
                 
                 for a in range(qntd_clb):
-                    equipe_atual[f'{a}'] = ['', '', 'Executor']        
+                    equipe_atual[f'{a}'] = [None, None, 'Executor']        
 
                 with st.form('FORMS ATUALIZAR EQUIPE'):
                         
@@ -755,11 +894,11 @@ elif authentication_status:
 
                     for colb_a in range(len(equipe_list)):
                         with col_equip2:
-                            colb_name = st.selectbox('Colaboradores', [x[1] for x in users], list([x[1] for x in users]).index(equipe_list[colb_a][1]),label_visibility="collapsed", key=f'Nome Colab{colb_a}')        
+                            colb_name = st.selectbox('Colaboradores', [x[1] for x in users], list([x[1] for x in users]).index(equipe_list[colb_a][1]) if equipe_list[colb_a][0] != None else None,label_visibility="collapsed", key=f'Nome Colab{colb_a}')        
                         with col_equip1:
-                            colab_matric = st.text_input('Matricula', list(set([x[0] for x in users if x[1] == colb_name]))[0], label_visibility="collapsed", disabled=True, key=f'MatriculaColabs{colb_a}')
+                            colab_matric = st.text_input('Matricula', list(set([x[0] for x in users if x[1] == colb_name]))[0] if colb_name != None else None, label_visibility="collapsed", disabled=True, key=f'MatriculaColabs{colb_a}')
                         with col_equip3:
-                            colb_funç = st.selectbox('Função', ['Especialista', 'Executor'],list(['Especialista', 'Executor']).index(equipe_list[colb_a][2]), label_visibility="collapsed", key=f'funcaoColab{colb_a}')
+                            colb_funç = st.selectbox('Função', ['Especialista', 'Executor'],list(['Especialista', 'Executor']).index(equipe_list[colb_a][2]) if colb_name != None else None, label_visibility="collapsed", key=f'funcaoColab{colb_a}')
                         list_colbs.append([colab_matric, colb_funç])
                     
                     button_att_equipe = st.form_submit_button('Atualizar')
@@ -784,29 +923,32 @@ elif authentication_status:
                             
                         mycursor.close()
                         st.toast('Equipe Atualizada!', icon='✅') 
-            with tab2:
-                
+            with tab2:                
                 font_TITLE('EXCLUIR COLABORADOR DA EQUIPE', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
-                st.text(' ')
-                col1, col2, col3 = st.columns([0.6,3,2])
+
+                if len(equipe_atual) > 0:
                 
-                with col2:
-                    colab_ex = st.selectbox('Colaborador', [str(x[1]).strip() for x in equipe_atual.values()])
-                with col1:
-                    matric_ex = st.text_input('Matricula', [x[0] for x in users if str(x[1]).strip().lower() == str(colab_ex).strip().lower()][0], disabled=True)
-                with col3:
-                    funca_ex = st.text_input('Função', equipe_atual[matric_ex][2], disabled=True)
+                    st.text(' ')
+                    col1, col2, col3 = st.columns([0.6,3,2])
+                    with col2:
+                        colab_ex = st.selectbox('Colaborador', [str(x[1]).strip() for x in equipe_atual.values()])                
+                    with col1:
+                        matric_ex = st.text_input('Matricula', [x[0] for x in users if str(x[1]).strip().lower() == str(colab_ex).strip().lower()][0], disabled=True)
+                    with col3:
+                        funca_ex = st.text_input('Função', equipe_atual[matric_ex][2], disabled=True)
 
-                button_ex_equip = st.button('Excluir', key='EXCLUIR COLABORADOR DO PROJETO')
-                if button_ex_equip:
-                    mycursor = conexao.cursor()
-                    cmd_ex_equip = f'UPDATE projeu_registroequipe SET status_reg = "I" WHERE id_registro = {equipe_atual[matric_ex][3]};'
+                    button_ex_equip = st.button('Excluir', key='EXCLUIR COLABORADOR DO PROJETO')
+                    if button_ex_equip:
+                        mycursor = conexao.cursor()
+                        cmd_ex_equip = f'UPDATE projeu_registroequipe SET status_reg = "I" WHERE id_registro = {equipe_atual[matric_ex][3]};'
 
-                    mycursor.execute(cmd_ex_equip)
-                    conexao.commit()
+                        mycursor.execute(cmd_ex_equip)
+                        conexao.commit()
+
+                else:
+                    st.error('Não há colaboradores vinculados a equipe do projeto.', icon='❌')
                 
             
-
         with st.expander('Controle do Projeto', expanded=True): 
             
             font_TITLE('DATAS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
