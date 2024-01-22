@@ -178,53 +178,53 @@ def cardImg(image_url):
         unsafe_allow_html=True
     )
 
-def displayInd(title, valor, min_val, max_val):
+def displayInd(title, valor, min_val, max_val, padding=0.6, id=1):
     max_val = float(max_val)
     # Estilos CSS para a janela
-    styleJanela = '''
+    styleJanela = f'''
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&display=swap');
-    .card2 {
-        padding: 0.6rem;
+    .card{id} {{
+        padding: {padding}rem;
         background-color: #fff;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         max-width: 100%;
         border-radius: 20px;
         text-align: center;
-    }
+    }}
 
-    .title2 {
+    .title{id} {{
         align-items: center;
-    }
+    }}
 
-    .title2-text {
+    .title{id}-text {{
     color: #374151;
     font-size: 15px;
     font-family: 'Poppins', sans-serif;
-    }
+    }}
 
-    .data2 {
+    .data{id} {{
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-    }
+    }}
 
-    .data2 p {
+    .data{id} p {{
         color: #1F2937;
         font-size: 27px;
         line-height: 2.5rem;
         font-weight: 700;
         font-family: 'Poppins', sans-serif;
-    }
+    }}
 
     '''
 
     # HTML da janela
     htmlJanela = f'''
-                    <div class="card2">
-                        <div class="title2">
-                            <p class="title2-text">{title}</p>
+                    <div class="card{id}">
+                        <div class="title{id}">
+                            <p class="title{id}-text">{title}</p>
                                 </div>
-                                <div class="data2">
+                                <div class="data{id}">
                             <p>{valor}</p>
                         </div>
                     </div>
@@ -897,7 +897,6 @@ class PlotCanvas:
         
         return canvaStyle
 
-
 import mysql.connector
 
 conexao = mysql.connector.connect(
@@ -977,7 +976,11 @@ class CalculoPrêmio:
                     (
                        SELECT check_proj FROM projeu_projetos WHERE id_proj = PS.id_proj_fgkey
                     ) AS STATUS_PROJ,
-                    PS.status_sprint AS EVENTO_SPRINT
+                    PS.status_sprint AS EVENTO_SPRINT,
+                    PE.id_sprint,
+                    (
+                        SELECT PRE.papel FROM projeu_registroequipe PRE WHERE PRE.id_colab = PU.id_user AND PRE.id_projeto = PS.id_proj_fgkey
+                    ) AS PAPEL
                 FROM 
                     projeu_entregas AS PE
                 JOIN 
@@ -994,6 +997,7 @@ class CalculoPrêmio:
                             projeu_projetos PP 
                             ON PP.id_proj = PS_sub.id_proj_fgkey
                         WHERE PP.name_proj LIKE '%{self.name_proj}%');""")
+
         self.entregas_do_projeto = mycursor2.fetchall()
 
         mycursor2.execute(f'''
@@ -1020,21 +1024,42 @@ class CalculoPrêmio:
                 WHERE PP.name_proj LIKE '%{self.name_proj}%';
                 ''')
         self.proj_especial = mycursor2.fetchall()
+
+        mycursor2.execute(f'''
+        SELECT 
+            PES.id_sp,
+            PU.id_user,
+            PU.Matricula,
+            PU.Nome,
+            PS.id_sprint,
+            PS.number_sprint,
+            PES.status_sp
+        FROM projeu_especialist_sprint PES
+        JOIN
+            projeu_users PU ON PU.id_user = PES.id_colab_fgkey
+        JOIN
+            projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
+        WHERE 
+            PS.id_sprint IN ({str(list(set([x[11] for x in self.entregas_do_projeto]))).replace("[", "").replace("]", "")})
+            AND
+                PES.status_sp = 'A';''')
+        
+        self.especialist_by_sprint = mycursor2.fetchall()
         
         mycursor2.execute(
-            '''SELECT 
+            f'''SELECT 
                 sum(PPE.valor) AS VALOR_TOTAL
             FROM 
                 projeu_sprints AS PS
             JOIN
                 projeu_premio_entr PPE ON id_sprint_fgkey = PS.id_sprint
             WHERE 
-                  PS.id_proj_fgkey IN (
+                PS.id_proj_fgkey IN (
                     SELECT id_proj FROM projeu_projetos
-                        WHERE name_proj LIKE '%Estabelecer ciclo de otimização de produtividade através de tecnologias corporativas%'
+                        WHERE name_proj LIKE '%{str(self.name_proj).strip()}%'
         );''')
         self.valor_total = mycursor2.fetchall()
-        
+
         mycursor2.close()
 
 
@@ -1091,7 +1116,7 @@ class CalculoPrêmio:
                         and str(x[1]).strip().upper() == str(self.complexidProj).strip().upper()]
         else:
             valor_base = [round(float(self.proj_especial[0][3]), 2)] #VALOR BASE DAQUELE PROJETO EM ESPECIAL  # VALOR BASE DAQUELA COMPLEXIDADE
-
+        
         eventos = list(set([typEvent[1] for typEvent in premioSprintBD]))  # SPRINT PRÉ-MVP, MVP, PÓS-MVP, ENTREGA FINAL
         AuxDDComplx = {}
         for event in eventos:
@@ -1115,7 +1140,7 @@ class CalculoPrêmio:
     #FUNÇÃO PARA CALCULAR O VALOR QUE FALTA CASO O PROJETO SEJA FINALIZADO ANTES DO PERÍODO PRÉVIO 
     def valor_restante(self):
         status = list(set([x[9] for x in self.entregas_do_projeto]))[0]
-        if 'PÓS-MVP' in list(set([str(x[10]).strip() for x in self.entregas_do_projeto])) and status == 1:
+        if 'ENTREGA FINAL' in list(set([str(x[10]).strip() for x in self.entregas_do_projeto])) and status == 1:
             sprints_aux = list(set([(x[0],x[7]) for x in self.entregas_do_projeto]))
 
             eventos = list(set([typEvent[1] for typEvent in premioSprintBD]))
@@ -1126,7 +1151,7 @@ class CalculoPrêmio:
             for event in eventos:
                 aux_sum.append(valores_base_por_event[str(event).strip().upper()]['ValorEvento'])#VOU PEGAR O OBJETO VALOR EVENTO QUE NOS FORNECE A VALOR TOTAL DIVIDIDO POR SPRINT
 
-            dif_valor = sum(aux_sum) - self.valor_total #PEGANDO O VALOR TOTAL QUE JÁ FOI PAGO NAS ENTREGAS
+            dif_valor = sum(aux_sum) - float(self.valor_total[0][0]) #PEGANDO O VALOR TOTAL QUE JÁ FOI PAGO NAS ENTREGAS
 
             retorno = dif_valor
         else:
@@ -1146,14 +1171,20 @@ class CalculoPrêmio:
         # exemplo_de_como_chamar = CalculaSquad([list(x) for x in entregasBD if x[0] == sprint], 1200)
         
         if len(list(set([x[0] for x in entregas if int(x[0]) in [int(x) for x in self.number_sprint]]))) > 0:
-            entregas_sprint = entregas
-
+            entregas_sprint = []
+            for entr in entregas:
+                if str(entr[12]).strip() == 'Gestor':
+                    entr[4] = 0
+                
+                entregas_sprint.append(entr)
+                        
             # MATRICULA, NOME COLABORADOR
             colbs = list(set([(x[3], x[2]) for x in entregas_sprint]))
+            
             hrs_normaliz = {colb[1]: sum([float(x[4] * self.dificEntreg(x[5])) for x in entregas_sprint if x[3] == colb[0]])
                             for colb in colbs}
+                        
             hrs_total = sum([hrs_normaliz[x] for x in hrs_normaliz.keys()])
-
             valor_colab = {name_colab: {'BonificacaoSprint': valor_sprint * (hrs_normaliz[name_colab] / hrs_total),
                                         'HorasNormalTotal': hrs_normaliz[name_colab],
                                         'Entregas': {x[1]: {'Horas': x[4],
@@ -1170,17 +1201,22 @@ class CalculoPrêmio:
 
         return valor_colab
 
-    def CalculaSprint(self, valorSprint, qntdEspecial, sprint):
+    def CalculaSprint(self, valorSprint, sprint):
+        dd_especialist = [x for x in self.especialist_by_sprint if x[5] in list(sprint)]#DADOS SOBRE ESPECIALISTAS DAQUELAS SPRINTS
+        
+        qntd_contrib_espc = {id_espc: len([d for d in dd_especialist if d[1] == id_espc]) for id_espc in list(set([x[1] for x in dd_especialist]))}
+        
+        porc_contrib = {id_user: qntd_contr/sum(qntd_contrib_espc.values()) for id_user, qntd_contr in qntd_contrib_espc.items()}
+        
+        qntdEspecial = len(porc_contrib)
         status = list(set([x[9] for x in self.entregas_do_projeto]))[0]
         if self.entregas_do_projeto != None:
             self.number_sprint = sprint
             
             #IDÊNTIFICANDO O VALOR RESTANTE PARA CASO O PROJETO JÁ TENHA SIDO FINALIZADO ANTES DO PRAZO
-            if str(status).strip() == str(1) and 'PÓS-MVP' in list(set([str(x[10]).strip() for x in self.entregas_do_projeto])):
+            if str(status).strip() == str(1) and 'ENTREGA FINAL' in list(set([str(x[10]).strip() for x in self.entregas_do_projeto])):
                 valor_restante = self.valor_restante()
-                valorSprint += valor_restante
-            else:
-                print('PROJETO AINDA NÃO FINALIZADO.')
+                valorSprint = valor_restante
             
             if len(self.proj_especial) > 0:
                 porcEquipe = [['GESTOR', f'{str(self.proj_especial[0][11]).strip()} {str(self.proj_especial[0][12]).strip()}', self.proj_especial[0][8]],
@@ -1189,7 +1225,7 @@ class CalculoPrêmio:
             else:
                 porcEquipe = [list(x) for x in premioFuncaoBD if x[1] == self.complexidProj]
 
-            if qntdEspecial == 0:
+            if len(dd_especialist) == 0:
                 idx_time_fun = lambda equipe: list([str(x[0]).strip().upper() for x in porcEquipe]).index(
                     f'{str(equipe).upper()}')
 
@@ -1204,8 +1240,12 @@ class CalculoPrêmio:
             TotalEspecialist = valorSprint * float([x[2] for x in porcEquipe if str(x[0]).upper() == 'ESPECIALISTA'][0])
             valoresEquipe['ESPECIALISTA'] = {'ValorTotal': TotalEspecialist,
                                              'ValorPorEspecialist': (TotalEspecialist/qntdEspecial) if qntdEspecial > 0 else 0,
-                                             'QuantidadeEspecialista': qntdEspecial}
-
+                                             'QuantidadeEspecialista': qntdEspecial,
+                                             'ValorParaMVP': {[str(x[2]).strip() for x in dd_especialist if x[1] == id_user][0]:{
+                                                                  [str(x[3]).strip() for x in dd_especialist if x[1] == id_user][0]: TotalEspecialist * porct_epc}
+                                                              for id_user, porct_epc in porc_contrib.items()}    
+                                            }
+            
             valoresEquipe['SQUAD'] = self.CalculaSquad([list(x) for x in self.entregas_do_projeto if x[0] in self.number_sprint],
                                                   valorSprint * float(
                                                       [x[2] for x in porcEquipe if str(x[0]).upper() == 'SQUAD'][0]))
@@ -1214,6 +1254,7 @@ class CalculoPrêmio:
         else:
             retorno = 'PRIMAIRAMENTE, É NECESSÁRIO CONSUMIR O BANCO DADOS PARA PEGAR AS ENTREGAS DO PROJETO'
         return retorno
+
 
 
 ######################## FUNÇÕES PARA PLOTAR CAIXINHA DO 9BOX ########################
