@@ -2,3 +2,4 @@ streamlit-authenticator
 mysql-connector-python
 streamlit
 Pillow
+plotly
