@@ -756,7 +756,7 @@ elif authentication_status:
         dat_inic_sprt = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][13]).split("~/>"))]  if dadosOrigin[0][13] != None else [None]
 
         dat_fim_sprt = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][14]).split("~/>"))]  if dadosOrigin[0][13] != None else [None]
-        dat_homol = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][43]).split("~/>"))]  if dadosOrigin[0][13] != None else [None]
+        dat_homol = [datetime.strptime(str(x), "%Y-%m-%d").date() for x in list(str(dadosOrigin[0][43]).split("~/>"))]  if dadosOrigin[0][43] != None else [None]
 
         
         dif_desvio_sprints = [int((dat_inic_sprt[x + 1] - dat_fim_sprt[x]).days) if x < int(len(dat_inic_sprt)-1) else 0 for x in range(len(dat_fim_sprt))]
@@ -817,7 +817,6 @@ elif authentication_status:
                                 'SPRINT PÓS MVP': 20,
                                 'ENTREGA FINAL': 5}
                 return pausa_by_evento[str(evento).strip().upper()]
-
 
             sprints_by_evnt = fqntd_sprints_por_event(type_proj, dificuldade_proj)
 
@@ -981,7 +980,7 @@ elif authentication_status:
                 except:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
-        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP']
+        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
