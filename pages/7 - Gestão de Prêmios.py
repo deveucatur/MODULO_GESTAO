@@ -110,19 +110,33 @@ elif authentication_status:
                 projeu_empresas AS PEM 
             WHERE id_empresa = PU.empresa_fgkey
         ) AS NUMBER_EMPRESA,
-        PPE.opcional_evento AS OPC_EVENTO
-    FROM projeu_premio_entr AS PPE
-    LEFT JOIN 
-        projeu_sprints PS ON PS.id_sprint = PPE.id_sprint_fgkey
-    LEFT JOIN 
-        projeu_users PU ON PU.id_user = PPE.bonificado_fgkey
-    LEFT OUTER JOIN 
-        projeu_entregas PE ON PE.id_entr = PPE.id_entreg_fgkey
-    LEFT JOIN 
-        projeu_projetos PP ON PP.id_proj = PS.id_proj_fgkey
-    WHERE 
-        PS.check_consolid <> 1 OR PS.check_consolid IS NULL
-    GROUP BY PPE.id_premio;
+        PPE.opcional_evento AS OPC_EVENTO,
+        (
+            SELECT 
+                PMP_AUX.macroprocesso
+            FROM 
+                projeu_macropr AS PMP_AUX
+            WHERE PMP_AUX.id = PP.macroproc_fgkey 
+        ) AS MACROPROCESSO,
+        (
+            SELECT
+                PP_AUX.nome_prog
+            FROM
+                projeu_programas AS PP_AUX
+            WHERE PP_AUX.id_prog = PP.progrm_fgkey
+        ) AS PROGRAMA
+        FROM projeu_premio_entr AS PPE
+        LEFT JOIN 
+            projeu_sprints PS ON PS.id_sprint = PPE.id_sprint_fgkey
+        LEFT JOIN 
+            projeu_users PU ON PU.id_user = PPE.bonificado_fgkey
+        LEFT OUTER JOIN 
+            projeu_entregas PE ON PE.id_entr = PPE.id_entreg_fgkey
+        LEFT JOIN 
+            projeu_projetos PP ON PP.id_proj = PS.id_proj_fgkey
+        WHERE 
+            PS.check_consolid <> 1 OR PS.check_consolid IS NULL
+        GROUP BY PPE.id_premio;
     """
     mycursor.execute(cmd_premio)
     dadosBD = mycursor.fetchall()
@@ -143,6 +157,17 @@ elif authentication_status:
     '''
     mycursor.execute(cmd_equipe)
     equipeBD = mycursor.fetchall()
+
+    cmd_cadeia = '''
+    SELECT 
+        PMP.macroprocesso,
+        PPG.nome_prog
+    FROM 
+        projeu_programas PPG
+    JOIN projeu_macropr PMP ON PMP.id = PPG.macroprocesso_fgkey;'''
+    mycursor.execute(cmd_cadeia)
+    cadeiaBD = mycursor.fetchall()
+
     mycursor.close()
 
 
@@ -354,8 +379,51 @@ elif authentication_status:
         st.text(' ')
         dadosBD = [x for x in dadosBD if str(x[11]).strip() == str(1).strip()]
         
-        matric_and_names = list(set((x[4], x[5]) for x in dadosBD)) 
+        #TRANTANDO OS DADOS PARA LEVALOS AO FILTRO
+        dic_cadeia = {} 
+        for macro in list(set([str(x[16]).strip() for x in dadosBD])):#FILTRANDO POR MACROPROCESSO
+            dd_by_macro = [x for x in dadosBD if str(x[16]).strip() == macro]
 
+            dic_by_prog = {} 
+            for prog in [str(x[17]).strip() for x in dd_by_macro]:#FILTRANDO POR PROGRAMA
+                dd_by_prog = [x for x in dd_by_macro if str(x[17]).strip() == prog]
+                
+                proj_and_sprints = {proj: list(set([x[1] if str(x[15]).strip() not in ['MVP', 'ENTREGA FINAL'] else str(x[15]).strip() for x in dd_by_prog if str(x[2]).strip() == proj])) for proj in [str(x[2]).strip() for x in dd_by_prog]}
+
+                dic_by_prog[prog] = proj_and_sprints
+
+            dic_cadeia[macro] = dic_by_prog
+
+
+        with st.expander('Filtro', expanded=True):
+            macro_filter = st.multiselect('Macroprocesso', list(dict(dic_cadeia).keys()), list(dict(dic_cadeia).keys()))
+            
+            value_prog = []
+            for macro in list(macro_filter):
+                value_prog.extend(list(dict(dic_cadeia[macro]).keys()))
+            prog_filter = st.multiselect('Programa', value_prog, value_prog)
+            
+            col1, col2 = st.columns([3,1.2])
+            with col1:
+                value_proj = []
+                for macro in list(macro_filter):
+                    for prog in list(dict(dic_cadeia[macro]).keys()):
+                        value_proj.extend(list(dict(dic_cadeia[macro][prog]).keys()))
+                
+                projetos_filter = st.multiselect('Projeto', set(value_proj), set(value_proj))
+
+            with col2:
+                value_sprint = []
+                for macro in list(macro_filter):
+                    for prog in list(dict(dic_cadeia[macro]).keys()):
+                        for proj in list(dict(dic_cadeia[macro][prog]).keys()):
+                            value_sprint.extend(list(dic_cadeia[macro][prog][proj]))
+
+                sprints_filter = st.multiselect('Eventos', set(value_sprint), set(value_sprint))
+
+        dadosBD = [x for x in dadosBD if str(x[16]).strip() in list(macro_filter) and str(x[17]).strip() in list(prog_filter) and str(x[2]).strip() in projetos_filter and (x[1] in sprints_filter or str(x[15]).strip() in sprints_filter)]        
+        
+        matric_and_names = list(set((x[4], x[5]) for x in dadosBD)) 
         consolid_pendent = {matric_and_names[list([x[0] for x in matric_and_names]).index(matric)][1]: [x for x in dadosBD if str(x[4]).strip() == str(matric).strip()] for matric in list(set([x[4] for x in dadosBD]))}
 
         if len(consolid_pendent) > 0:
@@ -364,6 +432,7 @@ elif authentication_status:
 
                 return dados_by_project[str(matricula)]
             
+            st.text(' ')
             col0, col2, col3, col4, col5, col6 = st.columns([0.19, 0.18, 0.89, 0.14, 0.17, 0.17])
             with col0:
                 st.caption('Empresa')
@@ -432,7 +501,7 @@ elif authentication_status:
                         arquivo_temporario = temp_file.name
                     
                     #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                    enviar_email(destino='processos.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                    enviar_email(destino='processos4.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
                 
                 #ENVIADO EMAIL PARA OS PJ
                 consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
@@ -440,7 +509,7 @@ elif authentication_status:
                     by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
                 
                     #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                    enviar_email(destino='processos.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
+                    enviar_email(destino='processos4.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
 
                     sleep(1)
                 st.rerun()
