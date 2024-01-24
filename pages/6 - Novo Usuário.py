@@ -58,7 +58,6 @@ with tab1:
         with st.form('Forms New User', clear_on_submit=False):
             font_TITLE('CADASTRO DE NOVOS USUÁRIOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
             
-
             colu1, colu2 = st.columns([2, 1.6])
             col1, col2, col3 = st.columns(3)
             co1, co2, co3 = st.columns([3, 3, 2])
@@ -103,8 +102,12 @@ with tab1:
                 if senha != senhaaux:
                     st.toast('Senhas diferentes', icon='❌')
                 else:
+                    if str(empresa).strip() == 'PJ' and len(str(cpf).strip()) < 1:
+                        st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
+                    
                     #st.info([len(str(x).strip()) for x in [str(nome).strip(), str(cpf).strip(), str(email).strip(),email2, senha, senhaaux, cpf]])           
-                    if 0 not in [len(str(x).strip()) for x in [str(nome).strip(), str(cpf).strip(), str(email).strip(),email2, senha, senhaaux, cpf]]:
+                    elif 0 not in [len(str(x).strip()) for x in [str(nome).strip(), str(email).strip(),email2, senha, senhaaux]]:
+                        
                         if str(email).strip().lower() not in [str(x[3]).strip().lower() for x in usersBD]:
                             columnsBD = '''Nome, cpf_cnpj, email, senha, unidade_fgkey, empresa_fgkey, macroprocesso_fgkey, condicao_pagamento_fgkey, especialidade, senha_hash, perfil_proj, email_pj'''
                             values = f""" 
