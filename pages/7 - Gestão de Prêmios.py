@@ -376,144 +376,143 @@ elif authentication_status:
             
     with tab2:
         font_TITLE('PRÊMIOS CONSOLIDADOS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')
-        st.text(' ')
         dadosBD = [x for x in dadosBD if str(x[11]).strip() == str(1).strip()]
         
-        #TRANTANDO OS DADOS PARA LEVALOS AO FILTRO
-        dic_cadeia = {} 
-        for macro in list(set([str(x[16]).strip() for x in dadosBD])):#FILTRANDO POR MACROPROCESSO
-            dd_by_macro = [x for x in dadosBD if str(x[16]).strip() == macro]
+        if len(dadosBD) > 0:
+            #TRANTANDO OS DADOS PARA LEVALOS AO FILTRO
+            dic_cadeia = {} 
+            for macro in list(set([str(x[16]).strip() for x in dadosBD])):#FILTRANDO POR MACROPROCESSO
+                dd_by_macro = [x for x in dadosBD if str(x[16]).strip() == macro]
 
-            dic_by_prog = {} 
-            for prog in [str(x[17]).strip() for x in dd_by_macro]:#FILTRANDO POR PROGRAMA
-                dd_by_prog = [x for x in dd_by_macro if str(x[17]).strip() == prog]
+                dic_by_prog = {} 
+                for prog in [str(x[17]).strip() for x in dd_by_macro]:#FILTRANDO POR PROGRAMA
+                    dd_by_prog = [x for x in dd_by_macro if str(x[17]).strip() == prog]
+                    
+                    proj_and_sprints = {proj: list(set([x[1] if str(x[15]).strip() not in ['MVP', 'ENTREGA FINAL'] else str(x[15]).strip() for x in dd_by_prog if str(x[2]).strip() == proj])) for proj in [str(x[2]).strip() for x in dd_by_prog]}
+
+                    dic_by_prog[prog] = proj_and_sprints
+
+                dic_cadeia[macro] = dic_by_prog
+
+            with st.expander('Filtro', expanded=True):
+                macro_filter = st.multiselect('Macroprocesso', list(dict(dic_cadeia).keys()), list(dict(dic_cadeia).keys()))
                 
-                proj_and_sprints = {proj: list(set([x[1] if str(x[15]).strip() not in ['MVP', 'ENTREGA FINAL'] else str(x[15]).strip() for x in dd_by_prog if str(x[2]).strip() == proj])) for proj in [str(x[2]).strip() for x in dd_by_prog]}
-
-                dic_by_prog[prog] = proj_and_sprints
-
-            dic_cadeia[macro] = dic_by_prog
-
-
-        with st.expander('Filtro', expanded=True):
-            macro_filter = st.multiselect('Macroprocesso', list(dict(dic_cadeia).keys()), list(dict(dic_cadeia).keys()))
-            
-            value_prog = []
-            for macro in list(macro_filter):
-                value_prog.extend(list(dict(dic_cadeia[macro]).keys()))
-            prog_filter = st.multiselect('Programa', value_prog, value_prog)
-            
-            col1, col2 = st.columns([3,1.2])
-            with col1:
-                value_proj = []
+                value_prog = []
                 for macro in list(macro_filter):
-                    for prog in list(dict(dic_cadeia[macro]).keys()):
-                        value_proj.extend(list(dict(dic_cadeia[macro][prog]).keys()))
+                    value_prog.extend(list(dict(dic_cadeia[macro]).keys()))
+                prog_filter = st.multiselect('Programa', value_prog, value_prog)
                 
-                projetos_filter = st.multiselect('Projeto', set(value_proj), set(value_proj))
+                col1, col2 = st.columns([3,1.2])
+                with col1:
+                    value_proj = []
+                    for macro in list(macro_filter):
+                        for prog in list(dict(dic_cadeia[macro]).keys()):
+                            value_proj.extend(list(dict(dic_cadeia[macro][prog]).keys()))
+                    
+                    projetos_filter = st.multiselect('Projeto', set(value_proj), set(value_proj))
 
-            with col2:
-                value_sprint = []
-                for macro in list(macro_filter):
-                    for prog in list(dict(dic_cadeia[macro]).keys()):
-                        for proj in list(dict(dic_cadeia[macro][prog]).keys()):
-                            value_sprint.extend(list(dic_cadeia[macro][prog][proj]))
-
-                sprints_filter = st.multiselect('Eventos', set(value_sprint), set(value_sprint))
-
-        dadosBD = [x for x in dadosBD if str(x[16]).strip() in list(macro_filter) and str(x[17]).strip() in list(prog_filter) and str(x[2]).strip() in projetos_filter and (x[1] in sprints_filter or str(x[15]).strip() in sprints_filter)]        
-        
-        matric_and_names = list(set((x[4], x[5]) for x in dadosBD)) 
-        consolid_pendent = {matric_and_names[list([x[0] for x in matric_and_names]).index(matric)][1]: [x for x in dadosBD if str(x[4]).strip() == str(matric).strip()] for matric in list(set([x[4] for x in dadosBD]))}
-
-        if len(consolid_pendent) > 0:
-            def colabs_proj(matricula):
-                dados_by_project = {matri:equipeBD[list([str(x[2]) for x in equipeBD]).index(matri)][4] for matri in [str(x[0]).strip() for x in matric_and_names]}
-
-                return dados_by_project[str(matricula)]
-            
-            st.text(' ')
-            col0, col2, col3, col4, col5, col6 = st.columns([0.19, 0.18, 0.89, 0.14, 0.17, 0.17])
-            with col0:
-                st.caption('Empresa')
-            with col2:
-                st.caption('Matricula')
-            with col3:
-                st.caption('Nome')
-            with col4:
-                st.caption('Atividades')
-            with col5:
-                st.caption('Horas')
-            with col6:
-                st.caption('Valor Total')
-
-            for name_colab, dd_consolid in consolid_pendent.items():
-                with col0:
-                    empresa_number = st.text_input('', 'EUCATUR', label_visibility='collapsed', key=f'Consolidado Empresa {name_colab}')
                 with col2:
-                    matricula_pessoa = st.text_input('', dd_consolid[0][4], label_visibility='collapsed', key=f'Consolidado Matricula{name_colab}')
-                with col3:
-                    nome_pessoa = st.text_input('', dd_consolid[0][5], label_visibility='collapsed', key=f'Consolidado Nome{name_colab}')
-                with col4:
-                    qntd_atdd = st.text_input('', len(list(set([str(x[3]).strip().lower() for x in dd_consolid]))), label_visibility='collapsed', key=f'Consolidado Atividade{name_colab}')
-                with col5:
-                    horas_pessoa = st.text_input('', sum([int(x[7]) if x[7] != None else 0 for x in dd_consolid]), label_visibility='collapsed', key=f'Consolidado horas{name_colab}')
-                with col6:
-                    valor_total_pessoa = st.text_input('', sum([x[10] for x in dd_consolid]), label_visibility='collapsed', key=f'Consolidado Valor{name_colab}')
+                    value_sprint = []
+                    for macro in list(macro_filter):
+                        for prog in list(dict(dic_cadeia[macro]).keys()):
+                            for proj in list(dict(dic_cadeia[macro][prog]).keys()):
+                                value_sprint.extend(list(dic_cadeia[macro][prog][proj]))
+
+                    sprints_filter = st.multiselect('Eventos', set(value_sprint), set(value_sprint))
+
+            dadosBD = [x for x in dadosBD if str(x[16]).strip() in list(macro_filter) and str(x[17]).strip() in list(prog_filter) and str(x[2]).strip() in projetos_filter and (x[1] in sprints_filter or str(x[15]).strip() in sprints_filter)]        
             
-            st.text(' ')
-            button_consolid = st.button('Consolidar') 
-            if button_consolid:
-                sprints = list(set([x[0] for x in dadosBD]))
+            matric_and_names = list(set((x[4], x[5]) for x in dadosBD)) 
+            consolid_pendent = {matric_and_names[list([x[0] for x in matric_and_names]).index(matric)][1]: [x for x in dadosBD if str(x[4]).strip() == str(matric).strip()] for matric in list(set([x[4] for x in dadosBD]))}
 
-                for id_sprint in sprints:
-                    mycursor = conexao.cursor()
-                    cmd_consolid = f"UPDATE projeu_sprints SET check_consolid = 1 WHERE id_sprint = {id_sprint};"
-                
-                    mycursor.execute(cmd_consolid)
-                    conexao.commit()
+            if len(consolid_pendent) > 0:
+                def colabs_proj(matricula):
+                    dados_by_project = {matri:equipeBD[list([str(x[2]) for x in equipeBD]).index(matri)][4] for matri in [str(x[0]).strip() for x in matric_and_names]}
 
-                mycursor.close()
-                st.toast('Prêmio Consolidado!', icon='✅')
-                sleep(1)
+                    return dados_by_project[str(matricula)]
                 
-                fun_digits = lambda x, y=[6, 4, 2, 4, 2, 4, 1, 2, 16]: [f'{"0"*(int(y[idx])-len(str(x[idx])))}{str(x[idx])}' for idx in range(len(x))]
+                st.text(' ')
+                col0, col2, col3, col4, col5, col6 = st.columns([0.19, 0.18, 0.89, 0.14, 0.17, 0.17])
+                with col0:
+                    st.caption('Empresa')
+                with col2:
+                    st.caption('Matricula')
+                with col3:
+                    st.caption('Nome')
+                with col4:
+                    st.caption('Atividades')
+                with col5:
+                    st.caption('Horas')
+                with col6:
+                    st.caption('Valor Total')
 
-                hoje = datetime.today() + relativedelta(months=1)        
-                #ENVIADO EMAIL PARA O DEPARTAMENTO PESSOAL
-                dados_by_empres = {name_empr: {mat: [x for x in dadosBD if str(x[14]).strip() == str(name_empr).strip() and str(x[4]).strip() == str(mat).strip()] for mat in list(set([x[4] for x in dadosBD if str(x[14]).strip() == str(name_empr).strip()]))} for name_empr in list(set([dd[14] for dd in dadosBD if str(dd[13]).strip().upper() != 'PJ']))}
+                for name_colab, dd_consolid in consolid_pendent.items():
+                    with col0:
+                        empresa_number = st.text_input('', 'EUCATUR', label_visibility='collapsed', key=f'Consolidado Empresa {name_colab}')
+                    with col2:
+                        matricula_pessoa = st.text_input('', dd_consolid[0][4], label_visibility='collapsed', key=f'Consolidado Matricula{name_colab}')
+                    with col3:
+                        nome_pessoa = st.text_input('', dd_consolid[0][5], label_visibility='collapsed', key=f'Consolidado Nome{name_colab}')
+                    with col4:
+                        qntd_atdd = st.text_input('', len(list(set([str(x[3]).strip().lower() for x in dd_consolid]))), label_visibility='collapsed', key=f'Consolidado Atividade{name_colab}')
+                    with col5:
+                        horas_pessoa = st.text_input('', sum([int(x[7]) if x[7] != None else 0 for x in dd_consolid]), label_visibility='collapsed', key=f'Consolidado horas{name_colab}')
+                    with col6:
+                        valor_total_pessoa = st.text_input('', sum([x[10] for x in dd_consolid]), label_visibility='collapsed', key=f'Consolidado Valor{name_colab}')
                 
-                for cod_empres, dd_empres in dados_by_empres.items():
+                st.text(' ')
+                button_consolid = st.button('Consolidar') 
+                if button_consolid:
+                    sprints = list(set([x[0] for x in dadosBD]))
+
+                    for id_sprint in sprints:
+                        mycursor = conexao.cursor()
+                        cmd_consolid = f"UPDATE projeu_sprints SET check_consolid = 1 WHERE id_sprint = {id_sprint};"
                     
-                    #CRIANDO ARQUIVO TEMPORÁRIO TXT
-                    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-                        info_txt = ""
+                        mycursor.execute(cmd_consolid)
+                        conexao.commit()
 
-                        for matric_colab, dd_consolid in dd_empres.items():
-                            horas_colab = sum([int(x[7]) if x[7] != None else 0 for x in dd_consolid])
-                            valor_colab = sum([x[10] for x in dd_consolid])
-                            
-                            dd_txt = fun_digits([matric_colab, '1204', hoje.month, hoje.year,hoje.month, hoje.year, 0, 5, str(round(valor_colab, 2)).replace('.', ',')])
-
-                            info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}\n'''
-                        
-                        temp_file.write(info_txt)
-                        arquivo_temporario = temp_file.name
-                    
-                    #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                    enviar_email(destino='processos4.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
-                
-                #ENVIADO EMAIL PARA OS PJ
-                consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
-                for name_colab, dd_consolid in consolid_pj.items():
-                    by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
-                
-                    #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                    enviar_email(destino='processos4.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
-
+                    mycursor.close()
+                    st.toast('Prêmio Consolidado!', icon='✅')
                     sleep(1)
-                st.rerun()
+                    
+                    fun_digits = lambda x, y=[6, 4, 2, 4, 2, 4, 1, 2, 16]: [f'{"0"*(int(y[idx])-len(str(x[idx])))}{str(x[idx])}' for idx in range(len(x))]
+
+                    hoje = datetime.today() + relativedelta(months=1)        
+                    #ENVIADO EMAIL PARA O DEPARTAMENTO PESSOAL
+                    dados_by_empres = {name_empr: {mat: [x for x in dadosBD if str(x[14]).strip() == str(name_empr).strip() and str(x[4]).strip() == str(mat).strip()] for mat in list(set([x[4] for x in dadosBD if str(x[14]).strip() == str(name_empr).strip()]))} for name_empr in list(set([dd[14] for dd in dadosBD if str(dd[13]).strip().upper() != 'PJ']))}
+                    
+                    for cod_empres, dd_empres in dados_by_empres.items():
+                        
+                        #CRIANDO ARQUIVO TEMPORÁRIO TXT
+                        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                            info_txt = ""
+
+                            for matric_colab, dd_consolid in dd_empres.items():
+                                horas_colab = sum([int(x[7]) if x[7] != None else 0 for x in dd_consolid])
+                                valor_colab = sum([x[10] for x in dd_consolid])
+                                
+                                dd_txt = fun_digits([matric_colab, '1204', hoje.month, hoje.year,hoje.month, hoje.year, 0, 5, str(round(valor_colab, 2)).replace('.', ',')])
+
+                                info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}\n'''
+                            
+                            temp_file.write(info_txt)
+                            arquivo_temporario = temp_file.name
+                        
+                        #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
+                        enviar_email(destino='processos4.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                    
+                    #ENVIADO EMAIL PARA OS PJ
+                    consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
+                    for name_colab, dd_consolid in consolid_pj.items():
+                        by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
+                    
+                        #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
+                        enviar_email(destino='processos4.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
+
+                        sleep(1)
+                    st.rerun()
 
         else:
             st.error('NÃO HÁ PRÊMIOS PARA SEREM CONSOLIDADOS')
- 
+
