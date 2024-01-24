@@ -62,7 +62,7 @@ SELECT
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as fim_sprint,
     (
-        SELECT GROUP_CONCAT(status_homolog SEPARATOR '~/>') 
+        SELECT GROUP_CONCAT(IFNULL(status_homolog, "NULO") SEPARATOR '~/>')
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as status_homolog_sprint,
@@ -1331,8 +1331,18 @@ elif authentication_status:
                                 st.caption('Parecer Homologação')
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
+
+                                idSprints = [x[27].split("~/>") for x in ddPaging if x[27]]
+                                for i in range(len(idSprints)):
+                                    for j in range(len(idSprints[i])):
+                                        if ddSprint[cont_sprint - 1][4] == idSprints[i][j]:
+                                            statusHomolog = [x[15].split("~/>") for x in ddPaging if x[27] and ddSprint[cont_sprint - 1][4] == idSprints[i][j] and x[1] == project_filter]
                                 
-                                btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
+                                if statusHomolog[0][cont_sprint - 1] == "HOMOLOGADO COM AJUSTES" or statusHomolog[0][cont_sprint - 1] == 'HOMOLOGADO':
+                                    btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True)
+                                else:
+                                    btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
+                                
                                 if btt_homo:
                                     if len(parec_homol) > 0:
                                         if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0:
