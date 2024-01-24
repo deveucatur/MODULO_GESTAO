@@ -1394,7 +1394,7 @@ elif authentication_status:
                                                                         'hrs_normalizadas', 'dificuldade']
 
                                                             #PEGANDO OS DADOS DA SQUAD
-                                                            bonific_list_aux1 = [[entrega[7], #MATRICULA
+                                                            bonific_list_aux1 = [[entrega[8], #MATRICULA
                                                                                     bonific_calcul['SQUAD'][entrega[2]]['Entregas'][entrega[1]]['Bonificação'], #VALOR DA BONIFICAÇÃO
                                                                                     'EX',
                                                                                     entrega[6], #ID DA ENTREGA
