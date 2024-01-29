@@ -3,7 +3,7 @@ from PIL import Image
 import mysql.connector
 from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
 from time import sleep
-from datetime import datetime 
+from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -171,13 +171,35 @@ elif authentication_status:
     mycursor.close()
 
 
+    def aux_mes(number_mes):
+        if number_mes >= 12:
+            number_mes = 0
+
+        dic_mes = {
+            1: 'Janeiro',
+            2: 'Fevereiro',
+            3: 'Março',
+            4: 'Abril',
+            5: 'Maio',
+            6: 'Junho',
+            7: 'Julho',
+            8: 'Agosto',
+            9: 'Setembro',
+            10: 'Outubro',
+            11: 'Novembro',
+            12: 'Dezembro'
+        }
+
+        return dic_mes[number_mes]
+
+
     def enviar_email(destino, nome_colab = None, list_valores = None, txt_temporario = None, name_arquivo = None):
         
         msg = MIMEMultipart()
-        msg['Subject'] = "Assunto"
+        msg['Subject'] = f"Bonificação de Projetos - {aux_mes(int(date.today().month)+1)}"
         msg['From'] = 'automacao1.processos@gmail.com'
         msg['To'] = destino
-        
+
         if nome_colab != None:
             html = escopoGeral(nome_colab, list_valores, '051.625.652-10', 'PJ')
             corpo_email = html
@@ -197,7 +219,7 @@ elif authentication_status:
         s.login(msg['From'], password)
 
         #ENVIANDO EMAIL
-        s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
+        s.sendmail(msg['From'], [msg['To'], 'cleidi.sander@gmail.com', 'processos.eucatur@gmail.com', 'processos4.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
         print('Email enviado')
 
 
@@ -500,7 +522,7 @@ elif authentication_status:
                             arquivo_temporario = temp_file.name
                         
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='processos4.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                        enviar_email(destino='jesiel.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
                     
                     #ENVIADO EMAIL PARA OS PJ
                     consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
@@ -508,9 +530,9 @@ elif authentication_status:
                         by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
                     
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='processos4.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
+                        enviar_email(destino='jesiel.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
 
-                        sleep(1)
+                    sleep(1)
                     st.rerun()
 
         else:
