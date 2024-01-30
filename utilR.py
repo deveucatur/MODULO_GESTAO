@@ -2281,7 +2281,9 @@ def validarEmail(codigo):
                     <hr>
                     <p>Acesse a página de confirmação e insira o código abaixo para validar seu e-mail</p>
                     <h2>{codigo}</h2>
-                    <button type="button">VALIDAR</button>
+                    <a href="https://meusprojetos-mpjj-mg.streamlit.app/Novo_Usuário">
+                        <button type="button">VALIDAR</button>
+                    </a>
                 </div>
             </div>
         </body>"""
