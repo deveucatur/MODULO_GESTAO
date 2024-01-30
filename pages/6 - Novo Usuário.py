@@ -171,8 +171,8 @@ with tab3:
                 mycursor.execute(update)
                 conexao.commit()
                 st.toast("Usuário validado com sucesso !", icon='✅')
-                sleep(2)
-                st.switch_page("Home.py")
+                # sleep(2)
+                # st.switch_page("Home.py")
             else:
                 st.info("Esse código não é válido")
         else:
