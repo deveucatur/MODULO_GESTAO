@@ -28,7 +28,7 @@ menuCss = menuProjeuCss()
 st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
 st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(['Novos Usuários', 'Usuários Criados', 'Check Usuário'])
+tab1, tab2, tab3 = st.tabs(['Novos Usuários', 'Usuários Criados', 'Validar Usuário'])
 
 with tab1:    
     comando1 = 'SELECT * FROM projeu_users;'
