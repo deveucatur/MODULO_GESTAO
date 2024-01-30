@@ -2292,7 +2292,7 @@ def validarEmail(codigo):
 
 def enviar_email(destino, codigo):    
     msg = MIMEMultipart()
-    msg['Subject'] = "Assunto"
+    msg['Subject'] = "Validação de e-mail - Eucatur"
     msg['From'] = 'automacao1.processos@gmail.com'
     msg['To'] = destino
     msg['Cc'] = ', automacao1.processos@gmail.com'
