@@ -2,8 +2,10 @@ import streamlit as st
 from PIL import Image
 import streamlit_authenticator as stauth
 import mysql.connector
-from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
+from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss, validarEmail, enviar_email
 from time import sleep
+import string
+import random
 
 
 conexao = mysql.connector.connect(
@@ -57,6 +59,18 @@ with tab1:
                      'Liderança': 'L'}
 
         return dic_users[str(username).strip()]
+    
+    def gerar_sequencia_aleatoria():
+        tamanho = 5
+
+        trava = True
+        while trava:
+            caracteres = string.ascii_letters + string.digits
+            carac_random =''.join(random.choices(caracteres, k=tamanho))
+            if carac_random not in [x[14] for x in usersBD]:
+                trava = False    
+
+        return carac_random
 
 
     fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
@@ -110,13 +124,12 @@ with tab1:
                     st.toast('Senhas diferentes', icon='❌')
                 else:
                     if str(empresa).strip() == 'PJ' and len(str(cpf).strip()) < 1:
-                        st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
-                    
-                    #st.info([len(str(x).strip()) for x in [str(nome).strip(), str(cpf).strip(), str(email).strip(),email2, senha, senhaaux, cpf]])           
+                        st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')                    
                     elif 0 not in [len(str(x).strip()) for x in [str(nome).strip(), str(email).strip(),email2, senha, senhaaux]]:
-                        
                         if str(email).strip().lower() not in [str(x[3]).strip().lower() for x in usersBD]:
-                            columnsBD = '''Nome, cpf_cnpj, email, senha, unidade_fgkey, empresa_fgkey, macroprocesso_fgkey, condicao_pagamento_fgkey, especialidade, senha_hash, perfil_proj, email_pj'''
+                            codigo = gerar_sequencia_aleatoria()
+
+                            columnsBD = '''Nome, cpf_cnpj, email, senha, unidade_fgkey, empresa_fgkey, macroprocesso_fgkey, condicao_pagamento_fgkey, especialidade, senha_hash, perfil_proj, codigo_user, email_pj'''
                             values = f""" 
                                         '{str(nome).strip()}', 
                                         '{str(cpf).strip()}',
@@ -128,7 +141,8 @@ with tab1:
                                         '{list(set(x[5] for x in dadosPagingBD if x[2] == condPagamento))[0]}',
                                         '{str(especialidade).strip()}',
                                         '{stauth.Hasher([senha]).generate()[0]}',
-                                        '{func_users(str(type_user).strip())}', 
+                                        '{func_users(str(type_user).strip())}',
+                                        '{str(codigo).strip()}', 
                                         '{email2}' """
 
 
@@ -143,7 +157,11 @@ with tab1:
                             
                             mycursor.execute(cmdINSERT)
                             conexao.commit()
-                            st.toast('Cadastro Concluído!', icon='✅') 
+                            st.toast('Cadastro Concluído!', icon='✅')
+
+                            validarEmail(str(codigo).strip())
+                            enviar_email(str(email).strip(), str(codigo).strip())
+                            st.info("Verifique o código de validação enviado no e-mail cadastrado")
                         else:
                             st.toast('Email já utilizado.', icon='❌')
                     else:
