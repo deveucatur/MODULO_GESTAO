@@ -2,7 +2,8 @@ import streamlit as st
 from PIL import Image
 import streamlit_authenticator as stauth
 import mysql.connector
-from utilR import font_TITLE
+from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
+from time import sleep
 
 
 conexao = mysql.connector.connect(
@@ -17,7 +18,13 @@ mycursor = conexao.cursor()
 st.set_page_config(
 page_title="9box | New User",
 page_icon=Image.open('imagens/icone.png'),
-layout="centered")
+layout="wide",
+initial_sidebar_state='collapsed')
+
+menuHtml = menuProjeuHtml(" ")
+menuCss = menuProjeuCss()
+st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(['Novos Usuários', 'Usuários Criados', 'Check Usuário'])
 
@@ -41,7 +48,7 @@ with tab1:
     unidadesBD = list(set([x[0] for x in dadosPagingBD]))
     macroprocBD = list(set([x[1] for x in dadosPagingBD]))
     condPagamentoBD = list(set([x[2] for x in dadosPagingBD]))
-    mycursor.close()
+    
 
     def func_users(username):
         dic_users = {'Padrão': 'P',
@@ -136,7 +143,6 @@ with tab1:
                             
                             mycursor.execute(cmdINSERT)
                             conexao.commit()
-                            mycursor.close()
                             st.toast('Cadastro Concluído!', icon='✅') 
                         else:
                             st.toast('Email já utilizado.', icon='❌')
@@ -145,3 +151,31 @@ with tab1:
  
 
     CadastroDeUsuarios()
+
+with tab3:
+    fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
+    font_TITLE('VALIDAR E-MAIL', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
+
+    col1, col2, col3 = st.columns(3)
+    with col2:
+        codValidacao = st.text_input("Código de Validação", max_chars=5)
+        validar = st.button("VALIDAR")
+
+    home = 0
+
+    if validar:
+        if codValidacao:
+            usuario = [x for x in usersBD if x[14] == f'{codValidacao}']
+            if len(usuario) != 0:
+                update = f"UPDATE projeu_users SET status_user = 'A', codigo_user = NULL WHERE codigo_user = '{codValidacao}'"
+                mycursor.execute(update)
+                conexao.commit()
+                st.toast("Usuário validado com sucesso !", icon='✅')
+                sleep(2)
+                st.switch_page("Home.py")
+            else:
+                st.info("Esse código não é válido")
+        else:
+            st.info("Insira o código de validação do seu e-mail")
+
+mycursor.close()
