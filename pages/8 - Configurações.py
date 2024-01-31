@@ -6,7 +6,7 @@ from utilR import menuProjeuHtml, menuProjeuCss
 from datetime import date
 import streamlit_authenticator as stauth
 
-st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide")
+st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide", initial_sidebar_state='collapsed')
 conexao = mysql.connector.connect(
     passwd='nineboxeucatur',
     port=3306,
