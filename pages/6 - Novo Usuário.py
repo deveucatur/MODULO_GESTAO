@@ -188,7 +188,7 @@ with tab3:
                 update = f"UPDATE projeu_users SET status_user = 'A', codigo_user = NULL WHERE codigo_user = '{codValidacao}'"
                 mycursor.execute(update)
                 conexao.commit()
-                st.toast("Usuário validado com sucesso !", icon='✅')
+                st.toast("Usuário validado com sucesso!", icon='✅')
                 # sleep(2)
                 # st.switch_page("Home.py")
             else:
