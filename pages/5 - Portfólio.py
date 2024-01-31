@@ -230,7 +230,7 @@ mycursor.execute(consult2AUX)
 param_premiosBD = mycursor.fetchall()
 
 
-comandUSERS = 'SELECT * FROM projeu_users;'
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV') AND status_user = 'A';"
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 

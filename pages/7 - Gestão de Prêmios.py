@@ -31,7 +31,7 @@ conexao = mysql.connector.connect(
 
 mycursor = conexao.cursor()
 
-comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A');"
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A') AND status_user = 'A';"
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 

@@ -219,7 +219,6 @@ cadeiaBD = mycursor.fetchall()
 
 mycursor.close()
 
-
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('DASHBOARD DE PROJETOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
 col1, col2, col3, col4, col5 = st.columns(5)
