@@ -54,6 +54,7 @@ if validar:
                 st.toast("Usuário validado com sucesso!", icon='✅')
                 # sleep(2)
                 # st.switch_page("Home.py")
+                st.info("Retorne à página inicial do sistema através do link: \n\n https://meusprojetos-mpjj-mg.streamlit.app")
             else:
                 st.info("Esse código não é válido")
         else:
