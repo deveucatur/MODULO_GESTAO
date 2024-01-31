@@ -1465,9 +1465,9 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
     qtdUnidades = dadosNineboxUni[1] 
     style = ["green"]
     txtHtml = []
-    # imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
-    # href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
-    # rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
+    imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
+    href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
+    rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
     for i in range(len(qtdUnidades)):
         txtAux = ""
 
@@ -1476,7 +1476,8 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
                 dados_ninebox = f"""<table class="tb2">
                         <tr class="tb-person-{style[i]}2">
                             <td>
-                                <p>{qtdUnidades[i][j]}</p>
+                                <div class="rank">{rank[j]}</div>
+                                {href[j]}{qtdUnidades[i][j]}</a>
                             </td>
                         </tr>
                     </table>"""
@@ -1484,34 +1485,7 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
                 txtAux += dados_ninebox
         txtHtml.append(txtAux)
 
-    return txtHtml    
-
-def statusProjetos(dados):
-                        #LISTA DE UNIDADES NO LISTCELLNINETODOS
-    nomeProj = dados[0] 
-    statusProj = dados[1]
-    style = ["green"]
-    txtHtml = []
-    for i in range(len(nomeProj)):
-        txtAux = ""
-
-        if len(nomeProj[i]) > 0:
-            for j in range(len(nomeProj[i])):
-                dados_ninebox = f"""<table class="tb2">
-                        <tr class="tb-person-{style[i]}2">
-                            <td style="min-width: 100px; max-width: 100px;">
-                                <p>{nomeProj[i][j]}</p>
-                            </td>
-                            <td style="min-width: 50px; max-width: 50px;">
-                                <p>{statusProj[i][j]}</p>
-                            </td>
-                        </tr>
-                    </table>"""
-                
-                txtAux += dados_ninebox
-        txtHtml.append(txtAux)
-
-    return txtHtml      
+    return txtHtml     
 
 def css_9box_home():
     ninebox_style = """
@@ -1537,8 +1511,8 @@ def css_9box_home():
     }
 
     p{
-        font-size: 14px;
-        margin: 0;
+        font-weight: bold;
+        font-size: 20px;
     }
 
     img{
@@ -1551,7 +1525,7 @@ def css_9box_home():
     }
 
     .st-emotion-cache-uvn0xz tr {
-        border-top: none
+    border-top: none
     }
 
     .box-green2{
@@ -1654,11 +1628,6 @@ def css_9box_home():
         color: #000;
         font-size: 13px;
         transition: background-color 0.6s ease;
-        margin: 5px;
-    }
-
-    td{
-        margin: 5px;
     }
 
     .tb-person-green2{
@@ -1695,6 +1664,7 @@ def css_9box_home():
 
     .tb-person-green2:hover td{
         background: linear-gradient(to bottom, #9fdafc, #bae6ff, #dbf2fe);
+        width: 100%;
     }
 
 
