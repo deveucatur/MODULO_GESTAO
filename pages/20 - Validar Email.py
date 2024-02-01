@@ -2,18 +2,13 @@ import streamlit as st
 import mysql.connector
 from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
 from time import sleep
+from conexao import conexaoBD
 
 st.set_page_config(page_title="Validar Email", 
                    layout="wide",
                    initial_sidebar_state="collapsed")
 
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-)
+conexao = conexaoBD()
 mycursor = conexao.cursor()
 
 user = 'SELECT * FROM projeu_users;'
