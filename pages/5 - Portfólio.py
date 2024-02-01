@@ -199,7 +199,12 @@ SELECT
         SELECT GROUP_CONCAT(date_homolog SEPARATOR '~/>') 
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
-    ) as date_homolog_sprint
+    ) as date_homolog_sprint,
+	 (
+        SELECT GROUP_CONCAT(status_homolog SEPARATOR '~/>') 
+        FROM projeu_sprints 
+        WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
+    ) as STATUS_HOMOLOG
 FROM 
     projeu_projetos
 JOIN 
@@ -230,7 +235,7 @@ mycursor.execute(consult2AUX)
 param_premiosBD = mycursor.fetchall()
 
 
-comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV') AND status_user = 'A';"
+comandUSERS = 'SELECT * FROM projeu_users;'
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 
@@ -536,6 +541,19 @@ elif authentication_status:
                             WHERE 
                                 PS.id_sprint IN ({dadosOrigin[0][27].replace('~/>', ',') if dadosOrigin[0][27] != None else 'null'});"""
 
+        cmd_especialist_sprint = f"""SELECT
+                                        PES.id_sp, 
+                                        PES.id_sprt_fgkey, 
+                                        PS.number_sprint,
+                                        PES.id_colab_fgkey, 
+                                        PU.Matricula,
+                                        PU.Nome,
+                                        PES.status_sp
+                                    FROM projeu_especialist_sprint PES
+                                    JOIN projeu_users PU ON PU.id_user = PES.id_colab_fgkey
+                                    JOIN projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
+                                    WHERE PS.id_proj_fgkey IN (SELECT PP_AUX.id_proj FROM projeu_projetos PP_AUX WHERE PP_AUX.name_proj LIKE '%{str(dadosOrigin[0][1]).strip()}%');"""
+
     st.text(' ')
     st.text(' ')
     if len(dadosOrigin) > 0:
@@ -545,15 +563,20 @@ elif authentication_status:
         EntregasPlanjBD = mycursor.fetchall()
 
         #CONSULTANDO OS DADOS DAS ENTREGAS
-        mycursor = conexao.cursor()  
         mycursor.execute(cmd_entregas)
         EntregasBD = mycursor.fetchall()
         
         #CONSULTANDO OS DADOS DE OBSERVAÇÕES
         mycursor.execute(cmd_observcao)
         ObservBD = mycursor.fetchall()
-        mycursor.close()
         
+        #CONSULTANDO OS ESPECIALISTAS POR SPRINT
+        mycursor.execute(cmd_especialist_sprint)
+        especialist_by_proj = mycursor.fetchall()
+        
+        mycursor.close()
+
+
         tab1, tab2 = st.tabs(['Canvas', 'Editar'])
         with tab1:
             font_TITLE(f'{dadosOrigin[0][1]}', fonte_Projeto,"'Bebas Neue', sans-serif", 31, 'center', '#228B22')
@@ -748,7 +771,6 @@ elif authentication_status:
                         dadosOrigin[0][31]]
 
 
-        #st.write(dadosOrigin)
         ################################## APRESENTAÇÃO DO GRÁFICO EM LINHA DO DESVIO EM DIAS ##################################
         dificuldade_proj = f'{dadosOrigin[0][36]} {dadosOrigin[0][37]}'
         type_proj = str(dadosOrigin[0][4]).strip()
@@ -948,7 +970,7 @@ elif authentication_status:
                     st.error('Não há colaboradores vinculados a equipe do projeto.', icon='❌')
                 
             
-        with st.expander('Controle do Projeto', expanded=True): 
+        with st.expander('Controle do Projeto', expanded=False): 
             
             font_TITLE('DATAS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
             dt_aprov = st.date_input('Aprovação do Projeto', dados_control[0])
@@ -1040,8 +1062,6 @@ elif authentication_status:
                 st.toast('Sucesso na adição da sprint!', icon='✅')
                 st.text(' ')
                 
-                sleep(1.5)
-                # st.rerun()
 
             if button_exSprint:
                 NotEntrg = False
@@ -1107,6 +1127,7 @@ elif authentication_status:
                         name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] != 'MVP' else 'Evento - MVP'
                         with st.expander(name_expander):
                             id_sprint = idx_spr
+
                             #FILTRANDO ENTREGAS DAQUELA SPRINT
 
                             spEntregas = [x for x in SprintsEntregs if x[7] == idx_spr]
@@ -1129,10 +1150,54 @@ elif authentication_status:
                                 font_TITLE('ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ2:
                                 font_TITLE('STATUS DO PROJETO - EM ANDAMENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
-                                
-                            especialist_proj = [list(func_split(dadosOrigin[0][21]))[x] for x in range(len(func_split(dadosOrigin[0][22]))) if str(list(func_split(dadosOrigin[0][22]))[x]).upper() == 'ESPECIALISTA']
-                            especialist_sprint = st.multiselect('Especialistas',especialist_proj, especialist_proj, key=f'especialista multi{idx_spr}')
+
+                            especialistBD_sprint = [x for x in especialist_by_proj if str(x[1]) == str(id_sprint)]  #ESPECIALISTAS ATIVOS E NÃO ATIVOS VINCULADOS A SPRINT                        
                             
+                            especialist_proj = [list(func_split(dadosOrigin[0][21]))[x] for x in range(len(func_split(dadosOrigin[0][22]))) if str(list(func_split(dadosOrigin[0][22]))[x]).upper() == 'ESPECIALISTA']
+                            
+                            especialist_opc = especialist_proj if len(especialistBD_sprint) == 0 else [str(x[5]).strip() for x in especialistBD_sprint if str(x[6]).strip() == 'A']
+               
+                            especialist_sprint = st.multiselect('Especialistas', list(set(especialist_proj)), list(set(especialist_opc)), key=f'especialista multi{idx_spr}')
+                            
+                            def tratamento_especialist():
+                                for espec_bd in especialist_proj:
+                                    espec_bd = str(espec_bd).strip()
+                                    dd_espec = {matric: lista for matric, lista in dict(equipe_atual).items() if str(lista[1]).strip() == str(espec_bd)} 
+                                    
+                                    matricula_especil = str(list(dict(dd_espec).keys())[0]).strip()
+
+                                    cmd_aux = None
+                                    matric_all_espc = [str(x[4]) for x in especialistBD_sprint] #MATRICULA DE TODOS OS ESPECIALISTAS VINCULADOS A SPRINT
+                                    
+                                    if matricula_especil not in matric_all_espc and espec_bd in [str(x).strip() for x in especialist_sprint]: #SE SIM, NOVO ESPECIALISTA
+                                        cmd_aux = f'''
+                                                INSERT INTO projeu_especialist_sprint (
+                                                    id_sprt_fgkey, 
+                                                    id_colab_fgkey
+                                                ) VALUES (
+                                                    {id_sprint}, 
+                                                    (SELECT id_user FROM projeu_users WHERE Matricula = {matricula_especil}));'''
+                                                            
+                                    else: #ESTÁ VINCULADO A SPRINT DO PROJETO
+                                        if espec_bd in [str(x).strip() for x in especialist_sprint] and especialistBD_sprint[0][6] == 'I': #FOI SELECIONADO
+                                            cmd_aux = f'''
+                                                        UPDATE 
+                                                            projeu_especialist_sprint SET status_sp = "A" 
+                                                        WHERE 
+                                                            id_colab_fgkey = (SELECT id_user FROM projeu_users WHERE Matricula = {matricula_especil}) 
+                                                                AND id_sprt_fgkey = {id_sprint};'''
+                                        
+                                        elif espec_bd not in [str(x).strip() for x in especialist_sprint] and especialistBD_sprint[0][6] == 'A': #FOI RETIRADO
+                                            cmd_aux = f'''
+                                                        UPDATE 
+                                                            projeu_especialist_sprint SET status_sp = "I" 
+                                                        WHERE 
+                                                            id_colab_fgkey = (SELECT id_user FROM projeu_users WHERE Matricula = {matricula_especil}) 
+                                                                AND id_sprt_fgkey = {id_sprint};'''
+                                    #cmd_aux=''
+                                    return cmd_aux
+                                
+
                             st.text(' ')
                             spEntregas = [x for x in spEntregas if x[1] != None and x[2] != None and x[3] != None]
                             
@@ -1229,11 +1294,8 @@ elif authentication_status:
                                                                 mycursor.execute(cmd_insert)
                                                                 conexao.commit()
 
-                                                for i in range(len(especialist_sprint)):
-                                                    cmd_insert = f"""UPDATE projeu_especialist_sprint 
-                                                        SET id_colab_fgkey = (SELECT id_user FROM projeu_users WHERE Nome = '{especialist_sprint[i]}')
-                                                        WHERE id_sprt_fgkey = {spEntregas[0][7]};"""
-                                                    mycursor.execute(cmd_insert)
+                                                    cmd_especialist = tratamento_especialist()
+                                                    mycursor.execute(cmd_especialist)
                                                     conexao.commit()
 
                                                 mycursor.close()
@@ -1260,13 +1322,16 @@ elif authentication_status:
                                                         conexao.commit()
 
                                                 for i in range(len(especialist_sprint)):
-                                                    cmd_insert = f"""INSERT INTO projeu_especialist_sprint VALUES
-                                                    (null, 
-                                                    {spEntregas[0][0]}, 
-                                                    (SELECT id_user FROM projeu_users WHERE Nome = '{especialist_sprint[i]}'), 
-                                                    'A');"""
-                                                    mycursor.execute(cmd_insert)
+                                                    cmd_insert_espc = f"""INSERT INTO projeu_especialist_sprint (
+                                                                            id_sprt_fgkey, 
+                                                                            id_colab_fgkey
+                                                                        ) VALUES (
+                                                                            {id_sprint}, 
+                                                                            (SELECT id_user FROM projeu_users WHERE Nome LIKE '%{str(especialist_sprint[i]).strip()}%'));"""
+                                                    
+                                                    mycursor.execute(cmd_insert_espc)
                                                     conexao.commit()
+
                                                 st.toast('Entregas Enviadas!', icon='✅')
                                                 mycursor.close()
 
@@ -1308,7 +1373,6 @@ elif authentication_status:
                                         else:
                                             st.toast('Entrega não encontrada no banco de dados!', icon='❌')
 
-
                             with tab3:
                                 font_TITLE('HOMOLOGAÇÃO', fonte_Projeto, "'Bebas Neue', sans-serif", 26, 'left')
                                 col1, col2, col3 = st.columns([2, 1, 1])
@@ -1331,17 +1395,11 @@ elif authentication_status:
                                 st.caption('Parecer Homologação')
                                 parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                            key=f'parec_homol{idx_spr}')
-
-                                idSprints = [x[27].split("~/>") for x in ddPaging if x[27]]
-                                for i in range(len(idSprints)):
-                                    for j in range(len(idSprints[i])):
-                                        if ddSprint[cont_sprint - 1][4] == idSprints[i][j]:
-                                            statusHomolog = [x[15].split("~/>") for x in ddPaging if x[27] and ddSprint[cont_sprint - 1][4] == idSprints[i][j] and x[1] == project_filter]
                                 
-                                if statusHomolog[0][cont_sprint - 1] == "HOMOLOGADO COM AJUSTES" or statusHomolog[0][cont_sprint - 1] == 'HOMOLOGADO':
-                                    btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True)
-                                else:
-                                    btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}')
+                            
+                                status_homolog = [func_split(dadosOrigin[0][15])[x] for x in range(len(func_split(dadosOrigin[0][11]))) if str(func_split(dadosOrigin[0][27])[x]) == str(id_sprint)][0]
+
+                                btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True if str(status_homolog).strip() == 'HOMOLOGADO' else False)
                                 
                                 if btt_homo:
                                     if len(parec_homol) > 0:
@@ -1385,14 +1443,13 @@ elif authentication_status:
     
                                                         valores = premio_aux.valorEvento()
 
-                                                        bonif_sprints = [int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'PÓS MVP' else [int(x) for x in func_split(dadosOrigin[0][11])]
+                                                        bonif_sprints = [int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])] if str(type_homol).strip() != 'MVP' and str(type_homol).strip() != 'ENTREGA FINAL' else [int(x) for x in func_split(dadosOrigin[0][11])]
                                                         
                                                         bonific_calcul = premio_aux.CalculaSprint(valores[type_homol]['ValorPorSprint'], bonif_sprints)
                                                         
                                                         ################### SEPARANDO O VALOR QUE CADA COLABORADOR RECEBEU ###################
                                                                                                     
                                                         if str(type_homol).strip() != 'MVP' and str(dadosOrigin[0][38]) != '1': #AQUI É ONDE É TRATADO OS DADOS DE EVENTOS TRADICIONAIS - PRÉ-MVP E PÓS-MVP
-                                                            
                                                             #PEGANDO OS DADOS DOS GESTORES
                                                             bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G']]
                                                             
@@ -1415,7 +1472,6 @@ elif authentication_status:
                                                                                     ] for entrega in [entr for entr in spEntregas if entr[1] != None]]
                                                             
                                                         else: #AQUI PARA CASO SEJA MVP OU ENTREGA FINAL
-
                                                             #PEGANDO OS DADOS DOS GESTORES
                                                             bonific_list = [[dadosOrigin[0][3], bonific_calcul['GESTOR'], 'G', f'"{str(type_homol).strip().upper()}"']] 
 
