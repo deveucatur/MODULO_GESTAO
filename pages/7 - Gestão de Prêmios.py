@@ -12,6 +12,7 @@ from email.mime.application import MIMEApplication
 import tempfile
 from relatorio import escopoGeral
 import streamlit_authenticator as stauth
+from conexao import conexaoBD
 
 icone = Image.open('imagens/icone.png')
 st.set_page_config(
@@ -21,14 +22,7 @@ st.set_page_config(
     initial_sidebar_state='collapsed')
 
 
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-    )
-
+conexao = conexaoBD()
 mycursor = conexao.cursor()
 
 comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A');"
