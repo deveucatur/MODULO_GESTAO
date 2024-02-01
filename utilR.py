@@ -1,8 +1,5 @@
 import streamlit as st
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-import smtplib
 
 fonte = '''<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1465,9 +1462,9 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
     qtdUnidades = dadosNineboxUni[1] 
     style = ["green"]
     txtHtml = []
-    imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
-    href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
-    rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
+    # imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
+    # href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
+    # rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
     for i in range(len(qtdUnidades)):
         txtAux = ""
 
@@ -1476,8 +1473,7 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
                 dados_ninebox = f"""<table class="tb2">
                         <tr class="tb-person-{style[i]}2">
                             <td>
-                                <div class="rank">{rank[j]}</div>
-                                {href[j]}{qtdUnidades[i][j]}</a>
+                                <p>{qtdUnidades[i][j]}</p>
                             </td>
                         </tr>
                     </table>"""
@@ -1485,7 +1481,34 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
                 txtAux += dados_ninebox
         txtHtml.append(txtAux)
 
-    return txtHtml     
+    return txtHtml    
+
+def statusProjetos(dados):
+                        #LISTA DE UNIDADES NO LISTCELLNINETODOS
+    nomeProj = dados[0] 
+    statusProj = dados[1]
+    style = ["green"]
+    txtHtml = []
+    for i in range(len(nomeProj)):
+        txtAux = ""
+
+        if len(nomeProj[i]) > 0:
+            for j in range(len(nomeProj[i])):
+                dados_ninebox = f"""<table class="tb2">
+                        <tr class="tb-person-{style[i]}2">
+                            <td style="min-width: 100px; max-width: 100px;">
+                                <p>{nomeProj[i][j]}</p>
+                            </td>
+                            <td style="min-width: 50px; max-width: 50px;">
+                                <p>{statusProj[i][j]}</p>
+                            </td>
+                        </tr>
+                    </table>"""
+                
+                txtAux += dados_ninebox
+        txtHtml.append(txtAux)
+
+    return txtHtml      
 
 def css_9box_home():
     ninebox_style = """
@@ -1511,8 +1534,8 @@ def css_9box_home():
     }
 
     p{
-        font-weight: bold;
-        font-size: 20px;
+        font-size: 14px;
+        margin: 0;
     }
 
     img{
@@ -1525,7 +1548,7 @@ def css_9box_home():
     }
 
     .st-emotion-cache-uvn0xz tr {
-    border-top: none
+        border-top: none
     }
 
     .box-green2{
@@ -1628,6 +1651,11 @@ def css_9box_home():
         color: #000;
         font-size: 13px;
         transition: background-color 0.6s ease;
+        margin: 5px;
+    }
+
+    td{
+        margin: 5px;
     }
 
     .tb-person-green2{
@@ -1664,7 +1692,6 @@ def css_9box_home():
 
     .tb-person-green2:hover td{
         background: linear-gradient(to bottom, #9fdafc, #bae6ff, #dbf2fe);
-        width: 100%;
     }
 
 
@@ -2169,112 +2196,3 @@ def menuProjeuCss():
             }}
         }}"""
     return styleMenuProjeu
-
-def validarEmail(codigo):
-    htmlGeral = f"""<head>
-            <style>
-                body{{
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    margin: 0;
-                    padding: 0;
-                    background-color: #fff;
-                }}
-
-                .email{{
-                    max-width: 600px;
-                    margin: 50px auto;
-                    background-color: #f1f1f1;
-                    border-radius: 8px;
-                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-                    padding-bottom: 20px;
-                }}
-
-                .logo img{{
-                    width: 100%;
-                    height: auto;
-                    border-bottom: 1px solid #ddd;
-                    margin-bottom: 20px;
-                    border-radius: 8px 8px 0 0;
-                }}
-
-                .titulo h1{{
-                    color: #333;
-                    text-align: center;
-                }}
-
-                .mensagem{{
-                    text-align: center;
-                }}
-
-                .mensagem p{{
-                    margin: 10px;
-                    line-height: 1.5;
-                    color: #666;
-                }}
-
-                hr{{
-                    border: 0.5px solid #ddd;
-                    margin: 20px 10px;
-                }}
-
-                h2{{
-                    color: #333;
-                    font-size: 24px;
-                    margin: 10px;
-                }}
-
-                button{{
-                    background-color: #4CAF50;
-                    color: #fff;
-                    padding: 10px 20px;
-                    border: none;
-                    border-radius: 5px;
-                    cursor: pointer;
-                }}
-
-                button:hover{{
-                    background-color: #245326;
-                    cursor: pointer;
-                }}
-            </style>
-        </head>
-        <body>
-            <div class="email">
-                <div class="logo">
-                    <img src="https://raw.githubusercontent.com/RahyanRamos/Imagens.Eucatur/main/CabecalhoEmail.png" alt="cabeçalho do email Eucatur">
-                </div>
-                <div class="titulo">
-                    <h1>Confirme seu Email</h1>
-                </div>
-                <div class="mensagem">
-                    <p>Uma nova conta utilizando esse e-mail foi criada nos sistemas Eucatur</p>
-                    <hr>
-                    <p>Acesse a página de confirmação e insira o código abaixo para validar seu e-mail</p>
-                    <h2>{codigo}</h2>
-                    <a href="https://meusprojetos-mpjj-mg.streamlit.app/Validar_Email">
-                        <button type="button">VALIDAR</button>
-                    </a>
-                </div>
-            </div>
-        </body>"""
-
-    return htmlGeral
-
-def enviar_email(destino, codigo):    
-    msg = MIMEMultipart()
-    msg['Subject'] = "Validação de e-mail - Eucatur"
-    msg['From'] = 'automacao1.processos@gmail.com'
-    msg['To'] = destino
-    msg['Cc'] = ', automacao1.processos@gmail.com'
-    
-    html = validarEmail(codigo)
-    msg.attach(MIMEText(html, 'html'))
-
-    s = smtplib.SMTP('smtp.gmail.com: 587')
-    s.starttls()
-
-    password = 'zobl ekzk sljm zrwk'
-    s.login(msg['From'], password)
-
-    s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
-    print('Email enviado!')
