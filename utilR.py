@@ -1,5 +1,9 @@
 import streamlit as st
 from datetime import datetime
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.application import MIMEApplication
 
 fonte = '''<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2196,3 +2200,112 @@ def menuProjeuCss():
             }}
         }}"""
     return styleMenuProjeu
+
+def validarEmail(codigo):
+    htmlGeral = f"""<head>
+            <style>
+                body{{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #fff;
+                }}
+
+                .email{{
+                    max-width: 600px;
+                    margin: 50px auto;
+                    background-color: #f1f1f1;
+                    border-radius: 8px;
+                    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+                    padding-bottom: 20px;
+                }}
+
+                .logo img{{
+                    width: 100%;
+                    height: auto;
+                    border-bottom: 1px solid #ddd;
+                    margin-bottom: 20px;
+                    border-radius: 8px 8px 0 0;
+                }}
+
+                .titulo h1{{
+                    color: #333;
+                    text-align: center;
+                }}
+
+                .mensagem{{
+                    text-align: center;
+                }}
+
+                .mensagem p{{
+                    margin: 10px;
+                    line-height: 1.5;
+                    color: #666;
+                }}
+
+                hr{{
+                    border: 0.5px solid #ddd;
+                    margin: 20px 10px;
+                }}
+
+                h2{{
+                    color: #333;
+                    font-size: 24px;
+                    margin: 10px;
+                }}
+
+                button{{
+                    background-color: #4CAF50;
+                    color: #fff;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }}
+
+                button:hover{{
+                    background-color: #245326;
+                    cursor: pointer;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="email">
+                <div class="logo">
+                    <img src="https://raw.githubusercontent.com/RahyanRamos/Imagens.Eucatur/main/CabecalhoEmail.png" alt="cabeçalho do email Eucatur">
+                </div>
+                <div class="titulo">
+                    <h1>Confirme seu Email</h1>
+                </div>
+                <div class="mensagem">
+                    <p>Uma nova conta utilizando esse e-mail foi criada nos sistemas Eucatur</p>
+                    <hr>
+                    <p>Acesse a página de confirmação e insira o código abaixo para validar seu e-mail</p>
+                    <h2>{codigo}</h2>
+                    <a href="https://meusprojetos-mpjj-mg.streamlit.app/Validar_Email">
+                        <button type="button">VALIDAR</button>
+                    </a>
+                </div>
+            </div>
+        </body>"""
+
+    return htmlGeral
+
+def enviar_email(destino, codigo):    
+    msg = MIMEMultipart()
+    msg['Subject'] = "Validação de e-mail - Eucatur"
+    msg['From'] = 'automacao1.processos@gmail.com'
+    msg['To'] = destino
+    msg['Cc'] = ', automacao1.processos@gmail.com'
+    
+    html = validarEmail(codigo)
+    msg.attach(MIMEText(html, 'html'))
+
+    s = smtplib.SMTP('smtp.gmail.com: 587')
+    s.starttls()
+
+    password = 'zobl ekzk sljm zrwk'
+    s.login(msg['From'], password)
+
+    s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
+    print('Email enviado!')
