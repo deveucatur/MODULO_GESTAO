@@ -6,15 +6,9 @@ from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss, validarEmail, envia
 from time import sleep
 import string
 import random
+from conexao import conexaoBD
 
-
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-)
+conexao = conexaoBD()
 mycursor = conexao.cursor()
 
 st.set_page_config(
