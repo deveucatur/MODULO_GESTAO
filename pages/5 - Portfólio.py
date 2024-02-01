@@ -9,20 +9,14 @@ from collections import Counter
 from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss
 import streamlit_authenticator as stauth
 import plotly.graph_objects as go
+from conexao import conexaoBD
 
 st.set_page_config(
     page_title="Gerir Projetos",
     layout="wide",
     initial_sidebar_state='collapsed')
 
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-)
-
+conexao = conexaoBD()
 mycursor = conexao.cursor()
 
 setSession = "SET SESSION group_concat_max_len = 5000;"
