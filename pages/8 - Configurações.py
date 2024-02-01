@@ -5,15 +5,10 @@ from util import string_to_datetime, CalculoPrêmio
 from utilR import menuProjeuHtml, menuProjeuCss
 from datetime import date
 import streamlit_authenticator as stauth
+from conexao import conexaoBD
 
 st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide", initial_sidebar_state='collapsed')
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-)
+conexao = conexaoBD()
 
 ####### CONCULTA BAGUNÇADA DE DADOS GERAIS SOBRE OS PROGRAMAS #######
 mycursor = conexao.cursor()
