@@ -6,6 +6,7 @@ from time import sleep
 from datetime import date
 import streamlit_authenticator as stauth
 from utilR import menuProjeuHtml, menuProjeuCss
+from conexao import conexaoBD
 
 icone = Image.open('imagens/icone.png')
 st.set_page_config(
@@ -15,13 +16,7 @@ st.set_page_config(
     initial_sidebar_state='collapsed')
 
 ########CONECTANDO AO BANCO DE DADOS########
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-    )
+conexao = conexaoBD()
 
 def formatar_numero_string(numero_str):
 
