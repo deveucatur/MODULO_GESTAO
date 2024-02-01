@@ -31,7 +31,7 @@ conexao = mysql.connector.connect(
 
 mycursor = conexao.cursor()
 
-comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A') AND status_user = 'A';"
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A');"
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 
@@ -196,7 +196,8 @@ elif authentication_status:
     def enviar_email(destino, nome_colab = None, list_valores = None, txt_temporario = None, name_arquivo = None):
         
         msg = MIMEMultipart()
-        msg['Subject'] = f"Bonificação de Projetos - {aux_mes(int(date.today().month)+1)}"
+        msg['Subject'] = f"Recompensa de Projetos / {date.today().month} {date.today().year}"
+        #msg['Subject'] = f"Recompensa de Projetos / 01-2024"
         msg['From'] = 'automacao1.processos@gmail.com'
         msg['To'] = destino
 
@@ -208,7 +209,7 @@ elif authentication_status:
         if txt_temporario is not None:
             with open(txt_temporario, 'rb') as f:
                 attachment = MIMEApplication(f.read())
-                attachment.add_header('Content-Disposition', 'attachment', filename=f'PremioProjeto_{name_arquivo}_{hoje.month}_{hoje.year}.txt')
+                attachment.add_header('Content-Disposition', 'attachment', filename=f'PremioProjeto_{name_arquivo}_{date.today().month}_{hoje.year}.txt')
                 msg.attach(attachment)
 
         s = smtplib.SMTP('smtp.gmail.com: 587')
@@ -220,6 +221,7 @@ elif authentication_status:
 
         #ENVIANDO EMAIL
         s.sendmail(msg['From'], [msg['To'], 'cleidi.sander@gmail.com', 'processos.eucatur@gmail.com', 'processos4.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
+        #s.sendmail(msg['From'], [msg['To'], 'processos.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
         print('Email enviado')
 
 
@@ -496,11 +498,10 @@ elif authentication_status:
 
                     mycursor.close()
                     st.toast('Prêmio Consolidado!', icon='✅')
-                    sleep(1)
                     
                     fun_digits = lambda x, y=[6, 4, 2, 4, 2, 4, 1, 2, 16]: [f'{"0"*(int(y[idx])-len(str(x[idx])))}{str(x[idx])}' for idx in range(len(x))]
 
-                    hoje = datetime.today() + relativedelta(months=1)        
+                    hoje = datetime.today()        
                     #ENVIADO EMAIL PARA O DEPARTAMENTO PESSOAL
                     dados_by_empres = {name_empr: {mat: [x for x in dadosBD if str(x[14]).strip() == str(name_empr).strip() and str(x[4]).strip() == str(mat).strip()] for mat in list(set([x[4] for x in dadosBD if str(x[14]).strip() == str(name_empr).strip()]))} for name_empr in list(set([dd[14] for dd in dadosBD if str(dd[13]).strip().upper() != 'PJ']))}
                     
@@ -514,7 +515,8 @@ elif authentication_status:
                                 horas_colab = sum([int(x[7]) if x[7] != None else 0 for x in dd_consolid])
                                 valor_colab = sum([x[10] for x in dd_consolid])
                                 
-                                dd_txt = fun_digits([matric_colab, '1204', hoje.month, hoje.year,hoje.month, hoje.year, 0, 5, str(round(valor_colab, 2)).replace('.', ',')])
+                                dd_txt = fun_digits([matric_colab, '1349', hoje.month, hoje.year, hoje.month, hoje.year, 0, 5, str(round(valor_colab, 2)).replace('.', ',')])
+                                #dd_txt = fun_digits([matric_colab, '1349', '01', hoje.year, '01', hoje.year, 0, 5, str(round(valor_colab, 2)).replace('.', ',')])
 
                                 info_txt += f'''{dd_txt[0]};{dd_txt[1]};{dd_txt[2]};{dd_txt[3]};{dd_txt[4]};{dd_txt[5]};{dd_txt[6]};{dd_txt[7]};;;;{dd_txt[8]}\n'''
                             
@@ -531,7 +533,7 @@ elif authentication_status:
                     
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
                         enviar_email(destino='jesiel.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
-
+                    
                     sleep(1)
                     st.rerun()
 
