@@ -17,6 +17,7 @@ st.set_page_config(
     initial_sidebar_state='collapsed')
 
 conexao = conexaoBD()
+
 mycursor = conexao.cursor()
 
 setSession = "SET SESSION group_concat_max_len = 5000;"
@@ -229,7 +230,7 @@ mycursor.execute(consult2AUX)
 param_premiosBD = mycursor.fetchall()
 
 
-comandUSERS = 'SELECT * FROM projeu_users;'
+comandUSERS = 'SELECT * FROM projeu_users WHERE perfil_proj IN ("A", "GV");'
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 
