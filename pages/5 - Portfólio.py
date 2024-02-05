@@ -9,19 +9,14 @@ from collections import Counter
 from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss
 import streamlit_authenticator as stauth
 import plotly.graph_objects as go
+from conexao import conexaoBD
 
 st.set_page_config(
     page_title="Gerir Projetos",
     layout="wide",
     initial_sidebar_state='collapsed')
 
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-)
+conexao = conexaoBD()
 
 mycursor = conexao.cursor()
 
@@ -235,7 +230,7 @@ mycursor.execute(consult2AUX)
 param_premiosBD = mycursor.fetchall()
 
 
-comandUSERS = 'SELECT * FROM projeu_users;'
+comandUSERS = 'SELECT * FROM projeu_users WHERE perfil_proj IN ("A", "GV");'
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 
@@ -707,7 +702,7 @@ elif authentication_status:
                 range_aux = [1 if str(values[x]).strip() != str(values_aux[x]).strip() else 0 for x in range(len(values))]
                 for idx_clm in range(len(columns1)):
                     if range_aux[idx_clm] == 1:         
-                        cmd = f'UPDATE projeu_projetos SET {columns1[idx_clm]} = {values[idx_clm]} WHERE id_proj = {dadosOrigin[0][0]};'
+                        cmd = f'UPDATE projeu_projetos SET {columns1[idx_clm]} = "{values[idx_clm]}" WHERE id_proj = {dadosOrigin[0][0]};'
                         
                         mycursor_edit.execute(cmd)
                         conexao.commit()
