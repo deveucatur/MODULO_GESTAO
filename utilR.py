@@ -1466,7 +1466,7 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
     style = ["green"]
     txtHtml = []
     imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
-    href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
+    href = [f'''<a href = {y}> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
     rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
     for i in range(len(qtdUnidades)):
         txtAux = ""
