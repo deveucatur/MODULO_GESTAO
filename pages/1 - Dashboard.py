@@ -1,16 +1,23 @@
 import streamlit as st
 import mysql.connector
 from util import string_to_datetime, displayInd, font_TITLE
-from utilR import statusProjetos, css_9box_home, ninebox_home, nineboxDatasUnidades_home
+from utilR import statusProjetos, css_9box_home, ninebox_home, nineboxDatasUnidades_home, menuProjeuHtml, menuProjeuCss
 from datetime import date, datetime
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-from conexao import conexaoBD
+# from conexao import conexaoBD
 
 st.set_page_config(layout="wide",
                    initial_sidebar_state="collapsed")
 
-conexao = conexaoBD()
+conexao = mysql.connector.connect(
+    passwd='nineboxeucatur',
+    port=3306,
+    user='ninebox',
+    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
+    database='projeu'
+)
+# conexao = conexaoBD()
 mycursor = conexao.cursor()
 
 setSession = "SET SESSION group_concat_max_len = 5000;"
@@ -214,6 +221,10 @@ cadeiaBD = mycursor.fetchall()
 
 mycursor.close()
 
+html = menuProjeuHtml(" ")
+css = menuProjeuCss()
+st.write(f'<div>{html}</div>', unsafe_allow_html=True)
+st.write(f'<style>{css}</style>', unsafe_allow_html=True)
 
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('DASHBOARD DE PROJETOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
