@@ -275,7 +275,7 @@ elif authentication_status:
 
     with col2:
         st.write("")
-        nomeBotão = "MEUS PROJETOS"
+        nomeBotão = "GERIR PORTFÓLIO"
         link = 'https://meusprojetos-mpjj-mg.streamlit.app/Portfólio'
         image_url=  "https://cdn-icons-png.flaticon.com/128/64/64572.png"
         botao1(nomeBotão,link,image_url)
