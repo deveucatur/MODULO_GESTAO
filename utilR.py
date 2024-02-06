@@ -583,7 +583,7 @@ class PlotCanvas:
         prodProjetoCode = ""
         for i in range(len(self.prodProjetos)):
             prodProjetoCode += f"""<tr class="tdata1">
-                                <td>{self.prodProjetos[i]}
+                                <td>{self.prodProjetos[i]}</td>
                             </tr>"""
 
         
