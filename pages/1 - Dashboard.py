@@ -235,7 +235,7 @@ with col2:
     displayInd('Concluídos', len(list(set([x[0] for x in ddPaging if x[24] == "Concluído"]))), min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
 with col3:
     projs_andament = len(list(set([x[0] for x in ddPaging if x[13] != None and string_to_datetime(str(x[13]).split("~/>")[0]) < date.today() and x[24] != "Concluído"])))
-    displayInd('Andamento', projs_andament, min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
+    displayInd('Em Andamento', projs_andament, min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
 with col4:
     projs_nao_inic = len(list(set([x[0] for x in ddPaging if x[13] == None or string_to_datetime(str(x[13]).split("~/>")[0]) > date.today()])))
     displayInd('Não Iniciado', projs_nao_inic, min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
