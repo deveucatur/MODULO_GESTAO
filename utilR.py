@@ -1,8 +1,9 @@
 import streamlit as st
 from datetime import datetime
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import smtplib
+from email.mime.application import MIMEApplication
 
 fonte = '''<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1465,9 +1466,9 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
     qtdUnidades = dadosNineboxUni[1] 
     style = ["green"]
     txtHtml = []
-    imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
-    href = [f'''<a href = {y}> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
-    rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
+    # imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
+    # href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
+    # rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
     for i in range(len(qtdUnidades)):
         txtAux = ""
 
@@ -1476,8 +1477,7 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
                 dados_ninebox = f"""<table class="tb2">
                         <tr class="tb-person-{style[i]}2">
                             <td>
-                                <div class="rank">{rank[j]}</div>
-                                {href[j]}{qtdUnidades[i][j]}</a>
+                                <p>{qtdUnidades[i][j]}</p>
                             </td>
                         </tr>
                     </table>"""
@@ -1485,7 +1485,7 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
                 txtAux += dados_ninebox
         txtHtml.append(txtAux)
 
-    return txtHtml     
+    return txtHtml    
 
 def statusProjetos(dados):
                         #LISTA DE UNIDADES NO LISTCELLNINETODOS
@@ -1512,7 +1512,7 @@ def statusProjetos(dados):
                 txtAux += dados_ninebox
         txtHtml.append(txtAux)
 
-    return txtHtml
+    return txtHtml      
 
 def css_9box_home():
     ninebox_style = """
@@ -1538,8 +1538,8 @@ def css_9box_home():
     }
 
     p{
-        font-weight: bold;
-        font-size: 20px;
+        font-size: 14px;
+        margin: 0;
     }
 
     img{
@@ -1552,7 +1552,7 @@ def css_9box_home():
     }
 
     .st-emotion-cache-uvn0xz tr {
-    border-top: none
+        border-top: none
     }
 
     .box-green2{
@@ -1655,6 +1655,11 @@ def css_9box_home():
         color: #000;
         font-size: 13px;
         transition: background-color 0.6s ease;
+        margin: 5px;
+    }
+
+    td{
+        margin: 5px;
     }
 
     .tb-person-green2{
@@ -1691,7 +1696,6 @@ def css_9box_home():
 
     .tb-person-green2:hover td{
         background: linear-gradient(to bottom, #9fdafc, #bae6ff, #dbf2fe);
-        width: 100%;
     }
 
 
