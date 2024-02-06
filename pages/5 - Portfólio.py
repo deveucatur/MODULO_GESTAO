@@ -12,7 +12,7 @@ import plotly.graph_objects as go
 from conexao import conexaoBD
 
 st.set_page_config(
-    page_title="Gerir Projetos",
+    page_title="Gerir Portfólio",
     layout="wide",
     initial_sidebar_state='collapsed')
 
