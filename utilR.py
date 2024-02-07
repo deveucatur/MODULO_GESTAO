@@ -1476,9 +1476,11 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
             for j in range(len(qtdUnidades[i])):
                 dados_ninebox = f"""<table class="tb2">
                         <tr class="tb-person-{style[i]}2">
-                            <td>
-                                <p>{href[j]}{qtdUnidades[i][j]}</a></p>
-                            </td>
+                            {href[j]}
+                                <td>
+                                    <p>{qtdUnidades[i][j]}</p>
+                                </td>
+                            </a>
                         </tr>
                     </table>"""
                 
