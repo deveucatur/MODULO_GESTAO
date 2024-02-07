@@ -6,8 +6,8 @@ from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss, validarEmail, envia
 from time import sleep
 import string
 import random
-from conexao import conexaoBD
 import pandas as pd
+from conexao import conexaoBD
 
 conexao = conexaoBD()
 mycursor = conexao.cursor()
@@ -29,7 +29,7 @@ usersBD = mycursor.fetchall()
 
 tab1, tab2 = st.tabs(['Novos Usuários', 'Usuários Criados'])
 
-with tab1:    
+with tab1:
     comando2 = """SELECT DISTINCT PU.unidade, PM.macroprocesso, PC.condicao, PU.id, PM.id, PC.id
         FROM projeu_macropr AS PM
         INNER JOIN projeu_unidades AS PU
@@ -161,9 +161,9 @@ with tab1:
                             st.toast('Email já utilizado.', icon='❌')
                     else:
                         st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
-
+                        
     CadastroDeUsuarios()
-    
+
 with tab2:
     cmdUnidade = 'SELECT * FROM projeu_unidades;'
     mycursor.execute(cmdUnidade)
@@ -237,5 +237,3 @@ with tab2:
         conexao.commit()
 
         st.toast('Usuário atualizado com sucesso!', icon='✅')
-
-mycursor.close()
