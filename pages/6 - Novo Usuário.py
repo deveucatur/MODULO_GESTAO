@@ -7,6 +7,7 @@ from time import sleep
 import string
 import random
 from conexao import conexaoBD
+import pandas as pd
 
 conexao = conexaoBD()
 mycursor = conexao.cursor()
@@ -22,13 +23,13 @@ menuCss = menuProjeuCss()
 st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
 st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
+comando1 = 'SELECT * FROM projeu_users;'
+mycursor.execute(comando1)
+usersBD = mycursor.fetchall()
+
 tab1, tab2 = st.tabs(['Novos Usuários', 'Usuários Criados'])
 
 with tab1:    
-    comando1 = 'SELECT * FROM projeu_users;'
-    mycursor.execute(comando1)
-    usersBD = mycursor.fetchall()
-
     comando2 = """SELECT DISTINCT PU.unidade, PM.macroprocesso, PC.condicao, PU.id, PM.id, PC.id
         FROM projeu_macropr AS PM
         INNER JOIN projeu_unidades AS PU
@@ -160,8 +161,81 @@ with tab1:
                             st.toast('Email já utilizado.', icon='❌')
                     else:
                         st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
- 
 
     CadastroDeUsuarios()
     
+with tab2:
+    cmdUnidade = 'SELECT * FROM projeu_unidades;'
+    mycursor.execute(cmdUnidade)
+    unidadeBD = mycursor.fetchall()
+    
+    mapearUnidades = {unidade[0]: unidade[1] for unidade in unidadeBD}
+    unidadesAssociadas = [mapearUnidades.get(user[5], "") for user in usersBD]
+
+    st.dataframe({"Matrícula" : [x[1] for x in usersBD],
+                  "Nome" : [x[2] for x in usersBD],
+                  "E-mail" : [x[3] for x in usersBD],
+                  "Unidade" : [x for x in unidadesAssociadas],
+                  "Perfil" : [x[8] for x in usersBD],
+                  "Status" : [x[15] for x in usersBD]},
+                  use_container_width=True)
+
+    selectColab = st.selectbox("Colaborador", [x[2] for x in usersBD])
+    index = [x[2] for x in usersBD].index(selectColab)
+
+    if usersBD[index][5] is not None:
+        indiceUnidade = [x[0] for x in unidadeBD].index(usersBD[index][5])
+    else:
+        indiceUnidade = None
+
+    if usersBD[index][6] is not None:
+        indiceMacro = macroprocBD.index(macroprocBD[usersBD[index][6] - 1])
+    else:
+        indiceMacro = None
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        matricula = st.text_input("Matricula", usersBD[index][1])
+        senha = st.text_input("Nova Senha", type='password')
+        especialidade = st.text_area("Especialidade", usersBD[index][12])
+    with col2:
+        nome = st.text_input("Nome", usersBD[index][2])
+        unidade = st.selectbox("Unidade", [x[1] for x in unidadeBD], indiceUnidade)
+        status = st.text_input("Status", usersBD[index][15])
+    with col3:
+        email = st.text_input("E-mail", usersBD[index][3])
+        macro = st.selectbox("Macroprocesso", macroprocBD, indiceMacro)
+        cpf = st.text_input("CPF / CNPJ", usersBD[index][13])
+
+    salvar = st.button("Salvar")
+
+    if salvar:
+        colunasBD = ['Matricula', 'especialidade', 'Nome', 'unidade_fgkey', 'status_user', 'email', 'macroprocesso_fgkey', 'cpf_cnpj']
+        valoresBD = [f'{str(matricula).strip()}',
+            f"""'{str(especialidade).strip()}'""",
+            f"""'{str(nome).strip()}'""",
+            f'{list(set(x[3] for x in dadosPagingBD if x[0] == unidade))[0]}',
+            f"""'{str(status).strip()}'""",
+            f"""'{str(email).strip()}'""",
+            f'{list(set(x[4] for x in dadosPagingBD if x[1] == macro))[0]}',
+            f"""'{str(cpf).strip()}'"""]
+            
+        if senha:
+            colunasBD += ['senha', 'senha_hash']
+            valoresBD += [f"""'{str(senha).strip()}'""",
+                f"""'{stauth.Hasher([senha]).generate()[0]}'"""]
+
+        mycursor = conexao.cursor()
+        cmdUpdate = "UPDATE projeu_users SET "
+        for i in range(len(colunasBD)):
+            cmdUpdate += f"""{colunasBD[i]} = {valoresBD[i]}"""
+            if i != len(colunasBD) - 1:
+                cmdUpdate += ", "
+        cmdUpdate += f" WHERE id_user = {usersBD[index][0]}"
+        mycursor.execute(cmdUpdate)
+        conexao.commit()
+
+        st.toast('Usuário atualizado com sucesso!', icon='✅')
+
 mycursor.close()
