@@ -6,7 +6,6 @@ from time import sleep
 from datetime import date
 import streamlit_authenticator as stauth
 from utilR import menuProjeuHtml, menuProjeuCss
-from conexao import conexaoBD
 
 icone = Image.open('imagens/icone.png')
 st.set_page_config(
@@ -16,7 +15,13 @@ st.set_page_config(
     initial_sidebar_state='collapsed')
 
 ########CONECTANDO AO BANCO DE DADOS########
-conexao = conexaoBD()
+conexao = mysql.connector.connect(
+    passwd='nineboxeucatur',
+    port=3306,
+    user='ninebox',
+    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
+    database='projeu'
+    )
 
 def formatar_numero_string(numero_str):
 
@@ -72,9 +77,10 @@ mycursor.execute("""SELECT Matricula,
 )
 users = mycursor.fetchall()
 
-mycursor.execute("SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV') AND status_user = 'A';")
+mycursor.execute('SELECT * FROM projeu_users WHERE perfil_proj in ("A", "L", "GV");')
 usersBD = mycursor.fetchall()
 mycursor.close()
+
 
 ########################## APRESENTAÇÃO DO FRONT ##########################
 names = [x[2] for x in usersBD]
@@ -129,7 +135,7 @@ elif authentication_status:
     with col1:
         colaux1, colaux2 = st.columns([1.3, 2])    
         with colaux1:
-            typ_proj = st.selectbox('Tipo Projeto', ['Estratégicos', 'OKR', 'Implantação'])
+            typ_proj = st.selectbox('Tipo Projeto', ['Estratégico', 'OKR', 'Implantação'])
         with colaux2:
             MacroProjeto = st.selectbox('Macroprocesso', list(set([x[1] for x in prog_macro])))    
 
@@ -140,7 +146,7 @@ elif authentication_status:
             matric_gestor = st.text_input('Matricula Gestor', [x[0] for x in users if x[1] == gestorProjeto][0], disabled=True)
         
         mvp_name = st.text_input('MVP')
-        pdt_entrFinal = st.text_area('Produto Projeto')
+        pdt_entrFinal = st.text_area('Produto Projeto', key='ProdutoEntrega')
 
     with col2:
         nomePrograma = st.selectbox('Programa', [x[0] for x in prog_macro if x[1] == MacroProjeto])
@@ -161,12 +167,12 @@ elif authentication_status:
     with col1:
         font_TITLE('MÉTRICAS', fonte_Projeto,"'Bebas Neue', sans-serif", 33, 'left')
     with col2:
-        qntd_metric = st.number_input('Quantidade', min_value=1, step=1, key=f'Metricas')
+        qntd_metric = st.number_input('Quantidade', min_value=1, step=1, key=f'Cadastrar Metricas')
 
     listMetric = []
     st.caption('Métricas')
     for a_metrc in range(qntd_metric):
-        listMetric.append(st.text_input('', label_visibility="collapsed", key=f'Metricas{a_metrc}'))
+        listMetric.append(st.text_input('', label_visibility="collapsed", key=f'Cadastrar Metricas{a_metrc}'))
 
     ##### ADCIONANDO AS PRÍNCIPAIS ENTREGAS #####
     st.write('---')
@@ -174,12 +180,12 @@ elif authentication_status:
     with col1:
         font_TITLE('PRINCIPAIS ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 33, 'left')
     with col2:
-        qntd_entr = st.number_input('Quantidade', min_value=1, step=1, key='Entregas')
+        qntd_entr = st.number_input('Quantidade', min_value=1, step=1, key='Cadastrar Entregas')
 
     listEntregas = []
     st.caption('Entregas')
     for a_entr in range(qntd_entr):
-        listEntregas.append(st.text_input('', label_visibility="collapsed", key=f'Entreg{a_entr}'))
+        listEntregas.append(st.text_input('', label_visibility="collapsed", key=f'Cadastrar Entreg{a_entr}'))
 
     ##### ADCIONANDO A EQUIPE #####
     st.write('---')
@@ -201,11 +207,11 @@ elif authentication_status:
     list_colbs = [[matric_gestor, 'Gestor']]
     for colb_a in range(qntd_clb):
         with col_equip2:
-            colb_name = st.selectbox('Colaboradores', [x[1] for x in users], label_visibility="collapsed", key=f'Nome Colab{colb_a}')        
+            colb_name = st.selectbox('Colaboradores', [x[1] for x in users], label_visibility="collapsed", key=f'Cadastrar Nome Colab{colb_a}')        
         with col_equip1:
-            colab_matric = st.text_input('Matricula', list(set([x[0] for x in users if x[1] == colb_name]))[0], label_visibility="collapsed", disabled=True, key=f'MatriculaColabs{colb_a}')
+            colab_matric = st.text_input('Matricula', list(set([x[0] for x in users if x[1] == colb_name]))[0], label_visibility="collapsed", disabled=True, key=f'Cadastrar MatriculaColabs{colb_a}')
         with col_equip3:
-            colb_funç = st.selectbox('Função', ['Especialista', 'Executor'],None, label_visibility="collapsed", key=f'funcaoColab{colb_a}')
+            colb_funç = st.selectbox('Função', ['Especialista', 'Executor'],None, label_visibility="collapsed", key=f'Cadastrar funcaoColab{colb_a}')
         list_colbs.append([colab_matric, colb_funç])
 
     st.text(' ')
@@ -214,7 +220,6 @@ elif authentication_status:
     with colb3:
         st.text(' ')
         btt_criar_prj = st.button('Criar Projeto')
-
 
     if btt_criar_prj:
         if nomeProjeto not in dd_proj:
@@ -229,53 +234,57 @@ elif authentication_status:
                         produto_mvp, produto_entrega_final,  
                         ano, date_posse_gestor,  status_proj, investim_proj
                         ) VALUES (
-                        (SELECT id_type FROM projeu_type_proj WHERE type_proj = '{typ_proj}'), (SELECT id FROM projeu_macropr WHERE macroprocesso = '{MacroProjeto}'), 
-                        (SELECT id_prog FROM projeu_programas WHERE nome_prog = '{nomePrograma}'), 
-                        '{nomeProjeto}', '{result_esperd}', 
-                        (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{mvp_name}', '{mvp_produt}', 
-                        '{pdt_entrFinal}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{ivsProget}'); """
+                        (SELECT id_type FROM projeu_type_proj WHERE type_proj LIKE '%{str(typ_proj).strip()}%'), (SELECT id FROM projeu_macropr WHERE macroprocesso LIKE '%{str(MacroProjeto).strip()}%'), 
+                        (SELECT id_prog FROM projeu_programas WHERE nome_prog LIKE '%{nomePrograma}%'), 
+                        '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
+                        (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(mvp_name).strip()}', '{str(mvp_produt).strip()}', 
+                        '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}');"""
 
-                    
+                
                     mycursor.execute(cmd_criar_project)
                     conexao.commit()
                     print('PROJETO CRIADO!')
                     print('---'*30)
                     print('VINCULANDO COLABORADORES AO PROJETO')
-                    sleep(1)
+                    sleep(0.2)
 
                     ############# INSERINDO MÉTRICAS DO PROJETO #############
                     dd_metric = ''
                     for metric_name in listMetric:
-                        dd_metric += f"((SELECT id_proj FROM projeu_projetos WHERE name_proj = '{nomeProjeto}'), '{metric_name}'),"
+                        dd_metric += f"((SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1), '{metric_name}'),"
                     dd_metric = dd_metric[:len(dd_metric)-1]
 
                     cmd_metric = f"""INSERT INTO projeu_metricas(id_prj_fgkey, name_metric) 
                                         VALUES {dd_metric};"""
+                    
                     mycursor.execute(cmd_metric)
                     conexao.commit()
-                    sleep(1)
+                    sleep(0.2)
 
+                    
                     ############# INSERINDO COMPLEXIDADE #############
                     cmd_insert_complx = f'''INSERT INTO projeu_complexidade (proj_fgkey, date_edic) 
                     VALUES (
-                    (SELECT id_proj FROM projeu_projetos WHERE name_proj = '{nomeProjeto}' LIMIT 1),
+                    (SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1),
                     '{date.today()}'
                     );'''
+
                     mycursor.execute(cmd_insert_complx)
                     conexao.commit()
                     print('LINHA DE COMPLEXIDADE VINCULADO AO BANCO DE DADOS!')
-                    sleep(1)
+                    sleep(0.2)
 
+                    
                     ############# INSERINDO EQUIPE #############
                     for list_colb in list_colbs:
                         comand_insert_colabs = f"""INSERT INTO projeu_registroequipe(id_projeto, id_colab, papel) VALUES 
-                        ((SELECT id_proj FROM projeu_projetos WHERE name_proj = "{nomeProjeto}" AND gestor_id_fgkey = (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor} limit 1) limit 1), (SELECT id_user FROM projeu_users WHERE Matricula = {list_colb[0]} limit 1), '{list_colb[1]}');"""
+                        ((SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1), (SELECT id_user FROM projeu_users WHERE Matricula = {list_colb[0]} limit 1), '{list_colb[1]}');"""
                         
                         mycursor.execute(comand_insert_colabs)
                         conexao.commit()
 
                     print('COLABORADORES VINCULADOS')
-                    sleep(1)
+                    sleep(0.2)
                     
                     ############# INSERINDO PRINCIPAIS ENTREGAS #############
                     for name_entr in listEntregas:
@@ -285,21 +294,20 @@ elif authentication_status:
                         )
                         values (
                             '{name_entr}',
-                            (
-                            SELECT id_proj FROM projeu_projetos WHERE name_proj = '{nomeProjeto}')
+                            (SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1)
                             )'''
+
                         mycursor.execute(cmd_insert_princp)
                         conexao.commit()
 
                     st.toast('Sucesso na criação do Projeto!', icon='✅')
-                    mycursor.close()
+                    
                 except:
                     st.toast('Erro ao cadastrar projeto na base de dados.', icon='❌')
+                mycursor.close()
             else:
                 st.toast('Primeiramente, preencha todos os campos corretamente.', icon='❌')
         else:
             st.toast('Já existe um projeto com esse nome.', icon='❌')
-    #else:
-    #    st.error('VISUALIZAÇÃO NÃO DISPONÍVIL PARA O SEU PERFIL.')     
-
+    
     
