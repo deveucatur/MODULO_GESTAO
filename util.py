@@ -21,6 +21,15 @@ def string_to_datetime(string):
     return date
 
 
+def date_americ_by_brasil(data):
+    data_aux = str(data)
+    data_obj = datetime.strptime(data_aux, "%Y-%m-%d")
+
+    data_formatada = data_obj.strftime("%d/%m/%Y")
+
+    return data_formatada
+
+
 def font_TITLE(texto, fonte, fonte1, tam_font, text_alinham = None, cor = 'gray11'):
 #FONTE = URL DA FONTE
 #FONTE1 = NOME DA FONTE DA QUE ESTÁ SENDO IMPORTADA
@@ -1025,6 +1034,25 @@ class CalculoPrêmio:
                 ''')
         self.proj_especial = mycursor2.fetchall()
 
+        st.info(f'''
+        SELECT 
+            PES.id_sp,
+            PU.id_user,
+            PU.Matricula,
+            PU.Nome,
+            PS.id_sprint,
+            PS.number_sprint,
+            PES.status_sp
+        FROM projeu_especialist_sprint PES
+        JOIN
+            projeu_users PU ON PU.id_user = PES.id_colab_fgkey
+        JOIN
+            projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
+        WHERE 
+            PS.id_sprint IN ({str(list(set([x[11] for x in self.entregas_do_projeto]))).replace("[", "").replace("]", "")})
+            AND
+                PES.status_sp = "A";''')
+
         mycursor2.execute(f'''
         SELECT 
             PES.id_sp,
@@ -1042,7 +1070,7 @@ class CalculoPrêmio:
         WHERE 
             PS.id_sprint IN ({str(list(set([x[11] for x in self.entregas_do_projeto]))).replace("[", "").replace("]", "")})
             AND
-                PES.status_sp = 'A';''')
+                PES.status_sp = "A";''')
         
         self.especialist_by_sprint = mycursor2.fetchall()
         
@@ -1170,6 +1198,7 @@ class CalculoPrêmio:
         # sprint = 1                     ---> [[LISTA DE ENTREGAS], VALOR DISTRIBUIDO PARA A SPRINT]
         # exemplo_de_como_chamar = CalculaSquad([list(x) for x in entregasBD if x[0] == sprint], 1200)
         
+        st.error(entregas)
         if len(list(set([x[0] for x in entregas if int(x[0]) in [int(x) for x in self.number_sprint]]))) > 0:
             entregas_sprint = []
             for entr in entregas:
@@ -1177,7 +1206,7 @@ class CalculoPrêmio:
                     entr[4] = 0
                 
                 entregas_sprint.append(entr)
-                        
+
             # MATRICULA, NOME COLABORADOR
             colbs = list(set([(x[3], x[2]) for x in entregas_sprint]))
             
@@ -1185,6 +1214,7 @@ class CalculoPrêmio:
                             for colb in colbs}
                         
             hrs_total = sum([hrs_normaliz[x] for x in hrs_normaliz.keys()])
+
             valor_colab = {name_colab: {'BonificacaoSprint': valor_sprint * (hrs_normaliz[name_colab] / hrs_total),
                                         'HorasNormalTotal': hrs_normaliz[name_colab],
                                         'Entregas': {x[1]: {'Horas': x[4],
@@ -1204,6 +1234,7 @@ class CalculoPrêmio:
     def CalculaSprint(self, valorSprint, sprint):
         dd_especialist = [x for x in self.especialist_by_sprint if x[5] in list(sprint)]#DADOS SOBRE ESPECIALISTAS DAQUELAS SPRINTS
         
+        st.warning(dd_especialist)
         qntd_contrib_espc = {id_espc: len([d for d in dd_especialist if d[1] == id_espc]) for id_espc in list(set([x[1] for x in dd_especialist]))}
         
         porc_contrib = {id_user: qntd_contr/sum(qntd_contrib_espc.values()) for id_user, qntd_contr in qntd_contrib_espc.items()}
