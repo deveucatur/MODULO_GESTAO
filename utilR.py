@@ -1469,11 +1469,13 @@ def nineboxDatasUnidades_home(dadosNineboxUni, links):
     # imgRank = [f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692905.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692911.png"/>""", f"""<img src="https://cdn-icons-png.flaticon.com/128/4692/4692913.png"/>""", f"""<p>4º</p>""", f"""<p>5º</p>""", f"""<p>6º</p>""", f"""<p>7º</p>""", f"""<p>8º</p>""", f"""<p>9º</p>""", f"""<p>10º</p>"""]
     href = [f'''<a href = "{y}"> ''' for y in links] if len([x for x in links if x != None]) > 0 else ['' for y in range(len(links))]
     # rank = [f'''{y}''' for y in imgRank] if len([x for x in links if x == None]) > 0 else ['' for y in range(len(imgRank))]
+    
     for i in range(len(qtdUnidades)):
         txtAux = ""
 
         if len(qtdUnidades[i]) > 0:
             for j in range(len(qtdUnidades[i])):
+                
                 dados_ninebox = f"""<table class="tb2">
                         <tr class="tb-person-{style[i]}2">
                             <td>
@@ -1514,48 +1516,48 @@ def statusProjetos(dados):
 
     return txtHtml      
 
-def css_9box_home():
-    ninebox_style = """
-    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');
-    *{
+def css_9box_home(fonte0="""'Bebas Neue', sans-serif;""", fonte1="""@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');"""):
+    ninebox_style = f"""
+    {fonte1}
+    *{{
         margin: 0;
         padding: 0;
-    }
+    }}
 
-    main{
+    main{{
         width: 100%;
         display: flex;
         justify-content: center;
         align-items: center;
-    }
+    }}
 
-    .box2{
+    .box2{{
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        font-family: 'Bebas Neue', sans-serif;
+        font-family: {fonte0}
         font-color: black;
-    }
+    }}
 
-    p{
+    p{{
         font-size: 14px;
         margin: 0;
-    }
+    }}
 
-    img{
+    img{{
         max-width: 30px;
         max-height: 30px;
-    }
+    }}
 
-    .rank{
+    .rank{{
         display: inline-block;
-    }
+    }}
 
-    .st-emotion-cache-uvn0xz tr {
+    .st-emotion-cache-uvn0xz tr {{
         border-top: none
-    }
+    }}
 
-    .box-green2{
+    .box-green2{{
         margin: 10px 0px;
         border-radius: 8px;
         box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -1568,17 +1570,17 @@ def css_9box_home():
         padding-right: 10px;
         z-index: 2;
 
-    }
+    }}
 
-    .box-green2:hover{
+    .box-green2:hover{{
         transform: scale(1.05);
-    }
+    }}
 
-    .box-green2 {
+    .box-green2 {{
         background-color: #fff;
-    }
+    }}
 
-    .header-green2{
+    .header-green2{{
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1588,11 +1590,11 @@ def css_9box_home():
         width: 100%;
         height: 60px;
         background-color: #fff;
-    }
+    }}
 
-    .title-green2{
+    .title-green2{{
         text-align: left;
-        font-size: 23px;
+        font-size: 17px;
         margin: 0 5px;
         width: auto;
         height: auto;
@@ -1600,9 +1602,9 @@ def css_9box_home():
         padding-top: 10px;
         flex: 1;
         color: black;
-       }
+       }}
 
-    .data-green2{
+    .data-green2{{
         font-size: 14px;
         font-weight: bold;
         color: #000;
@@ -1612,14 +1614,14 @@ def css_9box_home():
         width: 30px;
         height: auto;
         padding: 5px;
-    }
+    }}
 
-    .data-green2{
+    .data-green2{{
         background-color: #D3D3D3; 
         color: #002100;
-    }
+    }}
 
-    .datap-green2{
+    .datap-green2{{
         font-size: 14px;
         font-weight: bold;
         color: #000;
@@ -1629,78 +1631,78 @@ def css_9box_home():
         width: auto;
         height: auto;
         padding: 5px;
-    }
+    }}
 
-    .datap-green2{
+    .datap-green2{{
         background-color: #C8E6C9; 
         color: #002100;
-    }
+    }}
 
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&display=swap');
-    #h4 {
+    #h4 {{
         font-family: 'Poppins', sans-serif;
         color: white;
-    }
+    }}
 
-    .tb2 {
+    .tb2 {{
         width: 100%;
         border-collapse: collapse;
         margin-top: 10px;
         margin: 5px;
-    }
+    }}
 
-    .tb-person-green2 td{
+    .tb-person-green2 td{{
         padding: 5px 5px;
         border-radius: 5px;
         color: #000;
         font-size: 13px;
         transition: background-color 0.6s ease;
         margin: 5px;
-    }
+    }}
 
-    td{
+    td{{
         margin: 5px;
-    }
+    }}
 
-    .tb-person-green2{
+    .tb-person-green2{{
         background-color: #DCDBDB;
         width: 100%;
-    }
+    }}
 
-    .tb-person-green2:last-child td{
+    .tb-person-green2:last-child td{{
         border: none;
-    }
+    }}
 
-    .box-green2::-webkit-scrollbar {
+    .box-green2::-webkit-scrollbar {{
         width: 8px;
         border-radius: 20px;
-    }
+    }}
 
-    .box-green2::-webkit-scrollbar-track {
+    .box-green2::-webkit-scrollbar-track {{
         background: #848484;
         border-radius: 20px;
-    }
+    }}
 
 
-    .box-green2::-webkit-scrollbar-thumb {
+    .box-green2::-webkit-scrollbar-thumb {{
         background-color: #6c6c6c;
         border-radius: 20px;
         border: 1px solid #000;
-    }
+    }}
 
     a,
-    a:hover{
+    a:hover{{
         color: inherit;
         text-decoration: none;
-    }
+    }}
 
-    .tb-person-green2:hover td{
+    .tb-person-green2:hover td{{
         background: linear-gradient(to bottom, #9fdafc, #bae6ff, #dbf2fe);
-    }
+    }}
 
 
-    @media(max-width: 1400px){
-        .header-green2{
+    @media(max-width: 1400px){{
+        .header-green2{{
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1709,32 +1711,32 @@ def css_9box_home():
             z-index: 1;
             width: 100%;
             height: auto;
-        }   
-    }
-    }
+        }}
+    }}
+    
 
-    @media(max-width: 1000px){
-        .main{
+    @media(max-width: 1000px){{
+        .main{{
             flex-direction: column;
             align-items: stretch;
-        }
+        }}
 
         .line1,
         .line2,
-        .line3{
+        .line3{{
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
+        }}
 
-        .box-green2{
+        .box-green2{{
             width: 90%;
             min-height: auto;
             margin: 10px 5px;
-        }
+        }}
 
-        .header-green2{
+        .header-green2{{
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1743,8 +1745,8 @@ def css_9box_home():
             z-index: 1;
             width: 100%;
             height: auto;
-        }
-    }"""
+        }}
+    }}"""
 
     return ninebox_style
 
