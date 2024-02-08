@@ -134,23 +134,26 @@ mycursor = conexao.cursor()
 setSession = "SET SESSION group_concat_max_len = 5000;"
 mycursor.execute(setSession)
 
-sqlProjetoLider = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_lider IS NULL OR c.check_lider = 0 GROUP BY p.id_proj;"""
-mycursor.execute(sqlProjetoLider)
-projetoNomeLider = mycursor.fetchall()
+# sqlProjetoLider = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_lider IS NULL OR c.check_lider = 0 GROUP BY p.id_proj;"""
+# mycursor.execute(sqlProjetoLider)
+# projetoNomeLider = mycursor.fetchall()
 
-sqlProjetoGover = f"""
-SELECT 
-	p.name_proj, 
-    p.id_proj
-FROM 
-	projeu_projetos p 
-JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey 
-WHERE c.check_govern IS NULL OR c.check_govern = 0 
-GROUP BY p.id_proj; """
-mycursor.execute(sqlProjetoGover)
-projetoNomeGover = mycursor.fetchall()
+# sqlProjetoGover = f"""
+# SELECT 
+# 	p.name_proj, 
+#     p.id_proj
+# FROM 
+# 	projeu_projetos p 
+# JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey 
+# WHERE c.check_govern IS NULL OR c.check_govern = 0 
+# GROUP BY p.id_proj; """
+# mycursor.execute(sqlProjetoGover)
+# projetoNomeGover = mycursor.fetchall()
 
-#st.write(projetoNomeGover)
+sqlProjetoAvaliar = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_avaliado IS NULL OR c.check_avaliado = 0 GROUP BY p.id_proj;"""
+mycursor.execute(sqlProjetoAvaliar)
+projetoAvaliar = mycursor.fetchall()
+
 sqlCanva = f"""SELECT 
 	id_proj, 
 	name_proj, 
@@ -313,19 +316,19 @@ elif authentication_status:
 
     with col2:
         font_TITLE('Atividades Pendentes', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
-        if str(perfilUsuario).upper() in ['L', 'A']:
-            if len(projetoNomeLider) == 'None' or len(projetoNomeLider) <= 0:
+        if str(perfilUsuario).upper() in ['A']:
+            if len(projetoAvaliar) == 'None' or len(projetoAvaliar) <= 0:
                 st.info("Você não possui atividades pendentes no momento.")
 
-            for k in range(len(projetoNomeLider)):
-                with st.expander(f"Avaliar Complexidade | {projetoNomeLider[k][0]} - Liderança"):
-                    titleClass = ["Orientação do Projeto", "Impacto do Projeto"]
-                    infoClass = [["Orientação para Inovação em Produtos/Serviços  atuais", "Orientação para desenvolvimento de novos Produtos/Serviços", "Orientação para Aumento de Receita", "Orientação para Aumento de Produtividade", "Orientação para Redução de Custos/Despesas", "Orientação para Transformação de processos de Negócio"],["Impacto na Percepção de Valor do Cliente", "Pressão Por Prazos", "Investimento necessário", "Nível de transformação organizacional", "Valor para o Negócio"]]
+            for i in range(len(projetoAvaliar)):
+                with st.expander(f"Avaliar Complexidade | {projetoAvaliar[i][0]}"):
+                    titleClass = ["Orientação do Projeto", "Impacto do Projeto", "Escopo do Projeto", "Squads do Projeto"]
+                    infoClass = [["Orientação para Inovação em Produtos/Serviços  atuais", "Orientação para desenvolvimento de novos Produtos/Serviços", "Orientação para Aumento de Receita", "Orientação para Aumento de Produtividade", "Orientação para Redução de Custos/Despesas", "Orientação para Transformação de processos de Negócio"],["Impacto na Percepção de Valor do Cliente", "Pressão Por Prazos", "Investimento necessário", "Nível de transformação organizacional", "Valor para o Negócio"],["Impacto do escopo no Planejamento Estratégico", "Incerteza do escopo", "Complexidade  do escopo"], ["Senioridade da Squad", "Senioridade do Especialista", "Senioridade do Gestor do Projeto"]]
                     optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
 
-                    font_TITLE(f'{projetoNomeLider[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 30, 'center')
+                    font_TITLE(f'{projetoAvaliar[i][0]}', fonte_Projeto, "'Bebas Neue', sans-serif", 30, 'center')
 
-                    canva = [x for x in dadosCanva if x[1] == projetoNomeLider[k][0]][0]
+                    canva = [x for x in dadosCanva if x[1] == projetoAvaliar[i][0]][0]
                     listaEquipe = []
                     gestores = []
                     especialistas = []
@@ -337,22 +340,23 @@ elif authentication_status:
                     prodMvps = [canva[4]] if canva[4] != None else " "
                     resultados = [canva[6]] if canva[6] != None else " "
                     metricas = [canva[5]] if canva[5] != None else " "
-                    for i in range(len(canva[7].split('~/>'))):
-                        colab = str(canva[7]).split('~/>')[i]
-                        funcao = str(canva[8]).split('~/>')[i]
+                    
+                    for j in range(len(canva[7].split('/>'))):
+                        colab = str(canva[7]).split('~/>')[j]
+                        funcao = str(canva[8]).split('~/>')[j]
                         listaEquipe.append([colab, funcao])
 
-                    for i in range(len(listaEquipe)):
-                        if listaEquipe[i][1] == "Gestor":
-                            gest = listaEquipe[i][0]
+                    for j in range(len(listaEquipe)):
+                        if listaEquipe[j][1] == "Gestor":
+                            gest = listaEquipe[j][0]
                             listaEquipe.append(gest)
                             gestores.append(gest)
-                        elif listaEquipe[i][1] == "Especialista":
-                            espec = listaEquipe[i][0]
+                        elif listaEquipe[j][1] == "Especialista":
+                            espec = listaEquipe[j][0]
                             listaEquipe.append(espec)
                             especialistas.append(espec)
                         else:
-                            executor = listaEquipe[i][0]
+                            executor = listaEquipe[j][0]
                             listaEquipe.append(executor)
                             squads.append(executor)
                     if len(gestores) == 0:
@@ -387,18 +391,23 @@ elif authentication_status:
                         st.text_input('Entregas', entregas[entrg_idx], label_visibility='collapsed', key=f'entregas nomes{entrg_idx} {projetos[0]}')
 
                     notaGrau = []
-                    for i in range(len(titleClass)):
-                        font_TITLE(f'{titleClass[i]}', fonte_Projeto,"'Bebas Neue', sans-serif", 24, 'left')
+                    for j in range(len(titleClass)):
+                        font_TITLE(f'{titleClass[j]}', fonte_Projeto,"'Bebas Neue', sans-serif", 24, 'left')
                         listNota = []
-                        for j in infoClass[i]:
-                            nota = int(st.select_slider(j, optionClass, key=f"chave{k}_{i}_{j}", value=optionClass[0])[0][0:1])
+                        for k in infoClass[j]:
+                            nota = int(st.select_slider(k, optionClass, key=f"chave{i}_{j}_{k}", value=optionClass[0])[0][0:1])
                             listNota.append(nota)
                             st.text(' ')
                             st.text(' ')
                         notaGrau.append(listNota)
+
                     mediaImpacto = round(sum(notaGrau[1]) / len(notaGrau[1]), 2)
                     maiorOrientacao = max(notaGrau[0])
                     grauProjeto = round(((mediaImpacto + maiorOrientacao) / 2), 2)
+                    
+                    grauEscopo = round(sum(notaGrau[2]) / len(notaGrau[2]), 2)
+                    grauSquad = round(sum(notaGrau[3]) / len(notaGrau[3]), 2)
+                    mediaGov = round(((grauEscopo + grauSquad) / 2), 2)
                     
                     if grauProjeto == 0:
                         complexidade = ""
@@ -413,111 +422,6 @@ elif authentication_status:
                     else:
                         complexidade = "Valor inválido"
 
-                    finalizar = st.button("Finalizar avaliação", key=f"notaLider_{k}")
-
-                    if finalizar:
-                        mycursor = conexao.cursor()
-                        colunas = ["grauProjeto", "complxdd", "check_lider", "id_edic_fgkey"]
-                        dadosLider = [grauProjeto, f"'{complexidade}'", 1, matriUser]
-
-                        for i in range(len(colunas)):
-                            sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[i]} = {dadosLider[i]} WHERE proj_fgkey = {projetoNomeLider[k][1]}"
-                            mycursor.execute(sqlUpdate)
-                            conexao.commit()
-                        st.toast('Dados Atualizados!', icon='✅')
-                        sleep(3)
-                        st.rerun()
-
-        if str(perfilUsuario).strip().upper() in ['GV', 'A']:
-            if projetoNomeGover == None or len(projetoNomeGover) <= 0:
-                st.info("Você não possui atividades pendentes no momento.")
-
-            
-            for k in range(len(projetoNomeGover)):
-                with st.expander(f"Avaliar Complexidade | {projetoNomeGover[k][0]} - Governança"):
-                    titleClass = ["Escopo do Projeto", "Squads do Projeto"]
-                    infoClass = [["Impacto do escopo no Planejamento Estratégico", "Incerteza do escopo", "Complexidade  do escopo"], ["Senioridade da Squad", "Senioridade do Especialista", "Senioridade do Gestor do Projeto"]]
-                    optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
-
-                    font_TITLE(f'{projetoNomeGover[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
-
-                    st.text(' ')
-                    canva = [x for x in dadosCanva if x[1] == projetoNomeGover[k][0]][0]
-                    
-                    listaEquipe = []
-                    gestores = []
-                    especialistas = []
-                    squads = []
-
-                    projetos = [canva[1]] if canva[1] != None else " "
-                    mvps = [canva[3]] if canva[3] != None else " "
-                    prodProjetos = [canva[2]] if canva[2] != None else " "
-                    prodMvps = [canva[4]] if canva[4] != None else " "
-                    resultados = [canva[6]] if canva[6] != None else " "
-                    metricas = [canva[5]] if canva[5] != None else " "
-                    for i in range(len(canva[7].split('~/>'))):
-                        colab = str(canva[7]).split('~/>')[i]
-                        funcao = str(canva[7]).split('~/>')[i]
-                        listaEquipe.append([colab, funcao])
-
-                    for i in range(len(listaEquipe)):
-                        if listaEquipe[i][1] == "Gestor":
-                            gest = listaEquipe[i][0]
-                            listaEquipe.append(gest)
-                            gestores.append(gest)
-                        elif listaEquipe[i][1] == "Especialista":
-                            espec = listaEquipe[i][0]
-                            listaEquipe.append(espec)
-                            especialistas.append(espec)
-                        else:
-                            executor = listaEquipe[i][0]
-                            listaEquipe.append(executor)
-                            squads.append(executor)
-                    if len(gestores) == 0:
-                        gestores = " "
-                    if len(especialistas) == 0:
-                        especialistas = " "
-                    if len(squads) == 0:
-                        squads = " "
-
-                    entregas = str(canva[9]).split(';') if ';' in str(canva[9]) else str(canva[9]).split('~/>')
-                    investimentos = [canva[10]] if canva[10] != None else " "
-
-                    col1, col2, col3 = st.columns([1,1,0.6])
-                    with col1:
-                        st.text_input('Gestor', gestores, key=f'Gestor{projetos[0]} 1')
-                    with col2:
-                        st.text_input('Macroprocesso', canva[11], key=f'{projetos[0]} 2')#MACROPROCESSO
-                    with col3:
-                        st.text_input('Investimento', investimentos[0], key=f'{projetos[0]} 6')
-                        
-                    st.text_area('Programa', canva[12], key=f'{projetos[0]} 3')#PROGRAMA
-                    st.text_input('MVP', mvps[0], key=f'{projetos[0]} 4')
-                    
-                    col1, col2 = st.columns([3,2])
-                    with col1:
-                        st.multiselect('Squad', squads, squads, disabled=True, key=f'{projetos[0]} 9')
-                    with col2:
-                        st.text_input('Especialistas', especialistas, key=f'{projetos[0]} 7')
-                    
-                    font_TITLE(f'Principais Entregas', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
-                    for entrg_idx in range(len(entregas)):
-                        st.text_input('Entregas', entregas[entrg_idx], label_visibility='collapsed', key=f'entrega{entrg_idx} {projetos[0]} 5')
-    
-                    st.text(' ')
-                    notaGov = []
-                    for i in range(len(titleClass)):
-                        font_TITLE(f'{titleClass[i]}', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
-                        listNota = []
-                        for j in infoClass[i]:
-                            nota = int(st.select_slider(j, optionClass, key=f"chave{k}_{i}_{j}", value=optionClass[0])[0][0:1])
-                            listNota.append(nota)
-                            st.write("---")
-                        notaGov.append(listNota)
-                    grauEscopo = round(sum(notaGov[0]) / len(notaGov[0]), 2)
-                    grauSquad = round(sum(notaGov[1]) / len(notaGov[1]), 2)
-                    mediaGov = round(((grauEscopo + grauSquad) / 2), 2)
-
                     if mediaGov == 0:
                         nivel = ""
                     elif mediaGov <= 2:
@@ -527,22 +431,249 @@ elif authentication_status:
                     elif mediaGov <= 4:
                         nivel = "III"
                     else:
-                        nivel = "Valor médio fora do intervalo válido"
+                        nivel = "Valor inválido"
 
-                    finalizar = st.button("Finalizar avaliação", key=f"notaGovernanca_{k}")
+                    finalizar = st.button("Finalizar avaliação", key=f"notaLider_{i}")
 
                     if finalizar:
                         mycursor = conexao.cursor()
-                        colunas = ["grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey"]
-                        dadosGover = [grauEscopo, grauSquad, f"'{nivel}'", 1, matriUser]
+                        colunas = ["grauProjeto", "complxdd", "check_lider", "grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey", "check_avaliado"]
+                        dadosLider = [grauProjeto, f"'{complexidade}'", 1, grauEscopo, grauSquad, f"'{nivel}'", 1, matriUser, 1]
 
-                        for i in range(len(colunas)):
-                            sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[i]} = {dadosGover[i]} WHERE proj_fgkey = {projetoNomeGover[k][1]}"
+                        for j in range(len(colunas)):
+                            sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[j]} = {dadosLider[j]} WHERE proj_fgkey = {projetoAvaliar[i][1]}"
                             mycursor.execute(sqlUpdate)
                             conexao.commit()
                         st.toast('Dados Atualizados!', icon='✅')
-                        sleep(3)
+                        sleep(1)
                         st.rerun()
+
+        #     for k in range(len(projetoNomeLider)):
+        #         with st.expander(f"Avaliar Complexidade | {projetoNomeLider[k][0]}"):
+        #             titleClass = ["Orientação do Projeto", "Impacto do Projeto"]
+        #             infoClass = [["Orientação para Inovação em Produtos/Serviços  atuais", "Orientação para desenvolvimento de novos Produtos/Serviços", "Orientação para Aumento de Receita", "Orientação para Aumento de Produtividade", "Orientação para Redução de Custos/Despesas", "Orientação para Transformação de processos de Negócio"],["Impacto na Percepção de Valor do Cliente", "Pressão Por Prazos", "Investimento necessário", "Nível de transformação organizacional", "Valor para o Negócio"]]
+        #             optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
+
+        #             font_TITLE(f'{projetoNomeLider[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 30, 'center')
+
+        #             canva = [x for x in dadosCanva if x[1] == projetoNomeLider[k][0]][0]
+        #             listaEquipe = []
+        #             gestores = []
+        #             especialistas = []
+        #             squads = []
+
+        #             projetos = [canva[1]] if canva[1] != None else " "
+        #             mvps = [canva[3]] if canva[3] != None else " "
+        #             prodProjetos = [canva[2]] if canva[2] != None else " "
+        #             prodMvps = [canva[4]] if canva[4] != None else " "
+        #             resultados = [canva[6]] if canva[6] != None else " "
+        #             metricas = [canva[5]] if canva[5] != None else " "
+        #             for i in range(len(canva[7].split('~/>'))):
+        #                 colab = str(canva[7]).split('~/>')[i]
+        #                 funcao = str(canva[8]).split('~/>')[i]
+        #                 listaEquipe.append([colab, funcao])
+
+        #             for i in range(len(listaEquipe)):
+        #                 if listaEquipe[i][1] == "Gestor":
+        #                     gest = listaEquipe[i][0]
+        #                     listaEquipe.append(gest)
+        #                     gestores.append(gest)
+        #                 elif listaEquipe[i][1] == "Especialista":
+        #                     espec = listaEquipe[i][0]
+        #                     listaEquipe.append(espec)
+        #                     especialistas.append(espec)
+        #                 else:
+        #                     executor = listaEquipe[i][0]
+        #                     listaEquipe.append(executor)
+        #                     squads.append(executor)
+        #             if len(gestores) == 0:
+        #                 gestores = " "
+        #             if len(especialistas) == 0:
+        #                 especialistas = " "
+        #             if len(squads) == 0:
+        #                 squads = " "
+
+        #             entregas = str(canva[9]).split(';') if ';' in str(canva[9]) else str(canva[9]).split('~/>')
+        #             investimentos = [canva[10]] if canva[10] != None else " "
+
+        #             col1, col2, col3 = st.columns([1,1,0.6])
+        #             with col1:
+        #                 st.text_input('Gestor', gestores[0], key=f'{projetos} 1')
+        #             with col2:
+        #                 st.text_input('Macroprocesso', canva[11], key=f'{projetos} 2')#MACROPROCESSO
+        #             with col3:
+        #                 st.text_input('Investimento', investimentos[0], key=f'{projetos} 6')
+                        
+        #             st.text_input('Programa', canva[12], key=f'{projetos} 3')#PROGRAMA
+        #             st.text_input('MVP', mvps[0], key=f'{projetos} 4')
+                    
+        #             col1, col2 = st.columns([3,2])
+        #             with col1:
+        #                 st.multiselect('Squad', squads, squads, disabled=True, key=f'{projetos} 9')
+        #             with col2:
+        #                 st.text_input('Especialistas', str(especialistas).replace("[","").replace("]","").replace("'", ""), key=f'{projetos} 7')
+                    
+        #             font_TITLE(f'Principais Entregas', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
+        #             for entrg_idx in range(len(entregas)):
+        #                 st.text_input('Entregas', entregas[entrg_idx], label_visibility='collapsed', key=f'entregas nomes{entrg_idx} {projetos[0]}')
+
+        #             notaGrau = []
+        #             for i in range(len(titleClass)):
+        #                 font_TITLE(f'{titleClass[i]}', fonte_Projeto,"'Bebas Neue', sans-serif", 24, 'left')
+        #                 listNota = []
+        #                 for j in infoClass[i]:
+        #                     nota = int(st.select_slider(j, optionClass, key=f"chave{k}_{i}_{j}", value=optionClass[0])[0][0:1])
+        #                     listNota.append(nota)
+        #                     st.text(' ')
+        #                     st.text(' ')
+        #                 notaGrau.append(listNota)
+        #             mediaImpacto = round(sum(notaGrau[1]) / len(notaGrau[1]), 2)
+        #             maiorOrientacao = max(notaGrau[0])
+        #             grauProjeto = round(((mediaImpacto + maiorOrientacao) / 2), 2)
+                    
+        #             if grauProjeto == 0:
+        #                 complexidade = ""
+        #             elif grauProjeto <= 1:
+        #                 complexidade = "Seguro"
+        #             elif grauProjeto <= 2:
+        #                 complexidade = "Acessível"
+        #             elif grauProjeto <= 3:
+        #                 complexidade = "Abstrato"
+        #             elif grauProjeto <= 4:
+        #                 complexidade = "Singular"
+        #             else:
+        #                 complexidade = "Valor inválido"
+
+        #             finalizar = st.button("Finalizar avaliação", key=f"notaLider_{k}")
+
+        #             if finalizar:
+        #                 mycursor = conexao.cursor()
+        #                 colunas = ["grauProjeto", "complxdd", "check_lider", "id_edic_fgkey"]
+        #                 dadosLider = [grauProjeto, f"'{complexidade}'", 1, matriUser]
+
+        #                 for i in range(len(colunas)):
+        #                     sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[i]} = {dadosLider[i]} WHERE proj_fgkey = {projetoNomeLider[k][1]}"
+        #                     mycursor.execute(sqlUpdate)
+        #                     conexao.commit()
+        #                 st.toast('Dados Atualizados!', icon='✅')
+        #                 sleep(3)
+        #                 st.rerun()
+
+        # if str(perfilUsuario).strip().upper() in ['GV', 'A']:
+        #     if projetoNomeGover == None or len(projetoNomeGover) <= 0:
+        #         st.info("Você não possui atividades pendentes no momento.")
+
+            
+        #     for k in range(len(projetoNomeGover)):
+        #         with st.expander(f"Avaliar Complexidade | {projetoNomeGover[k][0]} - Governança"):
+        #             titleClass = ["Escopo do Projeto", "Squads do Projeto"]
+        #             infoClass = [["Impacto do escopo no Planejamento Estratégico", "Incerteza do escopo", "Complexidade  do escopo"], ["Senioridade da Squad", "Senioridade do Especialista", "Senioridade do Gestor do Projeto"]]
+        #             optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
+
+        #             font_TITLE(f'{projetoNomeGover[k][0]}', fonte_Projeto,"'Bebas Neue', sans-serif", 23, 'center')
+
+        #             st.text(' ')
+        #             canva = [x for x in dadosCanva if x[1] == projetoNomeGover[k][0]][0]
+                    
+        #             listaEquipe = []
+        #             gestores = []
+        #             especialistas = []
+        #             squads = []
+
+        #             projetos = [canva[1]] if canva[1] != None else " "
+        #             mvps = [canva[3]] if canva[3] != None else " "
+        #             prodProjetos = [canva[2]] if canva[2] != None else " "
+        #             prodMvps = [canva[4]] if canva[4] != None else " "
+        #             resultados = [canva[6]] if canva[6] != None else " "
+        #             metricas = [canva[5]] if canva[5] != None else " "
+        #             for i in range(len(canva[7].split('~/>'))):
+        #                 colab = str(canva[7]).split('~/>')[i]
+        #                 funcao = str(canva[7]).split('~/>')[i]
+        #                 listaEquipe.append([colab, funcao])
+
+        #             for i in range(len(listaEquipe)):
+        #                 if listaEquipe[i][1] == "Gestor":
+        #                     gest = listaEquipe[i][0]
+        #                     listaEquipe.append(gest)
+        #                     gestores.append(gest)
+        #                 elif listaEquipe[i][1] == "Especialista":
+        #                     espec = listaEquipe[i][0]
+        #                     listaEquipe.append(espec)
+        #                     especialistas.append(espec)
+        #                 else:
+        #                     executor = listaEquipe[i][0]
+        #                     listaEquipe.append(executor)
+        #                     squads.append(executor)
+        #             if len(gestores) == 0:
+        #                 gestores = " "
+        #             if len(especialistas) == 0:
+        #                 especialistas = " "
+        #             if len(squads) == 0:
+        #                 squads = " "
+
+        #             entregas = str(canva[9]).split(';') if ';' in str(canva[9]) else str(canva[9]).split('~/>')
+        #             investimentos = [canva[10]] if canva[10] != None else " "
+
+        #             col1, col2, col3 = st.columns([1,1,0.6])
+        #             with col1:
+        #                 st.text_input('Gestor', gestores, key=f'Gestor{projetos[0]} 1')
+        #             with col2:
+        #                 st.text_input('Macroprocesso', canva[11], key=f'{projetos[0]} 2')#MACROPROCESSO
+        #             with col3:
+        #                 st.text_input('Investimento', investimentos[0], key=f'{projetos[0]} 6')
+                        
+        #             st.text_area('Programa', canva[12], key=f'{projetos[0]} 3')#PROGRAMA
+        #             st.text_input('MVP', mvps[0], key=f'{projetos[0]} 4')
+                    
+        #             col1, col2 = st.columns([3,2])
+        #             with col1:
+        #                 st.multiselect('Squad', squads, squads, disabled=True, key=f'{projetos[0]} 9')
+        #             with col2:
+        #                 st.text_input('Especialistas', especialistas, key=f'{projetos[0]} 7')
+                    
+        #             font_TITLE(f'Principais Entregas', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
+        #             for entrg_idx in range(len(entregas)):
+        #                 st.text_input('Entregas', entregas[entrg_idx], label_visibility='collapsed', key=f'entrega{entrg_idx} {projetos[0]} 5')
+    
+        #             st.text(' ')
+        #             notaGov = []
+        #             for i in range(len(titleClass)):
+        #                 font_TITLE(f'{titleClass[i]}', fonte_Projeto,"'Bebas Neue', sans-serif", 21, 'left')
+        #                 listNota = []
+        #                 for j in infoClass[i]:
+        #                     nota = int(st.select_slider(j, optionClass, key=f"chave{k}_{i}_{j}", value=optionClass[0])[0][0:1])
+        #                     listNota.append(nota)
+        #                     st.write("---")
+        #                 notaGov.append(listNota)
+        #             grauEscopo = round(sum(notaGov[0]) / len(notaGov[0]), 2)
+        #             grauSquad = round(sum(notaGov[1]) / len(notaGov[1]), 2)
+        #             mediaGov = round(((grauEscopo + grauSquad) / 2), 2)
+
+        #             if mediaGov == 0:
+        #                 nivel = ""
+        #             elif mediaGov <= 2:
+        #                 nivel = "I"
+        #             elif mediaGov <= 3:
+        #                 nivel = "II"
+        #             elif mediaGov <= 4:
+        #                 nivel = "III"
+        #             else:
+        #                 nivel = "Valor médio fora do intervalo válido"
+
+        #             finalizar = st.button("Finalizar avaliação", key=f"notaGovernanca_{k}")
+
+        #             if finalizar:
+        #                 mycursor = conexao.cursor()
+        #                 colunas = ["grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey"]
+        #                 dadosGover = [grauEscopo, grauSquad, f"'{nivel}'", 1, matriUser]
+
+        #                 for i in range(len(colunas)):
+        #                     sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[i]} = {dadosGover[i]} WHERE proj_fgkey = {projetoNomeGover[k][1]}"
+        #                     mycursor.execute(sqlUpdate)
+        #                     conexao.commit()
+        #                 st.toast('Dados Atualizados!', icon='✅')
+        #                 sleep(3)
+        #                 st.rerun()
         else:
             if entregaProj == 'None' or len(entregaProj) <= 0:
                 st.info("Você não possui atividades pendentes no momento.")
