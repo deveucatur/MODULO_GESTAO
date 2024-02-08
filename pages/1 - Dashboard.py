@@ -1,23 +1,15 @@
 import streamlit as st
-import mysql.connector
 from util import string_to_datetime, displayInd, font_TITLE
-from utilR import statusProjetos, css_9box_home, ninebox_home, nineboxDatasUnidades_home, menuProjeuHtml, menuProjeuCss
+from utilR import statusProjetos, css_9box_home, ninebox_home, nineboxDatasUnidades_home
 from datetime import date, datetime
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-# from conexao import conexaoBD
+from conexao import conexaoBD
 
 st.set_page_config(layout="wide",
                    initial_sidebar_state="collapsed")
 
-conexao = mysql.connector.connect(
-    passwd='nineboxeucatur',
-    port=3306,
-    user='ninebox',
-    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
-    database='projeu'
-)
-# conexao = conexaoBD()
+conexao = conexaoBD()
 mycursor = conexao.cursor()
 
 setSession = "SET SESSION group_concat_max_len = 5000;"
@@ -199,7 +191,12 @@ SELECT
         SELECT GROUP_CONCAT(check_consolid SEPARATOR '~/>')
         FROM projeu_sprints
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
-    ) AS sprint_consolidada
+    ) AS sprint_consolidada,
+    (
+        SELECT GROUP_CONCAT(IFNULL(check_aprov, 0) SEPARATOR '~/>')
+        FROM projeu_sprints
+        WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
+    ) AS sprint_aprovada
 FROM 
     projeu_projetos
 JOIN 
@@ -221,10 +218,6 @@ cadeiaBD = mycursor.fetchall()
 
 mycursor.close()
 
-html = menuProjeuHtml(" ")
-css = menuProjeuCss()
-st.write(f'<div>{html}</div>', unsafe_allow_html=True)
-st.write(f'<style>{css}</style>', unsafe_allow_html=True)
 
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('DASHBOARD DE PROJETOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
@@ -235,7 +228,7 @@ with col2:
     displayInd('Concluídos', len(list(set([x[0] for x in ddPaging if x[24] == "Concluído"]))), min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
 with col3:
     projs_andament = len(list(set([x[0] for x in ddPaging if x[13] != None and string_to_datetime(str(x[13]).split("~/>")[0]) < date.today() and x[24] != "Concluído"])))
-    displayInd('Em Andamento', projs_andament, min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
+    displayInd('Andamento', projs_andament, min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
 with col4:
     projs_nao_inic = len(list(set([x[0] for x in ddPaging if x[13] == None or string_to_datetime(str(x[13]).split("~/>")[0]) > date.today()])))
     displayInd('Não Iniciado', projs_nao_inic, min_val=0, max_val=len(list(set([x[0] for x in ddPaging]))))
@@ -250,7 +243,7 @@ dadosProj = [f"{nomeProj} -- {statusProj}" for nomeProj, statusProj in zip(nomeP
 
 sprints_pendents = []
 for proj_list in ddPaging:
-    pendt_aux = [f'SPRINT {str(proj_list[11]).split("~/>")[x]} - {str(proj_list[1]).strip()}' if str(str(proj_list[12]).split("~/>")[x]).strip() not in ['MVP', 'ENTREGA FINAL'] else f'{str(proj_list[12]).split("~/>")[x]} - {str(proj_list[1]).strip()}' for x in range(len(str(proj_list[44]).split('~/>'))) if str(proj_list[44]).split('~/>')[x] not in ['None', '1'] and str(str(proj_list[34]).split('~/>')[x]).strip() == '0']
+    pendt_aux = [f'SPRINT {str(proj_list[11]).split("~/>")[x]} - {str(proj_list[1]).strip()}' if str(str(proj_list[12]).split("~/>")[x]).strip() not in ['MVP', 'ENTREGA FINAL'] else f'{str(proj_list[12]).split("~/>")[x]} - {str(proj_list[1]).strip()}' for x in range(len(str(proj_list[44]).split('~/>'))) if str(proj_list[44]).split('~/>')[x] not in ['None', '1'] and str(str(proj_list[34]).split('~/>')[x]).strip() == '0' and str(str(proj_list[45]).split('~/>')[x]).strip() == '1']
 
     if len(pendt_aux) > 0:
         sprints_pendents.extend(pendt_aux)
