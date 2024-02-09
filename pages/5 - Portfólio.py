@@ -203,7 +203,14 @@ SELECT
         SELECT GROUP_CONCAT(IFNULL(check_homolog, 0) SEPARATOR '~/>')
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
-    ) as CHECK_HOMOLOG_SPRINT
+    ) as CHECK_HOMOLOG_SPRINT,
+    (
+	 	SELECT 
+		 	GROUP_CONCAT(DISTINCT(PPP.typ_event) SEPARATOR '~/>') 
+		FROM 
+			projeu_param_premio AS PPP 
+		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
+	 ) AS EVENTOS_PROGRAMADOS
 FROM 
     projeu_projetos
 JOIN 
@@ -244,6 +251,17 @@ mycursor.execute("""SELECT Matricula,
 users = mycursor.fetchall()
 
 mycursor.close()
+
+
+def tratar_name_event(name_event):
+    name_event_aux = str(name_event).strip().upper()
+    aux = {'SPRINT PÓS MVP': 'PÓS MVP',
+           'SPRINT PRÉ MVP': 'PRÉ MVP'}
+    
+    retorno = aux[name_event_aux] if name_event_aux in list(aux.keys()) else name_event
+
+    return retorno
+
 
 def tableGeral():
     dadosUnic = tableUnic()
@@ -606,10 +624,10 @@ elif authentication_status:
         with tab1:
             font_TITLE(f'{dadosOrigin[0][1]}', fonte_Projeto,"'Bebas Neue', sans-serif", 31, 'center', '#228B22')
             ########CANVAS DO PROJETO SELECIONADO########
-            projetos = [dadosOrigin[0][1]] if dadosOrigin[0][1] != None else " "
-            mvps = [dadosOrigin[0][7]] if dadosOrigin[0][7] != None else " "  
-            investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != None else " "
-            gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != None else " "
+            projetos = [dadosOrigin[0][1]] if dadosOrigin[0][1] != "None" else " "
+            mvps = [dadosOrigin[0][7]] if dadosOrigin[0][7] != "None" else " "  
+            investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != "None" else " "
+            gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != "None" else " "
             
             pessoas = str(dadosOrigin[0][21]).split("~/>") if dadosOrigin[0][21] != None else ''
             funcao = str(dadosOrigin[0][22]).split("~/>") if dadosOrigin[0][22] != None else ''
@@ -628,8 +646,8 @@ elif authentication_status:
                 entregas = ''
 
             metricas = [str(dadosOrigin[0][33]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][33]).split("~/>"))) if str(str(dadosOrigin[0][42]).split("~/>")[x]).strip() == 'A'] if dadosOrigin[0][33] != None else ''
-            prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else " "
-            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][25] != None else " "
+            prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else ""
+            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][24] != None else ""
 
             
         #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos
@@ -662,9 +680,8 @@ elif authentication_status:
             font_TITLE(f'EDITAR CANVAS', fonte_Projeto,"'Bebas Neue', sans-serif", 24, 'left', 'black')
             nomeproj_edit = st.text_input('Nome Projeto', projetos[0])
             produtproj_edit = st.text_area('Produto Projeto', str(prodProjetos[0]).strip())
-            if dadosOrigin[0][4] != "Rápido":
-                mvp_edit = st.text_input('MVP', mvps[0])
-                produtmvp_edit = st.text_input('Produto MVP', prodMvps[0])
+            mvp_edit = st.text_input('MVP', mvps[0])
+            produtmvp_edit = st.text_input('Produto MVP', prodMvps[0])
             Resultado_edit = st.text_input('Resultado Esperado', resultados[0])
             
             ############################# MÉTRICAS #############################
@@ -777,6 +794,7 @@ elif authentication_status:
 
                 st.toast('Canvas Atualizado!', icon='✅') 
                 mycursor_edit.close()
+        
         ########APRESENTAÇÃO DOS DADOS DO PROJETO SELECIONADO########
         st.text(' ')
         st.text(' ')
@@ -1030,7 +1048,11 @@ elif authentication_status:
                 except:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
-        param_sprint = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+        param_sprint_aux = [str(tratar_name_event(x)).strip().upper() for x in list(str(dadosOrigin[0][46]).split("~/>"))]
+        
+        eventos_aux_sorted = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+        param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux]
+
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
@@ -1052,7 +1074,7 @@ elif authentication_status:
             with col1:
                 type_sprint_new = st.selectbox('Tipo', [listAddSprON_EX[1][listAddSprON_EX[0].index(max(listAddSprON_EX[0]))]] if on_ex else listAddSprOF_EX[1], disabled=disabledON)
             with col0:
-                number_sprt =listAddSprOF_EX[0] + 1 if type_sprint_new != 'MVP' else None
+                number_sprt = listAddSprOF_EX[0] + 1 if type_sprint_new != 'MVP' else None
                 number_sprint_new = st.text_input('Sprint', max(listAddSprON_EX[0]) if on_ex else number_sprt, disabled=True)
 
             with col2:
@@ -1186,7 +1208,7 @@ elif authentication_status:
                             with colPROJ3:
                                 font_TITLE(f'{date_americ_by_brasil(str(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][2]))}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ4:
-                                font_TITLE(f'{date_americ_by_brasil(str(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][2]))}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                                font_TITLE(f'{date_americ_by_brasil(str(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][3]))}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
 
                             especialistBD_sprint = [x for x in especialist_by_proj if str(x[1]) == str(id_sprint)]  #ESPECIALISTAS ATIVOS E NÃO ATIVOS VINCULADOS A SPRINT                        
                             
@@ -1439,11 +1461,11 @@ elif authentication_status:
                                     parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                             key=f'parec_homol{idx_spr}')
                                     
-                                    
                                     btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True if str(status_homolog_atual).strip() == '1' else False)
                                     if btt_homo:
+                                        
                                         if len(parec_homol) > 0:
-                                            if dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0:
+                                            if 'Rápido' in [(str(dadosOrigin[0][36]).strip())] or (dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0):
                                                 try:
                                                     def trat_homol(name_hmo):
                                                         aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
@@ -1479,7 +1501,8 @@ elif authentication_status:
         
                                                             premio_aux = CalculoPrêmio(
                                                                 str(project_filter).strip(),
-                                                                str(f'{dadosOrigin[0][36]} {dadosOrigin[0][37]}').upper(), dadosOrigin[0][4])
+                                                                str(f'{dadosOrigin[0][36]} {dadosOrigin[0][37]}').upper() if 'Rápido' not in [str(dadosOrigin[0][36]).strip()] else str(dadosOrigin[0][36]).strip().upper(), 
+                                                                dadosOrigin[0][4])
         
                                                             valores = premio_aux.valorEvento()
 
