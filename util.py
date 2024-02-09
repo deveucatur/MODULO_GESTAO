@@ -1034,24 +1034,6 @@ class CalculoPrêmio:
                 ''')
         self.proj_especial = mycursor2.fetchall()
 
-        st.info(f'''
-        SELECT 
-            PES.id_sp,
-            PU.id_user,
-            PU.Matricula,
-            PU.Nome,
-            PS.id_sprint,
-            PS.number_sprint,
-            PES.status_sp
-        FROM projeu_especialist_sprint PES
-        JOIN
-            projeu_users PU ON PU.id_user = PES.id_colab_fgkey
-        JOIN
-            projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
-        WHERE 
-            PS.id_sprint IN ({str(list(set([x[11] for x in self.entregas_do_projeto]))).replace("[", "").replace("]", "")})
-            AND
-                PES.status_sp = "A";''')
 
         mycursor2.execute(f'''
         SELECT 
@@ -1130,7 +1112,6 @@ class CalculoPrêmio:
                     for nameEvent in list(set([typEvent[1] for typEvent in premioSprintBD]))}
 
             retorno = premioSprint[evento]
-        
         else:
             retorno = f'EVENTO INFORMADO NÃO EXISTENTE. EVENTOS DISPONÍVEIS {list(set([typEvent[1] for typEvent in premioSprintBD]))}'
 
@@ -1145,7 +1126,8 @@ class CalculoPrêmio:
         else:
             valor_base = [round(float(self.proj_especial[0][3]), 2)] #VALOR BASE DAQUELE PROJETO EM ESPECIAL  # VALOR BASE DAQUELA COMPLEXIDADE
         
-        eventos = list(set([typEvent[1] for typEvent in premioSprintBD]))  # SPRINT PRÉ-MVP, MVP, PÓS-MVP, ENTREGA FINAL
+        eventos = list(set([typEvent[1] for typEvent in premioSprintBD if str(typEvent[4]).strip().upper() == str(self.complexidProj).strip().upper()]))  # SPRINT PRÉ-MVP, MVP, PÓS-MVP, ENTREGA FINAL
+        
         AuxDDComplx = {}
         for event in eventos:
             auxParam = self.param_eventos(event)
@@ -1198,7 +1180,6 @@ class CalculoPrêmio:
         # sprint = 1                     ---> [[LISTA DE ENTREGAS], VALOR DISTRIBUIDO PARA A SPRINT]
         # exemplo_de_como_chamar = CalculaSquad([list(x) for x in entregasBD if x[0] == sprint], 1200)
         
-        st.error(entregas)
         if len(list(set([x[0] for x in entregas if int(x[0]) in [int(x) for x in self.number_sprint]]))) > 0:
             entregas_sprint = []
             for entr in entregas:
@@ -1234,7 +1215,6 @@ class CalculoPrêmio:
     def CalculaSprint(self, valorSprint, sprint):
         dd_especialist = [x for x in self.especialist_by_sprint if x[5] in list(sprint)]#DADOS SOBRE ESPECIALISTAS DAQUELAS SPRINTS
         
-        st.warning(dd_especialist)
         qntd_contrib_espc = {id_espc: len([d for d in dd_especialist if d[1] == id_espc]) for id_espc in list(set([x[1] for x in dd_especialist]))}
         
         porc_contrib = {id_user: qntd_contr/sum(qntd_contrib_espc.values()) for id_user, qntd_contr in qntd_contrib_espc.items()}
@@ -1255,7 +1235,8 @@ class CalculoPrêmio:
                             ['SQUAD', f'{str(self.proj_especial[0][11]).strip()} {str(self.proj_especial[0][12]).strip()}', self.proj_especial[0][10]]]
             else:
                 porcEquipe = [list(x) for x in premioFuncaoBD if x[1] == self.complexidProj]
-
+            
+            
             if len(dd_especialist) == 0:
                 idx_time_fun = lambda equipe: list([str(x[0]).strip().upper() for x in porcEquipe]).index(
                     f'{str(equipe).upper()}')
@@ -1268,7 +1249,8 @@ class CalculoPrêmio:
             valoresEquipe['GESTOR'] = valorSprint * float(
                 [x[2] for x in porcEquipe if str(x[0]).upper() == 'GESTOR'][0])
 
-            TotalEspecialist = valorSprint * float([x[2] for x in porcEquipe if str(x[0]).upper() == 'ESPECIALISTA'][0])
+            TotalEspecialist = valorSprint * float([x[2] for x in porcEquipe if str(x[0]).upper() == 'ESPECIALISTA'][0] if len([x[2] for x in porcEquipe if str(x[0]).upper() == 'ESPECIALISTA']) > 0 else 0)
+            
             valoresEquipe['ESPECIALISTA'] = {'ValorTotal': TotalEspecialist,
                                              'ValorPorEspecialist': (TotalEspecialist/qntdEspecial) if qntdEspecial > 0 else 0,
                                              'QuantidadeEspecialista': qntdEspecial,
