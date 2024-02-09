@@ -280,11 +280,18 @@ elif authentication_status:
 
                     
                     ############# INSERINDO COMPLEXIDADE #############
-                    cmd_insert_complx = f'''INSERT INTO projeu_complexidade (proj_fgkey, date_edic) 
-                    VALUES (
-                    (SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1),
-                    '{date.today()}'
-                    );'''
+                    if typ_proj != "Rápido":
+                        cmd_insert_complx = f'''INSERT INTO projeu_complexidade (proj_fgkey, date_edic) 
+                        VALUES (
+                        (SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1),
+                        '{date.today()}'
+                        );'''
+                    else:
+                        cmd_insert_complx = f'''INSERT INTO projeu_complexidade (proj_fgkey, date_edic, complxdd, check_lider, check_govern, check_avaliado) 
+                        VALUES (
+                        (SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1),
+                        '{date.today()}', 'Rápido', 1, 1, 1
+                        );'''
 
                     mycursor.execute(cmd_insert_complx)
                     conexao.commit()
