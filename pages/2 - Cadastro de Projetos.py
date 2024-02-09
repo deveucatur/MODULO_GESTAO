@@ -135,7 +135,7 @@ elif authentication_status:
     with col1:
         colaux1, colaux2 = st.columns([1.3, 2])    
         with colaux1:
-            typ_proj = st.selectbox('Tipo Projeto', ['Estratégico', 'OKR', 'Implantação'])
+            typ_proj = st.selectbox('Tipo Projeto', ['Estratégico', 'OKR', 'Implantação', 'Rápido'])
         with colaux2:
             MacroProjeto = st.selectbox('Macroprocesso', list(set([x[1] for x in prog_macro])))    
 
@@ -145,7 +145,9 @@ elif authentication_status:
         with colG1:
             matric_gestor = st.text_input('Matricula Gestor', [x[0] for x in users if x[1] == gestorProjeto][0], disabled=True)
         
-        mvp_name = st.text_input('MVP')
+        if typ_proj != "Rápido":
+            mvp_name = st.text_input('MVP')
+
         pdt_entrFinal = st.text_area('Produto Projeto', key='ProdutoEntrega')
 
     with col2:
@@ -156,7 +158,9 @@ elif authentication_status:
             dat_inic = st.date_input('Início Projeto')
         with colD2:
             ivsProget = st.text_input('Investimento', placeholder='R$ 0,00')
-        mvp_produt = st.text_input('Produto MVP')    
+
+        if typ_proj != "Rápido":
+            mvp_produt = st.text_input('Produto MVP')    
 
         result_esperd = st.text_area('Resultado Esperado')
 
@@ -223,24 +227,37 @@ elif authentication_status:
 
     if btt_criar_prj:
         if nomeProjeto not in dd_proj:
-            if 0 not in [len(str(x)) if type(x) == date else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, mvp_name, pdt_entrFinal, nomePrograma, dat_inic, ivsProget, mvp_produt, 
-    result_esperd, listEntregas, list_colbs]]:
+            if typ_proj != "Rápido":
+                parametros = [len(str(x)) if type(x) == date else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, mvp_name, pdt_entrFinal, nomePrograma, dat_inic, ivsProget, mvp_produt, result_esperd, listEntregas, list_colbs]]
+            else:
+                parametros = [len(str(x)) if type(x) == date else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, pdt_entrFinal, nomePrograma, dat_inic, ivsProget, result_esperd, listEntregas, list_colbs]]
+            if 0 not in parametros:
                 mycursor = conexao.cursor()
                 try:
                     ############# INSERINDO O PROJETO #############
-                    cmd_criar_project = f"""INSERT INTO projeu_projetos(
-                        type_proj_fgkey, macroproc_fgkey, progrm_fgkey, name_proj, 
-                        result_esperad, gestor_id_fgkey, nome_mvp,
-                        produto_mvp, produto_entrega_final,  
-                        ano, date_posse_gestor,  status_proj, investim_proj
-                        ) VALUES (
-                        (SELECT id_type FROM projeu_type_proj WHERE type_proj LIKE '%{str(typ_proj).strip()}%'), (SELECT id FROM projeu_macropr WHERE macroprocesso LIKE '%{str(MacroProjeto).strip()}%'), 
-                        (SELECT id_prog FROM projeu_programas WHERE nome_prog LIKE '%{nomePrograma}%'), 
-                        '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
-                        (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(mvp_name).strip()}', '{str(mvp_produt).strip()}', 
-                        '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}');"""
+                    if typ_proj != "Rápido":
+                        cmd_criar_project = f"""INSERT INTO projeu_projetos(
+                            type_proj_fgkey, macroproc_fgkey, progrm_fgkey, name_proj, 
+                            result_esperad, gestor_id_fgkey, nome_mvp,
+                            produto_mvp, produto_entrega_final,  
+                            ano, date_posse_gestor,  status_proj, investim_proj
+                            ) VALUES (
+                            (SELECT id_type FROM projeu_type_proj WHERE type_proj LIKE '%{str(typ_proj).strip()}%'), (SELECT id FROM projeu_macropr WHERE macroprocesso LIKE '%{str(MacroProjeto).strip()}%'), 
+                            (SELECT id_prog FROM projeu_programas WHERE nome_prog LIKE '%{nomePrograma}%'), 
+                            '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
+                            (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(mvp_name).strip()}', '{str(mvp_produt).strip()}', 
+                            '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}');"""
+                    else:
+                        cmd_criar_project = f"""INSERT INTO projeu_projetos(
+                            type_proj_fgkey, macroproc_fgkey, progrm_fgkey, name_proj, 
+                            result_esperad, gestor_id_fgkey, produto_entrega_final,  
+                            ano, date_posse_gestor,  status_proj, investim_proj
+                            ) VALUES (
+                            (SELECT id_type FROM projeu_type_proj WHERE type_proj LIKE '%{str(typ_proj).strip()}%'), (SELECT id FROM projeu_macropr WHERE macroprocesso LIKE '%{str(MacroProjeto).strip()}%'), 
+                            (SELECT id_prog FROM projeu_programas WHERE nome_prog LIKE '%{nomePrograma}%'), 
+                            '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
+                            (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}');"""
 
-                
                     mycursor.execute(cmd_criar_project)
                     conexao.commit()
                     print('PROJETO CRIADO!')
