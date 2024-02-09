@@ -629,7 +629,7 @@ elif authentication_status:
 
             metricas = [str(dadosOrigin[0][33]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][33]).split("~/>"))) if str(str(dadosOrigin[0][42]).split("~/>")[x]).strip() == 'A'] if dadosOrigin[0][33] != None else ''
             prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else " "
-            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][24] != None else " "
+            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][25] != None else " "
 
             
         #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos
