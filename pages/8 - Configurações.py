@@ -5,15 +5,20 @@ from util import string_to_datetime, CalculoPrêmio
 from utilR import menuProjeuHtml, menuProjeuCss
 from datetime import date
 import streamlit_authenticator as stauth
-from conexao import conexaoBD
 
-st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide", initial_sidebar_state='collapsed')
-conexao = conexaoBD()
+st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide")
+conexao = mysql.connector.connect(
+    passwd='nineboxeucatur',
+    port=3306,
+    user='ninebox',
+    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
+    database='projeu'
+)
 
 ####### CONCULTA BAGUNÇADA DE DADOS GERAIS SOBRE OS PROGRAMAS #######
 mycursor = conexao.cursor()
 
-comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV') AND status_user = 'A';"
+comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A', 'L', 'GV');"
 mycursor.execute(comandUSERS)
 dadosUser = mycursor.fetchall()
 
@@ -312,14 +317,17 @@ elif authentication_status:
                     font_TITLE('VALOR BASE POR PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
                     
                     typ_proj_event = typ_proj = st.selectbox('Tipo de Projeto', [x[1] for x in typProgBD], list([x[1] for x in typProgBD]).index('Estratégico'), key='TYP PROJ VALOR TOTAL')
-                    complx_event = st.selectbox('Complexidade Projeto', list(set([x[2] for x in consulta3])), key='COMPLX VALOR TOTAL')
+                    
+                    complx_event = st.selectbox('Complexidade Projeto', list(set([x[2] for x in consulta3 if str(x[1]).strip() == str(typ_proj).strip()])), key='COMPLX VALOR TOTAL')
                     
                     dados_dql_param2 = [x for x in consulta3 if x[1] == typ_proj and x[2] == complx_event]
-                    col_aux, col_aux1 = st.columns([1,8])
-                    with col_aux:
-                        id_valor_event = st.text_input('Id Valor', dados_dql_param2[0][0], disabled=True)
-                    with col_aux1:
-                        valor_base = st.number_input('Valor Base', min_value=0.00, step=0.01, value=float(dados_dql_param2[0][3]))
+                    
+                    if len(dados_dql_param2) > 0:
+                        col_aux, col_aux1 = st.columns([1,8])
+                        with col_aux:
+                            id_valor_event = st.text_input('Id Valor', dados_dql_param2[0][0], disabled=True)
+                        with col_aux1:
+                            valor_base = st.number_input('Valor Base', min_value=0.00, step=0.01, value=float(dados_dql_param2[0][3]))
 
                 with col2:
                     st.text(' ')
@@ -328,16 +336,17 @@ elif authentication_status:
                                 'COMPLEXIDADE PROJETO': [x[2] for x in consulta3 if x[1] == typ_proj],
                                 'VALOR BASE': [x[3] for x in consulta3 if x[1] == typ_proj]})
                 
-                btt_ValorTotal = st.button('Atualizar', key='btt_ValorTotal')
-                if btt_ValorTotal:
-                    mycursor = conexao.cursor()
-                    cmdUP_vlb = f'UPDATE projeu_premio_base SET valor_base = {float(valor_base)} WHERE id_premiob = {id_valor_event};'
-                    mycursor.execute(cmdUP_vlb)
-                    conexao.commit()
-                    
-                    st.toast('Sucesso! Valor base atualizado.', icon='✅')
-                    mycursor.close()
-                    st.rerun()
+                if len(dados_dql_param2) > 0:
+                    btt_ValorTotal = st.button('Atualizar', key='btt_ValorTotal')
+                    if btt_ValorTotal:
+                        mycursor = conexao.cursor()
+                        cmdUP_vlb = f'UPDATE projeu_premio_base SET valor_base = {float(valor_base)} WHERE id_premiob = {id_valor_event};'
+                        mycursor.execute(cmdUP_vlb)
+                        conexao.commit()
+                        
+                        st.toast('Sucesso! Valor base atualizado.', icon='✅')
+                        mycursor.close()
+                        st.rerun()
 
             with tab2:
                 col1, col2 = st.columns([1.1, 1])
@@ -346,8 +355,8 @@ elif authentication_status:
                     font_TITLE('ESCOLHA DO PRÊMIO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
 
                     typ_proj = st.selectbox('Tipo de Projeto', list(set([x[1] for x in consulta2])))
-                    event_spr = st.selectbox('Tipo Evento', list(set([x[3] for x in consulta2])))
-                    event_complx = st.selectbox('Complexidade', list(set([x[2] for x in consulta2])), key='UP COMPLX')
+                    event_spr = st.selectbox('Tipo Evento', list(set([x[3] for x in consulta2 if str(x[1]).strip() == str(typ_proj).strip()])))
+                    event_complx = st.selectbox('Complexidade', list(set([x[2] for x in consulta2 if str(x[1]).strip() == str(typ_proj).strip() and str(x[3]).strip() == str(event_spr).strip()])), key='UP COMPLX')
             
                 with col2:
                     st.dataframe({'ID': [x[0] for x in consulta2 if x[1] == typ_proj and x[3] == event_spr],
@@ -427,6 +436,7 @@ elif authentication_status:
             dados_proj = [x for x in proj_difBD if str(x[1]).strip() == str(projeto_user).strip()]
 
             #INFORMAÇÕES DAS PREMIAÇÕES
+
             fcalculo1 = CalculoPrêmio(projeto_user, f'{str(dados_proj[0][15]).strip().upper()} {str(dados_proj[0][16]).strip()}', dados_proj[0][2])
 
             valorbase = fcalculo1.valorEvento()
