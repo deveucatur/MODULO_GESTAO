@@ -1034,8 +1034,7 @@ class CalculoPrêmio:
                 ''')
         self.proj_especial = mycursor2.fetchall()
 
-
-        mycursor2.execute(f'''
+        st.info(f'''
         SELECT 
             PES.id_sp,
             PU.id_user,
@@ -1054,6 +1053,25 @@ class CalculoPrêmio:
             AND
                 PES.status_sp = "A";''')
         
+        mycursor2.execute(f'''
+        SELECT 
+            PES.id_sp,
+            PU.id_user,
+            PU.Matricula,
+            PU.Nome,
+            PS.id_sprint,
+            PS.number_sprint,
+            PES.status_sp
+        FROM projeu_especialist_sprint PES
+        JOIN
+            projeu_users PU ON PU.id_user = PES.id_colab_fgkey
+        JOIN
+            projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
+        WHERE 
+            PS.id_sprint IN ({str(list(set([x[11] for x in self.entregas_do_projeto]))).replace("[", "").replace("]", "")})
+            AND
+                PES.status_sp = "A";''')
+          
         self.especialist_by_sprint = mycursor2.fetchall()
         
         mycursor2.execute(
