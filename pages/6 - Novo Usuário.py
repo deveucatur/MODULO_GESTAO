@@ -223,7 +223,7 @@ with tab2:
             
         if senha:
             colunasBD += ['senha', 'senha_hash']
-            valoresBD += [f"""'{str(senha).strip()}'""",
+            valoresBD += [f"""'{senha}'""",
                 f"""'{stauth.Hasher([senha]).generate()[0]}'"""]
 
         mycursor = conexao.cursor()
