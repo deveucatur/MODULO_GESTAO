@@ -9,7 +9,6 @@ import streamlit_authenticator as stauth
 import plotly.graph_objects as go
 from conexao import conexaoBD
 
-
 st.set_page_config(
     page_title="Gerir Projetos",
     layout="wide",
