@@ -210,7 +210,8 @@ SELECT
 		FROM 
 			projeu_param_premio AS PPP 
 		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
-	 ) AS EVENTOS_PROGRAMADOS
+	 ) AS EVENTOS_PROGRAMADOS,
+     projeu_projetos.type_proj_fgkey
 FROM 
     projeu_projetos
 JOIN 
@@ -220,7 +221,6 @@ GROUP BY
 
 mycursor.execute(comand)
 ddPaging = mycursor.fetchall()
-
 
 consult2AUX = '''
 SELECT 
@@ -1052,12 +1052,16 @@ elif authentication_status:
 
         param_sprint_aux = [str(tratar_name_event(x)).strip().upper() for x in list(str(dadosOrigin[0][46]).split("~/>"))]
         
-        eventos_aux_sorted = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+        if dadosOrigin[0][47] != 4:
+            eventos_aux_sorted = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+        else:
+            eventos_aux_sorted = ['SPRINT', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+
         param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux]
 
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
-            #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
+            #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA
             maior_idx = max([param_sprint.index(x)+1 if x != None else 0 for x in func_split(dadosOrigin[0][12])])
  
             if None in func_split(dadosOrigin[0][11]):
@@ -1181,7 +1185,11 @@ elif authentication_status:
                         listDadosAux = []
                         cont_sprint += 1
 
-                        name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] != 'MVP' else 'Evento - MVP'
+                        if param_sprint[idx_parm] != 'ENTREGA FINAL':
+                            name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] != 'MVP' else 'Evento - MVP'
+                        else:
+                            name_expander = "Entrega Final"
+
                         with st.expander(name_expander):
                             id_sprint = idx_spr
 
