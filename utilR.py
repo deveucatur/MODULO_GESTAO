@@ -589,15 +589,21 @@ class PlotCanvas:
         
         mvpCode = ""
         for i in range(len(self.mvp)):
-            mvpCode += f"""<tr class="tdata2">
-                    <td>{self.mvp[i]}</td>
-                </tr>"""
+            if len(self.mvp[i]) <= 1:
+                self.mvp = "        "
+            else:
+                mvpCode += f"""<tr class="tdata2">
+                        <td>{self.mvp[i]}</td>
+                    </tr>"""
             
         prodMvpCode = ""
         for i in range(len(self.prodMvp)):
-            prodMvpCode += f"""<tr class="tdata2">
-                        <td>{self.prodMvp[i]}</td>
-                    </tr>"""
+            if len(self.mvp[i]) <= 1:
+                self.prodMvp = "        "
+            else:
+                prodMvpCode += f"""<tr class="tdata2">
+                            <td>{self.prodMvp[i]}</td>
+                        </tr>"""
 
         htmlRow = f"""<div class="flex-row">
                 <div class="box">
@@ -783,8 +789,8 @@ class PlotCanvas:
         prodMvpCode = ""
         for i in range(len(prodMvp)):
             prodMvpCode += f"""<tr class="tdata2">
-                        <td>{prodMvp[i]}</td>
-                    </tr>"""
+                    <td>{prodMvp[i]}</td>
+                </tr>"""
 
         canvaStyle = """body{
             font-family: Arial, sans-serif;
@@ -838,7 +844,7 @@ class PlotCanvas:
             box-shadow: 0px 0px 25px rgba(255, 255, 68, 1);
         }"""
 
-        if len(mvpCode) > 72 and len(prodMvpCode) > 80:
+        if len(mvpCode) > 72 or len(prodMvpCode) > 72:
              canvaStyle += """.box1,
                 .box2,
                 .box3,
@@ -2374,3 +2380,12 @@ def enviar_email(destino, codigo):
 
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado!')
+
+# def menu():
+#     st.sidebar.page_link("HomeGestao.py", label="Home")
+#     st.sidebar.page_link("pages/1 - Dashboard.py")
+#     st.sidebar.page_link("pages/4 - Cadastro de Projetos.py")
+#     st.sidebar.page_link("pages/5 - Portfólio.py")
+#     st.sidebar.page_link("pages/6 - Novo Usuário.py")
+#     st.sidebar.page_link("pages/7 - Gestao de Prêmios.py")
+#     st.sidebar.page_link("pages/8 - Configurações.py")
