@@ -1,6 +1,6 @@
 import streamlit as st
 from util import string_to_datetime, displayInd, font_TITLE
-from utilR import statusProjetos, css_9box_home, ninebox_home, nineboxDatasUnidades_home
+from utilR import statusProjetos, css_9box_home, ninebox_home, nineboxDatasUnidades_home, menuProjeuHtml, menuProjeuCss
 from datetime import date, datetime
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
@@ -218,6 +218,10 @@ cadeiaBD = mycursor.fetchall()
 
 mycursor.close()
 
+menuHtml = menuProjeuHtml(" ")
+menuCss = menuProjeuCss()
+st.write(f'<div>{menuHtml}</div>', unsafe_allow_html=True)
+st.write(f'<style>{menuCss}</style>', unsafe_allow_html=True)
 
 fonte_Projeto = '''@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee+Inline&family=Koulen&family=Major+Mono+Display&family=Passion+One&family=Sansita+Swashed:wght@500&display=swap');'''
 font_TITLE('DASHBOARD DE PROJETOS', fonte_Projeto,"'Bebas Neue', sans-serif", 49, 'center')
