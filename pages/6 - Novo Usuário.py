@@ -2,10 +2,8 @@ import streamlit as st
 from PIL import Image
 import streamlit_authenticator as stauth
 from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss, validarEmail, enviar_email
-from time import sleep
 import string
 import random
-import pandas as pd
 from conexao import conexaoBD
 
 conexao = conexaoBD()
@@ -164,14 +162,12 @@ with tab1:
     CadastroDeUsuarios()
 
 with tab2:
-    st.error(unidadesBD)
     cmdUnidade = 'SELECT * FROM projeu_unidades;'
     mycursor.execute(cmdUnidade)
     unidadeBD = mycursor.fetchall()
     
     mapearUnidades = {unidade[0]: unidade[1] for unidade in unidadeBD}
     
-    st.write(mapearUnidades)
     unidadesAssociadas = [mapearUnidades.get(user[5], "") for user in usersBD]
 
     st.dataframe({"Matrícula" : [x[1] for x in usersBD],
@@ -236,8 +232,6 @@ with tab2:
                 cmdUpdate += ", "
         cmdUpdate += f" WHERE id_user = {usersBD[index][0]}"
 
-        st.info(cmdUpdate)
-        st.error('ATUALIZOU')
         mycursor.execute(cmdUpdate)
         conexao.commit()
 
