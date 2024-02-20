@@ -9,6 +9,7 @@ import streamlit_authenticator as stauth
 import plotly.graph_objects as go
 from conexao import conexaoBD
 
+
 st.set_page_config(
     page_title="Gerir Projetos",
     layout="wide",
@@ -209,8 +210,7 @@ SELECT
 		FROM 
 			projeu_param_premio AS PPP 
 		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
-	 ) AS EVENTOS_PROGRAMADOS,
-     projeu_projetos.type_proj_fgkey
+	 ) AS EVENTOS_PROGRAMADOS
 FROM 
     projeu_projetos
 JOIN 
@@ -220,6 +220,7 @@ GROUP BY
 
 mycursor.execute(comand)
 ddPaging = mycursor.fetchall()
+
 
 consult2AUX = '''
 SELECT 
@@ -623,13 +624,13 @@ elif authentication_status:
         with tab1:
             font_TITLE(f'{dadosOrigin[0][1]}', fonte_Projeto,"'Bebas Neue', sans-serif", 31, 'center', '#228B22')
             ########CANVAS DO PROJETO SELECIONADO########
-            projetos = [dadosOrigin[0][1]] if dadosOrigin[0][1] != None else " "
-            mvps = [dadosOrigin[0][7]] if dadosOrigin[0][7] != None else " "  
-            investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != None else " "
-            gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != None else " "
+            projetos = [dadosOrigin[0][1]] if dadosOrigin[0][1] != "None" else " "
+            mvps = [dadosOrigin[0][7]] if dadosOrigin[0][7] != "None" else " "  
+            investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != "None" else " "
+            gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != "None" else " "
             
-            pessoas = str(dadosOrigin[0][21]).split("~/>") if dadosOrigin[0][21] != None else ' '
-            funcao = str(dadosOrigin[0][22]).split("~/>") if dadosOrigin[0][22] != None else ' '
+            pessoas = str(dadosOrigin[0][21]).split("~/>") if dadosOrigin[0][21] != None else ''
+            funcao = str(dadosOrigin[0][22]).split("~/>") if dadosOrigin[0][22] != None else ''
             equipBD = [[pessoas[x], funcao[x]] for x in range(len(pessoas))]
 
             resultados = []
@@ -642,11 +643,12 @@ elif authentication_status:
             if dadosOrigin[0][32] != None:
                 entregas = [str(dadosOrigin[0][32]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][40]).split("~/>"))) if str(str(dadosOrigin[0][40]).split("~/>")[x]).strip() == 'A']
             else:
-                entregas = ' '
+                entregas = ''
 
-            metricas = [str(dadosOrigin[0][33]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][33]).split("~/>"))) if str(str(dadosOrigin[0][42]).split("~/>")[x]).strip() == 'A'] if dadosOrigin[0][33] != None else ' '
-            prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else " "
-            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][25] != None else " "
+            metricas = [str(dadosOrigin[0][33]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][33]).split("~/>"))) if str(str(dadosOrigin[0][42]).split("~/>")[x]).strip() == 'A'] if dadosOrigin[0][33] != None else ''
+            prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else ""
+            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][24] != None else ""
+
             
         #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos
             canvas = PlotCanvas(projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, [x[0] for x in equipBD if x[1] == 'Especialista'], [x[0] for x in equipBD if x[1] == 'Executor'], entregas, investimentos)
@@ -795,6 +797,7 @@ elif authentication_status:
 
                 st.toast('Canvas Atualizado!', icon='✅') 
                 mycursor_edit.close()
+            st.divider()
         
         ########APRESENTAÇÃO DOS DADOS DO PROJETO SELECIONADO########
         st.text(' ')
@@ -1051,16 +1054,12 @@ elif authentication_status:
 
         param_sprint_aux = [str(tratar_name_event(x)).strip().upper() for x in list(str(dadosOrigin[0][46]).split("~/>"))]
         
-        if dadosOrigin[0][47] != 4:
-            eventos_aux_sorted = ['PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
-        else:
-            eventos_aux_sorted = ['SPRINT', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
-
+        eventos_aux_sorted = ['SPRINT', 'PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
         param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux]
 
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
-            #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA
+            #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
             maior_idx = max([param_sprint.index(x)+1 if x != None else 0 for x in func_split(dadosOrigin[0][12])])
  
             if None in func_split(dadosOrigin[0][11]):
@@ -1156,6 +1155,7 @@ elif authentication_status:
                 else:
                     st.toast('Primeiramente, ative a opção de excluir sprint.', icon='❌')
 
+
         func_split = lambda x: x.split("~/>") if x is not None else [x]
         if func_split(dadosOrigin[0][11])[0] != None:
             # ----> DADOS [NUMBER_SPRINT, STATUS_SPRINT,  DATA INC SPRINT, DATA FIM SPRINT, ID_SPRINT, CHECK_SPRINT]
@@ -1184,11 +1184,15 @@ elif authentication_status:
                         listDadosAux = []
                         cont_sprint += 1
 
-                        if param_sprint[idx_parm] != 'ENTREGA FINAL':
-                            name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] != 'MVP' else 'Evento - MVP'
-                        else:
-                            name_expander = "Entrega Final"
+                        def aux_name(name_expader):
+                            name = str(name_expader).strip().upper()
+                            aux = {'MVP': 'Evento - MVP',
+                                   'ENTREGA FINAL': 'Evento - ENTREGA FINAL'}
 
+                            return aux[name]
+
+
+                        name_expander = f'Sprint {int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])}' if param_sprint[idx_parm] not in ('MVP', 'ENTREGA FINAL') else aux_name(param_sprint[idx_parm])
                         with st.expander(name_expander):
                             id_sprint = idx_spr
 
@@ -1475,7 +1479,7 @@ elif authentication_status:
                                         
                                         if len(parec_homol) > 0:
                                             if 'Rápido' in [(str(dadosOrigin[0][36]).strip())] or (dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0):
-                                                try:
+                                                #try:
                                                     def trat_homol(name_hmo):
                                                         aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
                                                                 'PÓS MVP': 'SPRINT PÓS MVP',
@@ -1498,13 +1502,13 @@ elif authentication_status:
                                                     mycursor1 = conexao.cursor()
                                                     
                                                     cmd_insert_homolog = f'''INSERT INTO projeu_homol_sprints(id_sprint_fgkey, obs_homolog, status_homolog) VALUES ({id_sprint}, "{str(parec_homol).strip()}", "{str(stt_homol).strip()}");'''                                                
-                                                    mycursor1.execute(cmd_insert_homolog)
-                                                    conexao.commit()
+                                                    #mycursor1.execute(cmd_insert_homolog)
+                                                    #conexao.commit()
 
                                                     if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
                                                         cmdHOMO = f'UPDATE projeu_sprints SET check_homolog = 1 WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
-                                                        mycursor1.execute(cmdHOMO)
-                                                        conexao.commit()
+                                                        #mycursor1.execute(cmdHOMO)
+                                                        #conexao.commit()
 
                                                         if str(ddSprint[list([x[4] for x in ddSprint]).index(str(id_sprint))][5]) == str(0):   
         
@@ -1602,11 +1606,11 @@ elif authentication_status:
                                                             st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
                                                         
                                                     mycursor1.close()
-                                                except:
-                                                    cont_erro =+ 1
-                                                    st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
-                                                if cont_erro < 1:
-                                                    st.toast('Dados de homologação atualizados', icon='✅')
+                                                #except:
+                                                #    cont_erro =+ 1
+                                                #    st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
+                                                #if cont_erro < 1:
+                                                #    st.toast('Dados de homologação atualizados', icon='✅')
                                             else:
                                                 st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
                                                         
