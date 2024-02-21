@@ -602,8 +602,8 @@ class PlotCanvas:
                 self.prodMvp = "        "
             else:
                 prodMvpCode += f"""<tr class="tdata2">
-                            <td>{self.prodMvp[i]}</td>
-                        </tr>"""
+                    <td>{self.prodMvp[i]}</td>
+                </tr>"""
 
         htmlRow = f"""<div class="flex-row">
                 <div class="box">
@@ -620,12 +620,14 @@ class PlotCanvas:
                         </table>
                     </div>
                 </div>"""
-        if len(mvpCode) > 72 and len(prodMvpCode) > 80:
-            htmlRow += f"""<div class="box">
+        
+        if len(mvpCode) > 72 or len(prodMvpCode) > 72:
+            htmlRow += f"""
+                <div class="box">
                     <div class="box2">
                         <table class="table2">
                             <tr class="thead2">
-                                <th>MVP<img src="https://cdn-icons-png.flaticon.com/128/9238/9238294.png" alt="Icone da tabela MVPs" class="table-icon"></th>
+                                <th>MVP <img src="https://cdn-icons-png.flaticon.com/128/9238/9238294.png" alt="Icone da tabela MVPs" class="table-icon"></th>
                             </tr>
                             <div>{mvpCode}</div>
                             <tr class="thead2-mvp">
@@ -634,7 +636,8 @@ class PlotCanvas:
                             <div>{prodMvpCode}</div>
                         </table>
                     </div>
-                </div>"""
+                </div>
+                """
         else:
             htmlRow += f"""<div class="box">
                     <p> </p>
@@ -845,7 +848,8 @@ class PlotCanvas:
         }"""
 
         if len(mvpCode) > 72 or len(prodMvpCode) > 72:
-             canvaStyle += """.box1,
+             canvaStyle += """
+                .box1,
                 .box2,
                 .box3,
                 .box4,
@@ -857,9 +861,10 @@ class PlotCanvas:
                     max-width: 350px;
                     max-height: 250px;
                     margin: 5px;
-                    overflow: auto;
                     overflow-x: hidden;
+                    overflow-y: auto;
                     scrollbar-width: thin;
+                    border-radius: 15px;
                 }
              
                 .table1,
@@ -873,12 +878,15 @@ class PlotCanvas:
                     border-collapse: collapse;
                     border-radius: 10px;
                     overflow: hidden; 
+                    overflow-y: auto;
                     min-height: 250px;
                     max-height: 250px;
                     border-collapse: collapse;
-                }"""
+                }
+                """
         else:
-             canvaStyle += """.box1,
+             canvaStyle += """
+                .box1,
                 .box2,
                 .box3,
                 .box4,
@@ -891,7 +899,9 @@ class PlotCanvas:
                     margin: 5px;
                     overflow: auto;
                     overflow-x: hidden;
+                    overflow-y: auto;
                     scrollbar-width: thin;
+                    border-radius: 15px;
                 }
              
                 .table1,
@@ -899,7 +909,8 @@ class PlotCanvas:
                     min-width: 534px;
                     border-collapse: collapse;
                     border-radius: 10px;
-                    overflow: hidden; 
+                    overflow: hidden;
+                    overflow-y: auto;
                     min-height: 250px;
                     max-height: 250px;
                     border-collapse: collapse;
@@ -913,11 +924,13 @@ class PlotCanvas:
                     min-width: 350px;
                     border-collapse: collapse;
                     border-radius: 10px;
-                    overflow: hidden; 
+                    overflow: hidden;
+                    overflow-y: auto;
                     min-height: 250px;
                     max-height: 250px;
                     border-collapse: collapse;
-                }"""
+                }
+                """
              
         canvaStyle += """th{
             height: 20px;
@@ -1513,7 +1526,7 @@ def ninebox_home(quadrante, nineboxDatasUnidadesAux, dadosNineboxUni, nome_quadr
     totalUnidades = sum([len(x) for x in qtdUnidades])
 
     quadrante = quadrante
-    boxTable = f"""<div class="box2">
+    boxTable = f"""<div class="box2-home">
                         <div class="box-{style[quadrante]}2">
                             <div class="header-{style[quadrante]}2">
                                 <div class="title-{style[quadrante]}2">
@@ -1600,7 +1613,7 @@ def css_9box_home(fonte0="""'Bebas Neue', sans-serif;""", fonte1="""@import url(
         align-items: center;
     }}
 
-    .box2{{
+    .box2-home{{
         display: flex;
         align-items: flex-end;
         justify-content: center;
