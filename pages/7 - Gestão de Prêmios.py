@@ -1,10 +1,10 @@
 import streamlit as st
 from PIL import Image
 import mysql.connector
-from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
+from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss, string_to_datetime
+from util import divisaoSecao2
 from time import sleep
 from datetime import datetime, date
-from dateutil.relativedelta import relativedelta
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -12,7 +12,6 @@ from email.mime.application import MIMEApplication
 import tempfile
 from relatorio import escopoGeral
 import streamlit_authenticator as stauth
-from conexao import conexaoBD
 
 icone = Image.open('imagens/icone.png')
 st.set_page_config(
@@ -22,7 +21,14 @@ st.set_page_config(
     initial_sidebar_state='collapsed')
 
 
-conexao = conexaoBD()
+conexao = mysql.connector.connect(
+    passwd='nineboxeucatur',
+    port=3306,
+    user='ninebox',
+    host='nineboxeucatur.c7rugjkck183.sa-east-1.rds.amazonaws.com',
+    database='projeu'
+    )
+
 mycursor = conexao.cursor()
 
 comandUSERS = "SELECT * FROM projeu_users WHERE perfil_proj in ('A');"
@@ -118,7 +124,10 @@ elif authentication_status:
             FROM
                 projeu_programas AS PP_AUX
             WHERE PP_AUX.id_prog = PP.progrm_fgkey
-        ) AS PROGRAMA
+        ) AS PROGRAMA,
+        PS.check_consolid AS CHECK_CONSOLIDADO,
+        PS.date_check_consolid AS DATA_CONSOLIDADO,
+        PPE.id_premio
         FROM projeu_premio_entr AS PPE
         LEFT JOIN 
             projeu_sprints PS ON PS.id_sprint = PPE.id_sprint_fgkey
@@ -128,8 +137,6 @@ elif authentication_status:
             projeu_entregas PE ON PE.id_entr = PPE.id_entreg_fgkey
         LEFT JOIN 
             projeu_projetos PP ON PP.id_proj = PS.id_proj_fgkey
-        WHERE 
-            PS.check_consolid <> 1 OR PS.check_consolid IS NULL
         GROUP BY PPE.id_premio;
     """
     mycursor.execute(cmd_premio)
@@ -163,28 +170,6 @@ elif authentication_status:
     cadeiaBD = mycursor.fetchall()
 
     mycursor.close()
-
-
-    def aux_mes(number_mes):
-        if number_mes >= 12:
-            number_mes = 0
-
-        dic_mes = {
-            1: 'Janeiro',
-            2: 'Fevereiro',
-            3: 'Março',
-            4: 'Abril',
-            5: 'Maio',
-            6: 'Junho',
-            7: 'Julho',
-            8: 'Agosto',
-            9: 'Setembro',
-            10: 'Outubro',
-            11: 'Novembro',
-            12: 'Dezembro'
-        }
-
-        return dic_mes[number_mes]
 
 
     def enviar_email(destino, nome_colab = None, list_valores = None, txt_temporario = None, name_arquivo = None):
@@ -261,10 +246,34 @@ elif authentication_status:
         return resultado
 
 
+    def meses_escrito(entreda, id_dyn=False):
+        entreda = str(entreda)
+        
+        aux = {
+            '1': 'Janeiro',
+            '2': 'Fevereiro',
+            '3': 'Março',
+            '4': 'Abril',
+            '5': 'Maio',
+            '6': 'Junho',
+            '7': 'Julho',
+            '8': 'Agosto',
+            '9': 'Setembro',
+            '10': 'Outubro',
+            '11': 'Novembro',
+            '12': 'Dezembro'
+        }
+
+        if id_dyn == True:
+            aux = {mes: number for number, mes in aux.items()}
+
+        return aux[entreda]
+
+
     tab1, tab2 = st.tabs(['APROVAÇÃO', 'CONSOLIDADO'])
 
     with tab1:
-        dadosBD1 = [x for x in dadosBD if str(x[11]).lower() != '1']
+        dadosBD1 = [x for x in dadosBD if str(x[11]).strip() != '1' and str(x[18]).strip() != '1']
         
         premios_proj_pendent = {name_proj: [x for x in dadosBD1 if str(x[2]).strip() == str(name_proj).strip()] for name_proj in list(set([x[2] for x in dadosBD1 if str(x[11]).strip() != str(1)]))}
         font_TITLE('PRÊMIOS PENDENTES DE APROVAÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')
@@ -393,8 +402,212 @@ elif authentication_status:
        
             
     with tab2:
+        st.text(' ')
+        with st.expander('Relatórios dos Prêmios'):
+            dadosBD = [x for x in dadosBD if str(x[11]).strip() == '1' and str(x[18]).strip() == '1']
+            
+            ########## FORMATANDO OS DADOS EM VÁRIOS DICIONÁRIOS PARA FACILITAR A FILTRAGEM ##########
+            dados_for_filter = {empr: {progm: {proj: {func: {pess: {date: [x for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess and str(x[19]) == date] 
+                                                    for date in [str(x[19]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess]} 
+                                                for pess in list(set([str(x[5]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func]))}
+                                            for func in list(set([str(x[6]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj]))} 
+                                        for proj in list(set([str(x[2]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm]))} 
+                                    for progm in list(set([str(x[17]).strip() for x in dadosBD if str(x[14]).strip() == empr]))} 
+                                for empr in list(set([str(x[14]).strip() for x in dadosBD]))}    
+            
+            #################### INÍCIO DO FILTRO ####################
+
+            #EMPRESA
+            empres_aux = list(dados_for_filter.keys())
+            empres_aux.append('TODOS')
+            empr_relt_filt = st.multiselect('Empresa', empres_aux, 'TODOS')
+            empr_relt_filt = list(dados_for_filter.keys()) if 'TODOS' in empr_relt_filt else empr_relt_filt
+
+            #PROGRAMA
+            progm_aux = ['TODOS']
+            for empr_aux in empr_relt_filt:
+                progm_aux.extend(dados_for_filter[empr_aux].keys())
+    
+            progm_relt_filt = st.multiselect('Programa', progm_aux, 'TODOS')
+            progm_relt_filt = [x for x in progm_aux if str(x).strip() != 'TODOS'] if 'TODOS' in progm_relt_filt else progm_relt_filt
+            
+            #PROJETO
+            proj_aux = ['TODOS']
+            for empr_aux in empr_relt_filt:
+                for prog_aux in dados_for_filter[empr_aux]:
+                    if prog_aux in progm_relt_filt:
+                        proj_aux.extend(dados_for_filter[empr_aux][prog_aux].keys())
+
+            proj_relt_filt = st.multiselect('Projeto', proj_aux, 'TODOS')
+            proj_relt_filt = [x for x in proj_aux if x != 'TODOS'] if 'TODOS' in proj_relt_filt else proj_relt_filt
+            
+            #FUNÇÃO
+            func_aux = ['TODOS']
+            for empr_aux in empr_relt_filt:
+                for prog_aux in dados_for_filter[empr_aux].keys():
+                    if prog_aux in progm_relt_filt: #PEGANDO SOMENTE OS PROJETOS DOS PROGRAMAS SELECIONADOS
+                        for proj_aux in dados_for_filter[empr_aux][prog_aux].keys():
+                            if proj_aux in proj_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                func_aux.extend(dados_for_filter[empr_aux][prog_aux][proj_aux].keys())
+            
+            func_relt_filt = st.multiselect('Função', set(func_aux), 'TODOS')
+            func_relt_filt = list(set([x for x in func_aux if x != 'TODOS'])) if 'TODOS' in func_relt_filt else func_relt_filt
+
+            #PESSOA
+            pess_aux = ['TODOS']
+            for empr_aux in empr_relt_filt:
+                for prog_aux in dados_for_filter[empr_aux].keys():
+                    if prog_aux in progm_relt_filt: #PEGANDO SOMENTE OS PROJETOS DOS PROGRAMAS SELECIONADOS
+                        for proj_aux in dados_for_filter[empr_aux][prog_aux].keys():
+                            if proj_aux in proj_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                for func_aux in dados_for_filter[empr_aux][prog_aux][proj_aux].keys():
+                                    if func_aux in func_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                        pess_aux.extend(dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux].keys())
+            
+            pess_relt_filt = st.multiselect('Pessoa', set(pess_aux), 'TODOS')
+            pess_relt_filt = [x for x in pess_aux if x != 'TODOS'] if 'TODOS' in pess_relt_filt else pess_relt_filt
+
+            #MÊS
+            mes_aux = ['TODOS']
+            for empr_aux in empr_relt_filt:
+                for prog_aux in dados_for_filter[empr_aux].keys():
+                    if prog_aux in progm_relt_filt: #PEGANDO SOMENTE OS PROJETOS DOS PROGRAMAS SELECIONADOS
+                        for proj_aux in dados_for_filter[empr_aux][prog_aux].keys():
+                            if proj_aux in proj_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                for func_aux in dados_for_filter[empr_aux][prog_aux][proj_aux].keys():
+                                    if func_aux in func_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                        for pes_aux in dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux].keys():
+                                            if pes_aux in pess_relt_filt:
+                                                mes_aux.extend(dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux][pes_aux].keys())
+
+            mes_aux = list(set(['{} - {}'.format(meses_escrito(string_to_datetime(x).month), string_to_datetime(x).year) if x != 'TODOS' else x for x in list(set(mes_aux))]))
+            mes_relt_filt = st.multiselect('MÊS', mes_aux, 'TODOS')
+            mes_relt_filt = [x for x in mes_aux if x != 'TODOS'] if 'TODOS' in mes_relt_filt else mes_relt_filt
+
+            button_relat = st.button('Pesquisar')
+            if button_relat:
+                dados_for_filter_aux = []
+                for empr_aux in empr_relt_filt:
+                    for prog_aux in dados_for_filter[empr_aux].keys():
+                        if prog_aux in progm_relt_filt: #PEGANDO SOMENTE OS PROJETOS DOS PROGRAMAS SELECIONADOS
+                            for proj_aux in dados_for_filter[empr_aux][prog_aux].keys():
+                                if proj_aux in proj_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                    for func_aux in dados_for_filter[empr_aux][prog_aux][proj_aux].keys():
+                                        if func_aux in func_relt_filt: #PEGANDO SOMENTE AS FUNÇÕES DOS PROJETOS SELECIONADOS
+                                            for pess_aux in dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux].keys():
+                                                if pess_aux in pess_relt_filt: #PEGANDO SOMENTE OS VALORES DAS PESSOAS SELECIONADAS
+                                                    for date_aux in dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux][pess_aux].keys():
+                                                        if '{} - {}'.format(string_to_datetime(date_aux).month, string_to_datetime(date_aux).year) in ['{} - {}'.format(meses_escrito(str(x).split('-')[0].strip(), id_dyn=True), str(x).split('-')[1].strip()) for x in mes_relt_filt]: 
+                                                            dados_for_filter_aux.extend(dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux][pess_aux][date_aux])  
+                
+                ###################### INICIANDO A APRESENTAÇÃO DOS DADOS ######################
+                #DIVIDINDO OS DADOS POR PESSOA
+                
+                st.text(' ')    
+                st.text(' ')
+                divisaoSecao2('Bonificação por Pessoa', id=1)
+                dados_for_filter = {mat: [x for x in dados_for_filter_aux if str(x[4]).strip() == mat] for mat in list(set([str(x[4]).strip() for x in dados_for_filter_aux]))} 
+            
+                col0, col2, col3, col4, col5, col6 = st.columns([0.19, 0.18, 0.89, 0.14, 0.17, 0.17])
+                with col0:
+                    st.caption('Empresa')
+                with col2:
+                    st.caption('Matricula')
+                with col3:
+                    st.caption('Nome')
+                with col4:
+                    st.caption('Atividades')
+                with col5:
+                    st.caption('Horas')
+                with col6:
+                    st.caption('Valor Total')
+                
+                for mat, lista in dados_for_filter.items():
+                    with col0:
+                        st.text_input('', 'EUCATUR', label_visibility='collapsed', key=f'HIST Consolidado Empresa {mat}')
+                    with col2:
+                        st.text_input('', lista[0][4], label_visibility='collapsed', key=f'HIST Consolidado Matricula{mat}')
+                    with col3:
+                        st.text_input('', lista[0][5], label_visibility='collapsed', key=f'HIST Consolidado Nome{mat}')
+                    with col4:
+                        st.text_input('', len(list(set([str(x[3]).strip().lower() for x in lista]))), label_visibility='collapsed', key=f'HIST Consolidado Atividade{mat}')
+                    with col5:
+                        st.text_input('', sum([int(x[7]) if x[7] != None else 0 for x in lista]), label_visibility='collapsed', key=f'HIST Consolidado horas{mat}')
+                    with col6:
+                        st.text_input('', f'R$ {sum([x[10] for x in lista])}', label_visibility='collapsed', key=f'HIST Consolidado Valor{mat}')
+
+                st.text(' ')
+                col0, col2, col3, col4, col5 = st.columns([0.19, 0.18, 0.89, 0.31, 0.17])
+                with col4:
+                    st.text_input('VALOR TOTAL', value='VALOR TOTAL', label_visibility='collapsed')
+                with col5:
+                    st.text_input('VALOR TOTAL', label_visibility='collapsed', value='R$ {}'.format(sum([sum([x[10] for x in value_list]) for value_list in list(dados_for_filter.values())])))
+
+                dd_by_proj = {proj:{sprint: [x for x in dados_for_filter_aux if x[1] == sprint and str(x[2]).strip() == str(proj).strip()]
+                               for sprint in list(set([x[1] for x in dados_for_filter_aux if str(x[2]).strip() == str(proj).strip()]))} for proj in list(set([str(x[2]).strip() for x in dados_for_filter_aux]))}
+
+                st.text(' ')
+                if len(list(set(dd_by_proj.keys()))) <= 3:
+                    divisaoSecao2('Bonificação por Entrega', id=1)
+                    for proj, dd_by_sprint in dd_by_proj.items():
+                        
+                        font_TITLE(f'{str(proj).strip()}', fonte_Projeto,"'Bebas Neue', sans-serif", 22, 'left')
+
+                        for number_sp, dd_sprint in dd_by_sprint.items():
+                            colaux, col0, col1, col11, col2, col3, col4, col5 = st.columns([0.09, 0.14, 0.29, 0.19, 1, 0.14, 0.17, 0.17])
+                            with colaux:
+                                st.caption('Sprint')
+                            with col0:
+                                st.caption('Matricula')
+                            with col1:
+                                st.caption('Executor')
+                            with col11:
+                                st.caption('Função')
+                            with col2:
+                                st.caption('Entrega')
+                            with col3:
+                                st.caption('Horas')
+                            with col4:
+                                st.caption('Complexidade')
+                            with col5:
+                                st.caption('Valor')
+                            for idx_premio in range(len(dd_sprint)): 
+                                with colaux:
+                                    st.text_input('', number_sp, label_visibility='collapsed', key=f'relatorio sprint {proj} - {number_sp} - sprint{idx_premio}')
+                                with col0:
+                                    st.text_input('', dd_sprint[idx_premio][4], label_visibility='collapsed', key=f'relatorio matricula {proj} - {number_sp} - sprint{idx_premio}')
+                                with col1:
+                                    st.text_input('', dd_sprint[idx_premio][5], label_visibility='collapsed', key=f'relatorio executor {proj} - {number_sp} - sprint{idx_premio}')
+                                with col11:
+                                    st.text_input('', funcao_premio(dd_sprint[idx_premio][6]), label_visibility='collapsed', key=f'relatorio funcao {proj} - {number_sp} - sprint{idx_premio}')
+                                with col2:
+                                    st.text_input('', dd_sprint[idx_premio][3] if dd_sprint[idx_premio][3] != None and dd_sprint[idx_premio][3] != '' else dd_sprint[idx_premio][15], label_visibility='collapsed', key=f'relatorio Entrega {proj} - {number_sp} - sprint{idx_premio}')
+                                with col3:
+                                    if dd_sprint[idx_premio][7] == None and dd_sprint[idx_premio][8] != None:
+                                        hrs_entrg = dd_sprint[idx_premio][8] / dd_sprint[idx_premio][9]
+                                    else:
+                                        hrs_entrg = dd_sprint[idx_premio][7]
+                                    
+                                    st.text_input('', hrs_entrg, label_visibility='collapsed', key=f'relatorio Horas {proj} - {number_sp} - sprint{idx_premio}')
+                                with col4:
+                                    st.text_input('', complexidade_name(dd_sprint[idx_premio][9]) if dd_sprint[idx_premio][9] != None else ' ', label_visibility='collapsed', key=f'relatorio Complexidade {proj} - {number_sp} - sprint{idx_premio}')
+                                with col5:
+                                    st.text_input('', dd_sprint[idx_premio][10], label_visibility='collapsed', key=f'relatorio Valor {proj} - {number_sp} - sprint{idx_premio}')    
+
+                            colaux, col0, col1, col11, col2, col3, col4 = st.columns([0.09, 0.14, 0.29, 0.19, 1, 0.31, 0.17])
+                            with col3:
+                                st.text_input('VALOR TOTAL SPRINT', value='VALOR TOTAL SPRINT', label_visibility='collapsed', key=f'TITLE por entrega {proj} {number_sp}')
+                            with col4:
+                                st.text_input('VALOR TOTAL SPRINT', label_visibility='collapsed', value='R$ {}'.format(sum([x[10] for x in dd_sprint])), key=f'VALOR por entrega {proj} {number_sp}')
+                            st.text(' ')
+
+                #button_download = st.button('Emitir Relatório')
+                #if button_download:
+                #    st.info('FOI')
+
+        st.text(' ')
         font_TITLE('PRÊMIOS CONSOLIDADOS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')
-        dadosBD = [x for x in dadosBD if str(x[11]).strip() == str(1).strip()]
+        dadosBD = [x for x in dadosBD if str(x[11]).strip() == str(1).strip() and str(x[18]).strip() != '1']
         
         if len(dadosBD) > 0:
             #TRANTANDO OS DADOS PARA LEVALOS AO FILTRO
