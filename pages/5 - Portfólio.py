@@ -624,13 +624,13 @@ elif authentication_status:
         with tab1:
             font_TITLE(f'{dadosOrigin[0][1]}', fonte_Projeto,"'Bebas Neue', sans-serif", 31, 'center', '#228B22')
             ########CANVAS DO PROJETO SELECIONADO########
-            projetos = [dadosOrigin[0][1]] if dadosOrigin[0][1] != "None" else " "
-            mvps = [dadosOrigin[0][7]] if dadosOrigin[0][7] != "None" else " "  
-            investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != "None" else " "
-            gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != "None" else " "
+            projetos = [dadosOrigin[0][1]] if dadosOrigin[0][1] != None else " "
+            mvps = [dadosOrigin[0][7]] if dadosOrigin[0][7] != None else " "  
+            investimentos = [f"{dadosOrigin[0][8]}"] if f"{dadosOrigin[0][8]}" != None else " "
+            gestores = [f"{dadosOrigin[0][2]}"] if f"{dadosOrigin[0][2]}" != None else " "
             
-            pessoas = str(dadosOrigin[0][21]).split("~/>") if dadosOrigin[0][21] != None else ''
-            funcao = str(dadosOrigin[0][22]).split("~/>") if dadosOrigin[0][22] != None else ''
+            pessoas = str(dadosOrigin[0][21]).split("~/>") if dadosOrigin[0][21] != None else ' '
+            funcao = str(dadosOrigin[0][22]).split("~/>") if dadosOrigin[0][22] != None else ' '
             equipBD = [[pessoas[x], funcao[x]] for x in range(len(pessoas))]
 
             resultados = []
@@ -643,11 +643,11 @@ elif authentication_status:
             if dadosOrigin[0][32] != None:
                 entregas = [str(dadosOrigin[0][32]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][40]).split("~/>"))) if str(str(dadosOrigin[0][40]).split("~/>")[x]).strip() == 'A']
             else:
-                entregas = ''
+                entregas = ' '
 
-            metricas = [str(dadosOrigin[0][33]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][33]).split("~/>"))) if str(str(dadosOrigin[0][42]).split("~/>")[x]).strip() == 'A'] if dadosOrigin[0][33] != None else ''
-            prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else ""
-            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][24] != None else ""
+            metricas = [str(dadosOrigin[0][33]).split("~/>")[x] for x in range(len(str(dadosOrigin[0][33]).split("~/>"))) if str(str(dadosOrigin[0][42]).split("~/>")[x]).strip() == 'A'] if dadosOrigin[0][33] != None else ' '
+            prodProjetos = str(dadosOrigin[0][10]).split("~/>") if dadosOrigin[0][10] != None else " "
+            prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][25] != None else " "
 
             
         #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos
