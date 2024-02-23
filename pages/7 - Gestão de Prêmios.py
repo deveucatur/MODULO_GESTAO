@@ -12,6 +12,8 @@ from email.mime.application import MIMEApplication
 import tempfile
 from relatorio import escopoGeral
 import streamlit_authenticator as stauth
+from dateutil.relativedelta import relativedelta
+
 
 icone = Image.open('imagens/icone.png')
 st.set_page_config(
@@ -51,7 +53,7 @@ def convert_to_dict(names, usernames, passwords):
     return credentials
 
 credentials = convert_to_dict(names, usernames, hashed_passwords)
-authenticator = stauth.Authenticate(credentials, "Teste", "abcde", 30)
+authenticator = stauth.Authenticate(credentials, "Teste", "abcde", 1000000)
 
 col1, col2,col3 = st.columns([1,3,1])
 with col2:
@@ -172,10 +174,10 @@ elif authentication_status:
     mycursor.close()
 
 
-    def enviar_email(destino, nome_colab = None, list_valores = None, txt_temporario = None, name_arquivo = None):
+    def enviar_email(destino, periodo, nome_colab = None, list_valores = None, txt_temporario = None, name_arquivo = None):
         
         msg = MIMEMultipart()
-        msg['Subject'] = f"Recompensa de Projetos / {date.today().month} {date.today().year}"
+        msg['Subject'] = f"Recompensa de Projetos / {periodo}"
         #msg['Subject'] = f"Recompensa de Projetos / 01-2024"
         msg['From'] = 'automacao1.processos@gmail.com'
         msg['To'] = destino
@@ -188,7 +190,7 @@ elif authentication_status:
         if txt_temporario is not None:
             with open(txt_temporario, 'rb') as f:
                 attachment = MIMEApplication(f.read())
-                attachment.add_header('Content-Disposition', 'attachment', filename=f'PremioProjeto_{name_arquivo}_{date.today().month}_{hoje.year}.txt')
+                attachment.add_header('Content-Disposition', 'attachment', filename=f'PremioProjeto_{name_arquivo}_{str(periodo.split("-")[0]).strip()}_{str(periodo.split("-")[1]).strip()}.txt')
                 msg.attach(attachment)
 
         s = smtplib.SMTP('smtp.gmail.com: 587')
@@ -199,8 +201,8 @@ elif authentication_status:
         s.login(msg['From'], password)
 
         #ENVIANDO EMAIL
-        s.sendmail(msg['From'], [msg['To'], 'cleidi.sander@gmail.com', 'processos.eucatur@gmail.com', 'processos4.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
-        #s.sendmail(msg['From'], [msg['To'], 'processos.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
+        #s.sendmail(msg['From'], [msg['To'], 'cleidi.sander@gmail.com', 'processos.eucatur@gmail.com', 'processos4.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
+        s.sendmail(msg['From'], [msg['To'], 'processos.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
         print('Email enviado')
 
 
@@ -404,16 +406,16 @@ elif authentication_status:
     with tab2:
         st.text(' ')
         with st.expander('Relatórios dos Prêmios'):
-            dadosBD = [x for x in dadosBD if str(x[11]).strip() == '1' and str(x[18]).strip() == '1']
+            dadosBD_rel = [x for x in dadosBD if str(x[11]).strip() == '1' and str(x[18]).strip() == '1']
             
             ########## FORMATANDO OS DADOS EM VÁRIOS DICIONÁRIOS PARA FACILITAR A FILTRAGEM ##########
-            dados_for_filter = {empr: {progm: {proj: {func: {pess: {date: [x for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess and str(x[19]) == date] 
-                                                    for date in [str(x[19]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess]} 
-                                                for pess in list(set([str(x[5]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func]))}
-                                            for func in list(set([str(x[6]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj]))} 
-                                        for proj in list(set([str(x[2]).strip() for x in dadosBD if str(x[14]).strip() == empr and str(x[17]).strip() == progm]))} 
-                                    for progm in list(set([str(x[17]).strip() for x in dadosBD if str(x[14]).strip() == empr]))} 
-                                for empr in list(set([str(x[14]).strip() for x in dadosBD]))}    
+            dados_for_filter = {empr: {progm: {proj: {func: {pess: {date: [x for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess and str(x[19]) == date] 
+                                                    for date in [str(x[19]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess]} 
+                                                for pess in list(set([str(x[5]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func]))}
+                                            for func in list(set([str(x[6]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj]))} 
+                                        for proj in list(set([str(x[2]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm]))} 
+                                    for progm in list(set([str(x[17]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr]))} 
+                                for empr in list(set([str(x[14]).strip() for x in dadosBD_rel]))}    
             
             #################### INÍCIO DO FILTRO ####################
 
@@ -607,7 +609,8 @@ elif authentication_status:
 
         st.text(' ')
         font_TITLE('PRÊMIOS CONSOLIDADOS', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')
-        dadosBD = [x for x in dadosBD if str(x[11]).strip() == str(1).strip() and str(x[18]).strip() != '1']
+        
+        dadosBD = [x for x in dadosBD if str(x[11]).strip() == '1' and str(x[18]).strip() != '1']
         
         if len(dadosBD) > 0:
             #TRANTANDO OS DADOS PARA LEVALOS AO FILTRO
@@ -650,7 +653,16 @@ elif authentication_status:
                                 value_sprint.extend(list(dic_cadeia[macro][prog][proj]))
 
                     sprints_filter = st.multiselect('Eventos', set(value_sprint), set(value_sprint))
+            
+            hoje_aux = date.today() + relativedelta(months=1)
+            opc_period = [f'{(hoje_aux-relativedelta(months=x)).month}-{(hoje_aux-relativedelta(months=x)).year}' for x in range(4)]
+            period_select = st.selectbox('Período de Referência', opc_period)
+            
 
+            subt_period = lambda x: x + 1 if x < 3 else x
+            
+            period_referen = opc_period[subt_period(opc_period.index(period_select))]
+            
             dadosBD = [x for x in dadosBD if str(x[16]).strip() in list(macro_filter) and str(x[17]).strip() in list(prog_filter) and str(x[2]).strip() in projetos_filter and (x[1] in sprints_filter or str(x[15]).strip() in sprints_filter)]        
             
             matric_and_names = list(set((x[4], x[5]) for x in dadosBD)) 
@@ -698,8 +710,13 @@ elif authentication_status:
 
                     for id_sprint in sprints:
                         mycursor = conexao.cursor()
-                        cmd_consolid = f"UPDATE projeu_sprints SET check_consolid = 1 WHERE id_sprint = {id_sprint};"
-                    
+                        cmd_consolid = f"""UPDATE projeu_sprints
+                                            SET 
+                                                check_consolid = 1, 
+                                                referenc_consolid = '{period_select}',
+                                                date_check_consolid = '{date.today()}'
+                                            WHERE id_sprint = {id_sprint};"""
+                        
                         mycursor.execute(cmd_consolid)
                         conexao.commit()
 
@@ -731,7 +748,8 @@ elif authentication_status:
                             arquivo_temporario = temp_file.name
                         
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='jesiel.eucatur@gmail.com',  txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                        enviar_email(destino='jesiel.eucatur@gmail.com', periodo=period_referen, txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
+                        #enviar_email(destino='processos4.eucatur@gmail.com', periodo=period_referen, txt_temporario=arquivo_temporario, name_arquivo=cod_empres)
                     
                     #ENVIADO EMAIL PARA OS PJ
                     consolid_pj = {name_colab: dd_consolid for name_colab, dd_consolid in consolid_pendent.items() if 'PJ' in [str(x[13]).strip().upper() for x in dd_consolid]}
@@ -739,7 +757,7 @@ elif authentication_status:
                         by_proj = {str(proj).strip():[x for x in dd_consolid if str(x[2]).strip().lower() == str(proj).strip().lower()] for proj in list(set([x[2] for x in dd_consolid]))}                               
                     
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
-                        enviar_email(destino='jesiel.eucatur@gmail.com',  nome_colab=name_colab, list_valores=by_proj)
+                        enviar_email(destino='jesiel.eucatur@gmail.com', periodo=period_referen, nome_colab=name_colab, list_valores=by_proj)
                     
                     sleep(1)
                     st.rerun()
