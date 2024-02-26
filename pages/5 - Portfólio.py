@@ -211,11 +211,11 @@ SELECT
 			projeu_param_premio AS PPP 
 		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
 	 ) AS EVENTOS_PROGRAMADOS,
-     (
-        SELECT GROUP_CONCAT(check_govern SEPARATOR '~/>') 
+	 (
+        SELECT GROUP_CONCAT(IFNULL(check_govern, 0) SEPARATOR '~/>')
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
-     ) AS check_entregas
+    ) as CHECK_GOVERN
 FROM 
     projeu_projetos
 JOIN 
@@ -1218,7 +1218,7 @@ elif authentication_status:
                             st.text(' ')
 
                             st.text(' ')
-                            colPROJ1, colPROJ2, colPROJ3, colPROJ4 = st.columns([4, 2, 0.8, 0.8])
+                            colPROJ1, colPROJ2, colPROJ3, colPROJ4 = st.columns([4, 2, 0.7, 0.7])
                             with colPROJ1:
                                 font_TITLE('ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ2:
@@ -1488,7 +1488,7 @@ elif authentication_status:
                                             
                                             if len(parec_homol) > 0:
                                                 if 'Rápido' in [(str(dadosOrigin[0][36]).strip())] or (dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0):
-                                                    #try:
+                                                    try:
                                                         def trat_homol(name_hmo):
                                                             aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
                                                                     'PÓS MVP': 'SPRINT PÓS MVP',
@@ -1511,13 +1511,13 @@ elif authentication_status:
                                                         mycursor1 = conexao.cursor()
                                                         
                                                         cmd_insert_homolog = f'''INSERT INTO projeu_homol_sprints(id_sprint_fgkey, obs_homolog, status_homolog) VALUES ({id_sprint}, "{str(parec_homol).strip()}", "{str(stt_homol).strip()}");'''                                                
-                                                        #mycursor1.execute(cmd_insert_homolog)
-                                                        #conexao.commit()
+                                                        mycursor1.execute(cmd_insert_homolog)
+                                                        conexao.commit()
 
                                                         if str(stt_homol).strip() in ['HOMOLOGADO COM AJUSTES', 'HOMOLOGADO']:
                                                             cmdHOMO = f'UPDATE projeu_sprints SET check_homolog = 1 WHERE id_sprint = {ddSprint[cont_sprint - 1][4]};'
-                                                            #mycursor1.execute(cmdHOMO)
-                                                            #conexao.commit()
+                                                            mycursor1.execute(cmdHOMO)
+                                                            conexao.commit()
 
                                                             if str(ddSprint[list([x[4] for x in ddSprint]).index(str(id_sprint))][5]) == str(0):   
             
@@ -1615,11 +1615,11 @@ elif authentication_status:
                                                                 st.toast('Primeiramente, para homologação final é necessário finalizar a sprint', icon='❌')
                                                             
                                                         mycursor1.close()
-                                                    #except:
-                                                    #    cont_erro =+ 1
-                                                    #    st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
-                                                    #if cont_erro < 1:
-                                                    #    st.toast('Dados de homologação atualizados', icon='✅')
+                                                    except:
+                                                        cont_erro =+ 1
+                                                        st.toast('Erro ao adcionar homologação ao banco de dados.', icon='❌')
+                                                    if cont_erro < 1:
+                                                        st.toast('Dados de homologação atualizados', icon='✅')
                                                 else:
                                                     st.toast('Primeiramente, é necessário preencher a complexidade do projeto corretamente.', icon='❌')
                                                             
@@ -1866,7 +1866,8 @@ elif authentication_status:
                                         st.toast("Entregas confirmadas para homologação!", icon='✅')
                                         sleep(1)
                                         st.rerun()
-                                    
+                                    st.text(' ')
+                                    st.text(' ')
                             #with tab4:
                             #    #OBSERVAÇÃO DA SPRINT SELECIONADA
                             #    obsv_sprint = [x for x in ObservBD if x[1] == idx_spr]
