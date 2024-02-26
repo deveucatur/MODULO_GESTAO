@@ -1182,7 +1182,6 @@ elif authentication_status:
                 cont_sprint = 0 
                 if len(ddSprint)> 0:
                     font_TITLE(f'{param_sprint[idx_parm]}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
-
                                                     #COLOCANDO EM ORDEM CRESCENTE AS SPRINTS
                     for idx_spr_tupl in sorted(list(set([(x[7], x[0]) for x in SprintsEntregs])), key=lambda x: x[1]):
                         idx_spr = idx_spr_tupl[0]
@@ -1209,6 +1208,12 @@ elif authentication_status:
 
                             block_sprint = True if str(ddSprint[list(x[4] for x in ddSprint).index(str(id_sprint))][5]) == str(0) else False
 
+                            sprintAtual = (int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])) - 1
+
+                            checkSprint = dadosOrigin[0][34].split("~/>")
+                            checkGovern = dadosOrigin[0][47].split("~/>")
+                            checkHomolog = dadosOrigin[0][45].split("~/>")
+
                             #PREPARANDO OS DADOS PARA APRESENTAR NO CARD DA SPRINT
                             contagem_dif = Counter([x[4] for x in spEntregas])                
                             dif_comum = contagem_dif.most_common(1)
@@ -1218,11 +1223,18 @@ elif authentication_status:
                             st.text(' ')
 
                             st.text(' ')
-                            colPROJ1, colPROJ2, colPROJ3, colPROJ4 = st.columns([4, 2, 0.7, 0.7])
+                            colPROJ1, colPROJ2, colPROJ3, colPROJ4 = st.columns([4, 2, 0.8, 0.8])
                             with colPROJ1:
                                 font_TITLE('ENTREGAS', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ2:
-                                font_TITLE('STATUS DA SPRINT - EM ANDAMENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                                if str(checkSprint[sprintAtual]) == "1":
+                                    font_TITLE('STATUS DA SPRINT - EM ANDAMENTO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                                elif str(checkSprint[sprintAtual]) == "0" and str(checkGovern[sprintAtual]) == "0" and str(checkHomolog[sprintAtual]) == "0":
+                                    font_TITLE('STATUS DA SPRINT - AGUARDANDO GOVERNANÇA', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                                elif str(checkHomolog[sprintAtual]) == "1":
+                                    font_TITLE('STATUS DA SPRINT - HOMOLOGADO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
+                                elif str(checkGovern[sprintAtual]) == "1":
+                                    font_TITLE('STATUS DA SPRINT - AGUARDANDO HOMOLOGAÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ3:
                                 font_TITLE(f'{date_americ_by_brasil(str(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][2]))}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left','#228B22')
                             with colPROJ4:
@@ -1452,7 +1464,6 @@ elif authentication_status:
                                             st.toast('Entrega não encontrada no banco de dados!', icon='❌')
 
                             with tab3:
-                                sprintAtual = (int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])) - 1
                                 checkEntrega = [x[47].split('~/>') for x in dadosOrigin]
                                 entregaAtual = [x[sprintAtual] for x in checkEntrega]
                                 status_homolog_atual = [func_split(dadosOrigin[0][45])[x] for x in range(len(func_split(dadosOrigin[0][11]))) if str(func_split(dadosOrigin[0][27])[x]) == str(id_sprint)][0]
@@ -1847,7 +1858,6 @@ elif authentication_status:
                                     with col5:
                                         st.text_input(f'', value=ent_menos[entr_idx][4], label_visibility="collapsed",
                                                       key=f'Compl Menos{entr_idx} {idx_spr}')
-                                        
                                     st.text(' ')
                                     st.text(' ')
 
@@ -1866,8 +1876,10 @@ elif authentication_status:
                                         st.toast("Entregas confirmadas para homologação!", icon='✅')
                                         sleep(1)
                                         st.rerun()
-                                    st.text(' ')
-                                    st.text(' ')
+
+                                    st.write(" ")
+                                    st.write(" ")
+                                    
                             #with tab4:
                             #    #OBSERVAÇÃO DA SPRINT SELECIONADA
                             #    obsv_sprint = [x for x in ObservBD if x[1] == idx_spr]
