@@ -1182,6 +1182,7 @@ elif authentication_status:
                 cont_sprint = 0 
                 if len(ddSprint)> 0:
                     font_TITLE(f'{param_sprint[idx_parm]}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
+
                                                     #COLOCANDO EM ORDEM CRESCENTE AS SPRINTS
                     for idx_spr_tupl in sorted(list(set([(x[7], x[0]) for x in SprintsEntregs])), key=lambda x: x[1]):
                         idx_spr = idx_spr_tupl[0]
