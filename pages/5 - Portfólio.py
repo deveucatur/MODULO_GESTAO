@@ -1209,7 +1209,8 @@ elif authentication_status:
 
                             block_sprint = True if str(ddSprint[list(x[4] for x in ddSprint).index(str(id_sprint))][5]) == str(0) else False
 
-                            sprintAtual = (int(ddSprint[[x[4] for x in ddSprint].index(str(idx_spr))][0])) - 1
+                            idSprint = dadosOrigin[0][27].split("~/>")
+                            sprintAtual = idSprint.index(str(idx_spr))
 
                             checkSprint = dadosOrigin[0][34].split("~/>")
                             checkGovern = dadosOrigin[0][47].split("~/>")
