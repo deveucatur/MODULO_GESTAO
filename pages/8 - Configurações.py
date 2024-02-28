@@ -3,7 +3,7 @@ import mysql.connector
 from util import font_TITLE
 from util import string_to_datetime, CalculoPrêmio
 from utilR import menuProjeuHtml, menuProjeuCss
-from datetime import date
+from datetime import date, datetime
 import streamlit_authenticator as stauth
 
 st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide")
@@ -209,7 +209,7 @@ elif authentication_status:
             st.dataframe({ "ID" :[x[0] for x in progrmBD],
                     "Nome" : [x[1] for x in progrmBD]})
         with col1:
-            tab1, tab2, tab3 = st.tabs(["Adicionar", "Editar",  "Excluir"])
+            tab1, tab2, tab3, tab4 = st.tabs(["Adicionar", "Editar",  "Excluir", "Histórico"])
             with tab1:
                 font_TITLE('ADICIONAR NOVO PROGRAMA', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left')  
                 NewProg = st.text_input("Nome Programa")
@@ -236,8 +236,15 @@ elif authentication_status:
                         
                         mycursor.execute(cmd_add_prog)
                         conexao.commit()
+
+                        dataModif = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                        cmd_historico = f"""INSERT INTO projeu_historico (parametro_his, id_parametro_his, tipo_modific_his, versao_nova_his, mat_colab_his, data_modif_his) VALUES ('{ParamEscolh}', (SELECT id_prog FROM projeu_programas WHERE nome_prog = '{NewProg}'), 'Adição', '{NewProg} | {NewMacrop} | {inic_pg} | {fim_pg} | {status_pg}', {dd_user_logado[1]}, '{dataModif}')"""
+                        mycursor.execute(cmd_historico)
+                        conexao.commit()
+
                         mycursor.close()     
-                        st.toast('Sucesso na adição do novo programa.', icon='✅')
+                        st.toast('Sucesso na adição do novo programa.a', icon='✅')
                         st.rerun()
                     else:
                         st.toast('Já existe um programa com um nome semelhante.', icon='❌')
@@ -258,9 +265,13 @@ elif authentication_status:
                     ED_fim_pgE = st.date_input('Fim Programa', [string_to_datetime(x[3]) if x[3] != None and x[3] != '' else date.today() for x in progrmBD if str(x[0]) == str(ED_idprogm)][0], key='editar fim')
                 with colv2:
                     ED_status_pgE = st.selectbox('Status', ['ATIVO', 'DESATIVO', 'CANCELADO'],list(['ATIVO', 'DESATIVO', 'CANCELADO']).index([x[4] for x in progrmBD if str(x[0]) == str(ED_idprogm)][0]),key='editar stats')
-            
+
                 if st.button("Editar"):
                     mycursor = conexao.cursor()
+
+                    cmdProgAnt = f"""SELECT nome_prog, (SELECT macroprocesso FROM projeu_macropr WHERE id = macroprocesso_fgkey), inic_pg, fim_pg, status_pg FROM projeu_programas WHERE id_prog = {ED_idprogm}"""
+                    mycursor.execute(cmdProgAnt)
+                    versaoAnt = mycursor.fetchall()
 
                     values = [f'"{ED_progrm}"', f'(SELECT id FROM projeu_macropr WHERE macroprocesso = "{NewMacrop}")', f'"{ED_inic_pgE}"', f'"{ED_fim_pgE}"', f'"{ED_status_pgE}"']
                     columns = ["nome_prog", "macroprocesso_fgkey", "inic_pg", "fim_pg", "status_pg"]
@@ -268,6 +279,12 @@ elif authentication_status:
                         cmd_up_pg = f'UPDATE projeu_programas SET {columns[colum_idx]} = {values[colum_idx]} WHERE id_prog = {ED_idprogm};'
                         mycursor.execute(cmd_up_pg)
                         conexao.commit()
+
+                    dataModif = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                    cmd_historico = f"""INSERT INTO projeu_historico (parametro_his, id_parametro_his, tipo_modific_his, versao_anterior_his, versao_nova_his, mat_colab_his, data_modif_his) VALUES ('{ParamEscolh}', {ED_idprogm}, 'Edição', '{versaoAnt[0][0]} | {versaoAnt[0][1]} | {versaoAnt[0][2]} | {versaoAnt[0][3]} | {versaoAnt[0][4]}', '{ED_progrm} | {NewMacrop} | {ED_inic_pgE} | {ED_fim_pgE} | {ED_status_pgE}', {dd_user_logado[1]}, '{dataModif}')"""
+                    mycursor.execute(cmd_historico)
+                    conexao.commit()
                     
                     st.toast('Sucesso na atualização do programa.', icon='✅')  
                     mycursor.close()
@@ -298,21 +315,116 @@ elif authentication_status:
                         cmd_ex_pg = f'DELETE FROM projeu_programas WHERE id_prog = {id_prog};'
                         mycursor.execute(cmd_ex_pg)
                         conexao.commit()
+
+                        dataModif = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                        cmd_historico = f"""INSERT INTO projeu_historico (parametro_his, id_parametro_his, tipo_modific_his, versao_anterior_his, mat_colab_his, data_modif_his) VALUES ('{ParamEscolh}', {EX_idprogm}, 'Exclusão', '{EX_progrm} | {NewMacrop} | {EX_inic_pgE} | {EX_fim_pgE} | {EX_status_pgE}', {dd_user_logado[1]}, '{dataModif}')"""
+                        mycursor.execute(cmd_historico)
+                        conexao.commit()
+
                         mycursor.close()     
                         st.toast('Sucesso ao excluir o programa.', icon='✅')
                         
                         st.rerun()
                     else:
                         st.toast('Há projetos vinculados a esse programa, assim, tornando impossível a exclusão do programa.', icon='❌')
+            with tab4:
+                mycursor = conexao.cursor()
+                cmdHistorico = f"""SELECT * FROM projeu_historico WHERE parametro_his = '{ParamEscolh}'"""
+                mycursor.execute(cmdHistorico)
+                historico = mycursor.fetchall()
+
+                histAdc = [x for x in historico if x[3] == "Adição"]
+                histEdc = [x for x in historico if x[3] == "Edição"]
+                histExc = [x for x in historico if x[3] == "Exclusão"]
+
+                st.subheader("Histórico de Edições")
+
+                if len(histAdc) != 0:
+                    st.text("Adição")
+                    col1, col2, col3, col4 = st.columns([0.7, 2, 0.5, 1.1])
+                    with col1:
+                        st.write("ID do Programa")
+                    with col2:
+                        st.write("Programa Adicionado")
+                    with col3:
+                        st.write("Editor")
+                    with col4:
+                        st.write("Data e Hora")
+                    for i in range(len(histAdc)):
+                        with col1:
+                            st.text_input("ID do Programa", histAdc[i][2], disabled=True, key=f"id-{i}", label_visibility='collapsed')
+                        with col2:
+                            st.text_input("Programa Adicionado", histAdc[i][5], disabled=True, key=f"alt-{i}", label_visibility='collapsed')
+                        with col3:
+                            st.text_input("Editor", histAdc[i][6], disabled=True, key=f"mat-{i}", label_visibility='collapsed')
+                        with col4:
+                            st.text_input("Data e Hora", histAdc[i][7], disabled=True, key=f"data-{i}", label_visibility='collapsed')
+                    st.write("---")
+
+                if len(histEdc) != 0:
+                    st.text("Edição")
+                    col1, col2, col3, col4 = st.columns([1.8, 1.8, 0.5, 1.1])
+                    with col1:
+                        st.write("Versão Anterior")
+                    with col2:
+                        st.write("Versão Editada")
+                    with col3:
+                        st.write("Editor")
+                    with col4:
+                        st.write("Data e Hora")
+                    for i in range(len(histEdc)):
+                        with col1:
+                            st.text_input("Versão anterior", histEdc[i][4], disabled=True, key=f"ant-{i}", label_visibility='collapsed')
+                        with col2:
+                            st.text_input("Versão editada", histEdc[i][5], disabled=True, key=f"edit-{i}", label_visibility='collapsed')
+                        with col3:
+                            st.text_input("Editor", histEdc[i][6], disabled=True, key=f"matr-{i}", label_visibility='collapsed')
+                        with col4:
+                            st.text_input("Data e Hora", histEdc[i][7], disabled=True, key=f"dat-{i}", label_visibility='collapsed')
+                    st.write("---")
+
+                if len(histExc) != 0:
+                    st.text("Exclusão")
+                    col1, col2, col3, col4 = st.columns([0.7, 2, 0.5, 1.1])
+                    with col1:
+                        st.write("ID do Programa")
+                    with col2:
+                        st.write("Programa Excluído")
+                    with col3:
+                        st.write("Editor")
+                    with col4:
+                        st.write("Data e Hora")
+                    for i in range(len(histExc)):
+                        with col1:
+                            st.text_input("ID do Programa", histExc[i][2], disabled=True, key=f"idp-{i}", label_visibility='collapsed')
+                        with col2:
+                            st.text_input("Programa Excluído", histExc[i][4], disabled=True, key=f"exc-{i}", label_visibility='collapsed')
+                        with col3:
+                            st.text_input("Editor", histExc[i][6], disabled=True, key=f"edi-{i}", label_visibility='collapsed')
+                        with col4:
+                            st.text_input("Data e Hora", histExc[i][7], disabled=True, key=f"dt-{i}", label_visibility='collapsed')
+                    st.write("---")
+
+                # st.dataframe({"ID" : [x[0] for x in historico],
+                #               "Parâmetro" : [x[1] for x in historico],
+                #               "ID do Programa" : [x[2] for x in historico],
+                #               "Modificação" : [x[3] for x in historico],
+                #               "Versão Anterior" : [x[4] for x in historico],
+                #               "Versão Atualizada" : [x[5] for x in historico],
+                #               "Matrícula do Editor" : [x[6] for x in historico],
+                #               "Data e Hora da Edição" : [x[7] for x in historico]},
+                #               use_container_width=True)
+
 
     elif ParamEscolh == 'Prêmio':
         if str(dd_user_logado[8]).strip() == 'A':
-            tab1, tab2, tab3 = st.tabs(["Valor Total", "Prêmio por Sprint", "Prêmio por Função"])
+            tab1, tab2, tab3, tab4 = st.tabs(["Valor Total", "Prêmio por Sprint", "Prêmio por Função", "Histórico"])
             
             with tab1:
                 col1, col2 = st.columns([1, 0.5])
 
-                with col1:
+                with col1:                    
                     st.text(' ')
                     font_TITLE('VALOR BASE POR PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left') 
                     
@@ -329,19 +441,32 @@ elif authentication_status:
                         with col_aux1:
                             valor_base = st.number_input('Valor Base', min_value=0.00, step=0.01, value=float(dados_dql_param2[0][3]))
 
+                    # st.write([x[0] for x in consulta2 if x[1] == typ_proj_event and x[2] == complx_event])
+
                 with col2:
                     st.text(' ')
                     st.dataframe({'ID': [x[0] for x in consulta3 if x[1] == typ_proj],
                                 'TIPO PROJETO': [x[1] for x in consulta3 if x[1] == typ_proj],
                                 'COMPLEXIDADE PROJETO': [x[2] for x in consulta3 if x[1] == typ_proj],
                                 'VALOR BASE': [x[3] for x in consulta3 if x[1] == typ_proj]})
-                
+
                 if len(dados_dql_param2) > 0:
                     btt_ValorTotal = st.button('Atualizar', key='btt_ValorTotal')
                     if btt_ValorTotal:
                         mycursor = conexao.cursor()
+
+                        cmdVersaoAnt = f"SELECT valor_base FROM projeu_premio_base WHERE id_premiob = {id_valor_event}"
+                        mycursor.execute(cmdVersaoAnt)
+                        versaoAnt = mycursor.fetchall()
+                        
                         cmdUP_vlb = f'UPDATE projeu_premio_base SET valor_base = {float(valor_base)} WHERE id_premiob = {id_valor_event};'
                         mycursor.execute(cmdUP_vlb)
+                        conexao.commit()
+
+                        dataModif = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                        cmd_historico = f"""INSERT INTO projeu_historico (parametro_his, id_parametro_his, tipo_modific_his, versao_anterior_his, versao_nova_his, mat_colab_his, data_modif_his) VALUES ('{ParamEscolh}', {id_valor_event}, 'Edição - VALOR BASE POR PROJETO', '{typ_proj_event} | {complx_event} | {id_valor_event} | {versaoAnt[0][0]}', '{typ_proj_event} | {complx_event} | {id_valor_event} | {valor_base}', {dd_user_logado[1]}, '{dataModif}')"""
+                        mycursor.execute(cmd_historico)
                         conexao.commit()
                         
                         st.toast('Sucesso! Valor base atualizado.', icon='✅')
@@ -377,6 +502,11 @@ elif authentication_status:
                 bttUP_premio = st.button('Atualizar', key='bttUP_premio')
                 if bttUP_premio:
                     mycursor = conexao.cursor()
+
+                    cmdVersaoAnt = f"SELECT qntd_event, porc FROM projeu_param_premio WHERE id_pp = {id_prem}"
+                    mycursor.execute(cmdVersaoAnt)
+                    versaoAnt = mycursor.fetchall()
+
                     columns = ['porc', 'qntd_event']
                     values = [porct_event, qntd_event]
                     for idx_column in range(len(columns)):
@@ -384,6 +514,12 @@ elif authentication_status:
                     
                         mycursor.execute(cmdUP_premio)
                         conexao.commit()
+
+                    dataModif = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                    cmd_historico = f"""INSERT INTO projeu_historico (parametro_his, id_parametro_his, tipo_modific_his, versao_anterior_his, versao_nova_his, mat_colab_his, data_modif_his) VALUES ('{ParamEscolh}', {id_prem}, 'Edição - ESCOLHA DO PRÊMIO', '{typ_proj} | {event_spr} | {event_complx} | {versaoAnt[0][0]} | {versaoAnt[0][1]}', '{typ_proj} | {event_spr} | {event_complx} | {qntd_event} | {porct_event}', {dd_user_logado[1]}, '{dataModif}')"""
+                    mycursor.execute(cmd_historico)
+                    conexao.commit()
                     
                     st.toast('Prêmio Atualizado', icon='✅')
                     mycursor.close()
@@ -410,19 +546,106 @@ elif authentication_status:
                                 'FUNÇÃO': [x[1] for x in consulta4 if x[1] == typFUN_proj],
                                 'COMPLEXIDADE': [x[2] for x in consulta4 if x[1] == typFUN_proj],
                                 'PORCENTUAL': [x[3] for x in consulta4 if x[1] == typFUN_proj]})
-                                
+                    
                 btt_FUN = st.button('Atualizar', key='btt_FUN')
                 if btt_FUN:
                     mycursor = conexao.cursor()
+
+                    cmdVersaoAnt = f"SELECT porcentual FROM projeu_porc_func WHERE id_equip = {idFUN_porc}"
+                    mycursor.execute(cmdVersaoAnt)
+                    versaoAnt = mycursor.fetchall()
+
                     cmdFUN_UP = f"UPDATE projeu_porc_func SET porcentual = {float(UPporcFUN)} WHERE id_equip = {idFUN_porc};"
-                    
                     mycursor.execute(cmdFUN_UP)
+                    conexao.commit()
+
+                    dataModif = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+                    cmd_historico = f"""INSERT INTO projeu_historico (parametro_his, id_parametro_his, tipo_modific_his, versao_anterior_his, versao_nova_his, mat_colab_his, data_modif_his) VALUES ('{ParamEscolh}', {idFUN_porc}, 'Edição - PRÊMIO POR FUNÇÃO', '{typFUN_proj} | {complxFUN_proj} | {versaoAnt[0][0]}', '{typFUN_proj} | {complxFUN_proj} | {UPporcFUN}', {dd_user_logado[1]}, '{dataModif}')"""
+                    mycursor.execute(cmd_historico)
                     conexao.commit()
 
                     mycursor.close()
                     
                     st.toast('Prêmio por função atualizado com sucesso.', icon='✅')  
                     st.rerun()
+            with tab4:
+                mycursor = conexao.cursor()
+                cmdHistorico = f"""SELECT * FROM projeu_historico WHERE parametro_his = '{ParamEscolh}'"""
+                mycursor.execute(cmdHistorico)
+                historico = mycursor.fetchall()
+
+                histAdc = [x for x in historico if x[3] == "Adição"]
+                histEdc = [x for x in historico if x[3] == "Edição"]
+                histExc = [x for x in historico if x[3] == "Exclusão"]
+
+                st.subheader("Histórico de Edições")
+
+                if len(histAdc) != 0:
+                    st.text("Adição")
+                    col1, col2, col3, col4 = st.columns([0.7, 2, 0.5, 1.1])
+                    with col1:
+                        st.write("ID do Programa")
+                    with col2:
+                        st.write("Programa Adicionado")
+                    with col3:
+                        st.write("Editor")
+                    with col4:
+                        st.write("Data e Hora")
+                    for i in range(len(histAdc)):
+                        with col1:
+                            st.text_input("ID do Programa", histAdc[i][2], disabled=True, key=f"id-{i}", label_visibility='collapsed')
+                        with col2:
+                            st.text_input("Programa Adicionado", histAdc[i][5], disabled=True, key=f"alt-{i}", label_visibility='collapsed')
+                        with col3:
+                            st.text_input("Editor", histAdc[i][6], disabled=True, key=f"mat-{i}", label_visibility='collapsed')
+                        with col4:
+                            st.text_input("Data e Hora", histAdc[i][7], disabled=True, key=f"data-{i}", label_visibility='collapsed')
+                    st.write("---")
+
+                if len(histEdc) != 0:
+                    st.text("Edição")
+                    col1, col2, col3, col4 = st.columns([1.8, 1.8, 0.5, 1.1])
+                    with col1:
+                        st.write("Versão Anterior")
+                    with col2:
+                        st.write("Versão Editada")
+                    with col3:
+                        st.write("Editor")
+                    with col4:
+                        st.write("Data e Hora")
+                    for i in range(len(histEdc)):
+                        with col1:
+                            st.text_input("Versão anterior", histEdc[i][4], disabled=True, key=f"ant-{i}", label_visibility='collapsed')
+                        with col2:
+                            st.text_input("Versão editada", histEdc[i][5], disabled=True, key=f"edit-{i}", label_visibility='collapsed')
+                        with col3:
+                            st.text_input("Editor", histEdc[i][6], disabled=True, key=f"matr-{i}", label_visibility='collapsed')
+                        with col4:
+                            st.text_input("Data e Hora", histEdc[i][7], disabled=True, key=f"dat-{i}", label_visibility='collapsed')
+                    st.write("---")
+
+                if len(histExc) != 0:
+                    st.text("Exclusão")
+                    col1, col2, col3, col4 = st.columns([0.7, 2, 0.5, 1.1])
+                    with col1:
+                        st.write("ID do Programa")
+                    with col2:
+                        st.write("Programa Excluído")
+                    with col3:
+                        st.write("Editor")
+                    with col4:
+                        st.write("Data e Hora")
+                    for i in range(len(histExc)):
+                        with col1:
+                            st.text_input("ID do Programa", histExc[i][2], disabled=True, key=f"idp-{i}", label_visibility='collapsed')
+                        with col2:
+                            st.text_input("Programa Excluído", histExc[i][4], disabled=True, key=f"exc-{i}", label_visibility='collapsed')
+                        with col3:
+                            st.text_input("Editor", histExc[i][6], disabled=True, key=f"edi-{i}", label_visibility='collapsed')
+                        with col4:
+                            st.text_input("Data e Hora", histExc[i][7], disabled=True, key=f"dt-{i}", label_visibility='collapsed')
+                    st.write("---")
 
         else:
             st.error('VISUALIZAÇÃO NÃO DISPONÍVEL PARA O SEU PERFIL.')
