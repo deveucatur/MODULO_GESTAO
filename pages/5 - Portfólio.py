@@ -1210,6 +1210,7 @@ elif authentication_status:
                             block_sprint = True if str(ddSprint[list(x[4] for x in ddSprint).index(str(id_sprint))][5]) == str(0) else False
 
                             idSprint = dadosOrigin[0][27].split("~/>")
+
                             sprintAtual = idSprint.index(str(idx_spr))
 
                             checkSprint = dadosOrigin[0][34].split("~/>")
@@ -1470,8 +1471,9 @@ elif authentication_status:
                                 entregaAtual = [x[sprintAtual] for x in checkEntrega]
                                 status_homolog_atual = [func_split(dadosOrigin[0][45])[x] for x in range(len(func_split(dadosOrigin[0][11]))) if str(func_split(dadosOrigin[0][27])[x]) == str(id_sprint)][0]
                                 
-                                if str(entregaAtual[0]) != "0":
-                                    if str(status_homolog_atual) != '1':
+                                status_homolog_atual = 0
+                                if str(entregaAtual[0]) != "0": #CHECANDO SE A GOVERNANÇA LIBEROU A HOMOLOGAÇÃO
+                                    if str(status_homolog_atual) != '1': #CHECANDO SE A SPRINT JÁ FOI HOMOLOGADO
 
                                         font_TITLE('HOMOLOGAÇÃO', fonte_Projeto, "'Bebas Neue', sans-serif", 26, 'left')
 
@@ -1501,6 +1503,7 @@ elif authentication_status:
                                             
                                             if len(parec_homol) > 0:
                                                 if 'Rápido' in [(str(dadosOrigin[0][36]).strip())] or (dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0):
+                                                
                                                     try:
                                                         def trat_homol(name_hmo):
                                                             aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
