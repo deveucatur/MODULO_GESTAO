@@ -1259,7 +1259,6 @@ class CalculoPrêmio:
                                                               for id_user, porct_epc in porc_contrib.items()}    
                                             }
             
-            st.info([list(x) for x in self.entregas_do_projeto if x[0] in self.number_sprint])
             valoresEquipe['SQUAD'] = self.CalculaSquad([list(x) for x in self.entregas_do_projeto if x[0] in self.number_sprint],
                                                   valorSprint * float(
                                                       [x[2] for x in porcEquipe if str(x[0]).upper() == 'SQUAD'][0]))
