@@ -1099,11 +1099,7 @@ elif authentication_status:
         if int(dadosOrigin[0][50]) == 3:
             param_sprint_aux = list(set([x for x in str(dadosOrigin[0][12]).split("~/>")] + ['MARCO {}'.format(max([[int(st) for st in str(x) if st.isdigit()][0] for x in str(dadosOrigin[0][12]).split("~/>")]) + 1)] if dadosOrigin[0][12] != None else ['MARCO 1']))
             eventos_aux_sorted = [f'MARCO {x+1}' for x in range(len(param_sprint_aux) + 1)] + ['ENTREGA FINAL']
-<<<<<<< HEAD
-        
-=======
             
->>>>>>> 5d0df340db6d6605b863f983182d9ed60e1a9a1f
         param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux and str(x).strip().upper() != 'SPRINT']
         
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
