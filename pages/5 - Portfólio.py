@@ -1073,15 +1073,14 @@ elif authentication_status:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
         param_sprint_aux = [str(tratar_name_event(x)).strip().upper() for x in list(str(dadosOrigin[0][46]).split("~/>"))]
-        eventos_aux_sorted = ['SPRINT', 'MARCO', 'PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+        eventos_aux_sorted = ['SPRINT', 'PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
 
-        #st.error(dadosOrigin[0][12])
         if int(dadosOrigin[0][50]) == 3:
-            param_sprint_aux = [x for x in param_sprint_aux if str(x).strip() == 'SPRINT']
-            #eventos_aux_sorted
-        
+            param_sprint_aux = list(set([x for x in str(dadosOrigin[0][12]).split("~/>")] + ['MARCO {}'.format(max([[int(st) for st in str(x) if st.isdigit()][0] for x in str(dadosOrigin[0][12]).split("~/>")]) + 1)] if dadosOrigin[0][12] != None else ['MARCO 1']))
+            eventos_aux_sorted = [f'MARCO {x+1}' for x in range(len(param_sprint_aux) + 1)] + ['ENTREGA FINAL']
+            
         param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux and str(x).strip().upper() != 'SPRINT']
-
+        
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
