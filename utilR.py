@@ -2447,7 +2447,7 @@ def CanvaImplantacao(dadosImplantacao):
         dadosRestricao += f"""<td>{dadosImplantacao[11][i]}</td>"""
 
     for i in range(len(dadosImplantacao[12])):
-        dadosCusto += f"""<td>{dadosImplantacao[12][i]}</td>"""
+        dadosCusto += f"""<td>R${dadosImplantacao[12][i]}</td>"""
 
     htmlCanvaImplant = f"""<body>
             <div class="linha">
