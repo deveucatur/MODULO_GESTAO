@@ -215,7 +215,22 @@ SELECT
         SELECT GROUP_CONCAT(IFNULL(check_govern, 0) SEPARATOR '~/>')
         FROM projeu_sprints 
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
-    ) as CHECK_GOVERN
+    ) as CHECK_GOVERN,
+    (
+	 	SELECT 
+		 	GROUP_CONCAT(PPP.qntd_event SEPARATOR '~/>') 
+		FROM 
+			projeu_param_premio AS PPP 
+		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
+	 ) AS QNTD_EVENTOS,
+	 (
+	 	SELECT 
+		 	GROUP_CONCAT(PPP.complx_param_fgkey SEPARATOR '~/>') 
+		FROM 
+			projeu_param_premio AS PPP 
+		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
+	 ) AS COMPLEXID_EVENTOS,
+     (SELECT id_type FROM projeu_type_proj WHERE id_type = projeu_projetos.type_proj_fgkey) AS id_type_proj
 FROM 
     projeu_projetos
 JOIN 
@@ -1058,9 +1073,14 @@ elif authentication_status:
                     st.toast('Erro ao atualizar dados de controle do projeto.', icon='❌')
 
         param_sprint_aux = [str(tratar_name_event(x)).strip().upper() for x in list(str(dadosOrigin[0][46]).split("~/>"))]
+        eventos_aux_sorted = ['SPRINT', 'MARCO', 'PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
+
+        #st.error(dadosOrigin[0][12])
+        if int(dadosOrigin[0][50]) == 3:
+            param_sprint_aux = [x for x in param_sprint_aux if str(x).strip() == 'SPRINT']
+            #eventos_aux_sorted
         
-        eventos_aux_sorted = ['SPRINT', 'PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
-        param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux]
+        param_sprint = [str(x).strip().upper() for x in eventos_aux_sorted if str(x).strip().upper() in param_sprint_aux and str(x).strip().upper() != 'SPRINT']
 
         font_TITLE('SPRINTS DO PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 28, 'left', '#228B22')
         with st.expander('Adcionar Sprint'):
@@ -1160,12 +1180,11 @@ elif authentication_status:
                 else:
                     st.toast('Primeiramente, ative a opção de excluir sprint.', icon='❌')
 
-
         func_split = lambda x: x.split("~/>") if x is not None else [x]
         if func_split(dadosOrigin[0][11])[0] != None:
             # ----> DADOS [NUMBER_SPRINT, STATUS_SPRINT,  DATA INC SPRINT, DATA FIM SPRINT, ID_SPRINT, CHECK_SPRINT]
             sprints = [[func_split(dadosOrigin[0][11])[x], func_split(dadosOrigin[0][12])[x], func_split(dadosOrigin[0][13])[x], func_split(dadosOrigin[0][14])[x], func_split(dadosOrigin[0][27])[x], func_split(dadosOrigin[0][34])[x]] for x in range(len(func_split(dadosOrigin[0][11])))]
-
+            
             for idx_parm in range(len(param_sprint)):
                 #INFORMAÇÕES DAS SPRINTS DAQUELE EVENTO
                 ddSprint = [sprints[x] for x in range(len(sprints)) if str(sprints[x][1]) == str(param_sprint[idx_parm])] #DESCOBRINDO QUAL A SPRINT DAQUELE STATUS
