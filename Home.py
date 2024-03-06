@@ -1,10 +1,10 @@
 import streamlit as st
 from utilR import font_TITLE, ninebox_home, css_9box_home, nineboxDatasUnidades_home
 from time import sleep
-import mysql.connector 
 import streamlit_authenticator as stauth
 from utilR import menuProjeuHtml, menuProjeuCss
 from conexao import conexaoBD
+import datetime
 
 st.set_page_config(
     layout="wide", 
@@ -150,7 +150,7 @@ mycursor.execute(setSession)
 # mycursor.execute(sqlProjetoGover)
 # projetoNomeGover = mycursor.fetchall()
 
-sqlProjetoAvaliar = f"""SELECT p.name_proj, p.id_proj FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_avaliado IS NULL OR c.check_avaliado = 0 GROUP BY p.id_proj;"""
+sqlProjetoAvaliar = f"""SELECT p.name_proj, p.id_proj, type_proj_fgkey FROM projeu_projetos p JOIN projeu_complexidade c ON p.id_proj = c.proj_fgkey WHERE c.check_avaliado IS NULL OR c.check_avaliado = 0 GROUP BY p.id_proj;"""
 mycursor.execute(sqlProjetoAvaliar)
 projetoAvaliar = mycursor.fetchall()
 
@@ -322,9 +322,14 @@ elif authentication_status:
 
             for i in range(len(projetoAvaliar)):
                 with st.expander(f"Avaliar Complexidade | {projetoAvaliar[i][0]}"):
-                    titleClass = ["Orientação do Projeto", "Impacto do Projeto", "Escopo do Projeto", "Squads do Projeto"]
-                    infoClass = [["Orientação para Inovação em Produtos/Serviços  atuais", "Orientação para desenvolvimento de novos Produtos/Serviços", "Orientação para Aumento de Receita", "Orientação para Aumento de Produtividade", "Orientação para Redução de Custos/Despesas", "Orientação para Transformação de processos de Negócio"],["Impacto na Percepção de Valor do Cliente", "Pressão Por Prazos", "Investimento necessário", "Nível de transformação organizacional", "Valor para o Negócio"],["Impacto do escopo no Planejamento Estratégico", "Incerteza do escopo", "Complexidade  do escopo"], ["Senioridade da Squad", "Senioridade do Especialista", "Senioridade do Gestor do Projeto"]]
-                    optionClass = ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]
+                    if projetoAvaliar[i][2] != 3:
+                        titleClass = ["Orientação do Projeto", "Impacto do Projeto", "Escopo do Projeto", "Squads do Projeto"]
+                        infoClass = [["Orientação para Inovação em Produtos/Serviços  atuais", "Orientação para desenvolvimento de novos Produtos/Serviços", "Orientação para Aumento de Receita", "Orientação para Aumento de Produtividade", "Orientação para Redução de Custos/Despesas", "Orientação para Transformação de processos de Negócio"],["Impacto na Percepção de Valor do Cliente", "Pressão Por Prazos", "Investimento necessário", "Nível de transformação organizacional", "Valor para o Negócio"],["Impacto do escopo no Planejamento Estratégico", "Incerteza do escopo", "Complexidade  do escopo"], ["Senioridade da Squad", "Senioridade do Especialista", "Senioridade do Gestor do Projeto"]]
+                        optionClass = [["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]] * 17
+                    else:
+                        titleClass = ["Foco do Projeto", "Impacto do Projeto", "Escopo do Projeto", "Maturidade da Squad"]
+                        infoClass = [["Aumento de Receita", "Aumento de Produtividade", "Redução de custos/despesa"], ["Cadeia de Valor", "Nivel de Transformação", "Nivel de Integração entre pessoas"], ["Depedência de Fornecedor externo", "Incerteza Tecnológica", "Riscos e Restrições", "Marco"], ["Gestor do Projeto", "Especialista", "Squad"]]
+                        optionClass = [[["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"], ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"], ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]], [["1 - Procedimento", "2 - Processo", "3 - Marco Processo", "4 - Toda a Cadeia"], ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"], ["1 - Nenhum(a)", "2 - Baixo(a)", "3 - Médio(a)", "4 - Forte"]], [["1 - Forte", "2 - Médio(a)", "3 - Baixo(a)", "4 - Nenhum(a)"], ["1 - Forte", "2 - Médio(a)", "3 - Baixo(a)", "4 - Nenhum(a)"], ["1 - Fortíssimo", "2 - Forte", "3 - Médio(a)", "4 - Baixo(a)"], ["1 - 3 Marco", "2 - 5 Marco", "3 - 7 Marco", "4 - 8 Marco"]], [["1 - Baixo(a)", "2 - Médio(a)", "3 - Forte", "4 - Fortíssimo"], ["1 - Baixo(a)", "2 - Médio(a)", "3 - Forte", "4 - Fortíssimo"], ["1 - Baixo(a)", "2 - Médio(a)", "3 - Forte", "4 - Fortíssimo"]]]
 
                     font_TITLE(f'{projetoAvaliar[i][0]}', fonte_Projeto, "'Bebas Neue', sans-serif", 30, 'center')
 
@@ -394,54 +399,94 @@ elif authentication_status:
                     for j in range(len(titleClass)):
                         font_TITLE(f'{titleClass[j]}', fonte_Projeto,"'Bebas Neue', sans-serif", 24, 'left')
                         listNota = []
-                        for k in infoClass[j]:
-                            nota = int(st.select_slider(k, optionClass, key=f"chave{i}_{j}_{k}", value=optionClass[0])[0][0:1])
+                        for k in range(len(infoClass[j])):
+                            if projetoAvaliar[i][2] != 3:
+                                nota = int(st.select_slider(infoClass[j][k], optionClass[j], key=f"chave{i}_{j}_{k}", value=optionClass[j][0])[0][0:1])
+                            else:
+                                nota = int(st.select_slider(infoClass[j][k], optionClass[j][k], key=f"chave{i}_{j}_{k}", value=optionClass[j][k][0])[0][0:1])
+
                             listNota.append(nota)
                             st.text(' ')
                             st.text(' ')
                         notaGrau.append(listNota)
 
-                    mediaImpacto = round(sum(notaGrau[1]) / len(notaGrau[1]), 2)
-                    maiorOrientacao = max(notaGrau[0])
-                    grauProjeto = round(((mediaImpacto + maiorOrientacao) / 2), 2)
-                    
-                    grauEscopo = round(sum(notaGrau[2]) / len(notaGrau[2]), 2)
-                    grauSquad = round(sum(notaGrau[3]) / len(notaGrau[3]), 2)
-                    mediaGov = round(((grauEscopo + grauSquad) / 2), 2)
-                    
-                    if grauProjeto == 0:
-                        complexidade = ""
-                    elif grauProjeto <= 1:
-                        complexidade = "Seguro"
-                    elif grauProjeto <= 2:
-                        complexidade = "Acessível"
-                    elif grauProjeto <= 3:
-                        complexidade = "Abstrato"
-                    elif grauProjeto <= 4:
-                        complexidade = "Singular"
-                    else:
-                        complexidade = "Valor inválido"
+                    if projetoAvaliar[i][2] != 3:
+                        mediaImpacto = round(sum(notaGrau[1]) / len(notaGrau[1]), 2)
+                        maiorOrientacao = max(notaGrau[0])
+                        grauProjeto = round(((mediaImpacto + maiorOrientacao) / 2), 2)
+                        
+                        grauEscopo = round(sum(notaGrau[2]) / len(notaGrau[2]), 2)
+                        grauSquad = round(sum(notaGrau[3]) / len(notaGrau[3]), 2)
+                        mediaGov = round(((grauEscopo + grauSquad) / 2), 2)
+                        
+                        if grauProjeto == 0:
+                            complexidade = ""
+                        elif grauProjeto <= 1:
+                            complexidade = "Seguro"
+                        elif grauProjeto <= 2:
+                            complexidade = "Acessível"
+                        elif grauProjeto <= 3:
+                            complexidade = "Abstrato"
+                        elif grauProjeto <= 4:
+                            complexidade = "Singular"
+                        else:
+                            complexidade = "Valor inválido"
 
-                    if mediaGov == 0:
-                        nivel = ""
-                    elif mediaGov <= 2:
-                        nivel = "I"
-                    elif mediaGov <= 3:
-                        nivel = "II"
-                    elif mediaGov <= 4:
-                        nivel = "III"
+                        if mediaGov == 0:
+                            nivel = ""
+                        elif mediaGov <= 2:
+                            nivel = "I"
+                        elif mediaGov <= 3:
+                            nivel = "II"
+                        elif mediaGov <= 4:
+                            nivel = "III"
+                        else:
+                            nivel = "Valor inválido"
                     else:
-                        nivel = "Valor inválido"
+                        mediaFoco = round(sum(notaGrau[0]) / len(notaGrau[0]), 2)
+                        mediaImpacto = round(sum(notaGrau[1]) / len(notaGrau[1]), 2)
+                        mediaEscopo = round(sum(notaGrau[2]) / len(notaGrau[2]), 2)
+                        mediaMaturidade = round(sum(notaGrau[3]) / len(notaGrau[3]), 2)
+
+                        mediaComplex = round((mediaFoco + mediaImpacto) / 2, 2)
+                        mediaNivel = round((mediaEscopo + mediaMaturidade) / 2, 2)
+
+                        if mediaComplex == 0:
+                            complexidade = " "
+                        elif mediaComplex <= 1.5:
+                            complexidade = "Incremental"
+                        elif mediaComplex <= 2.5:
+                            complexidade = "Radical"
+                        elif mediaComplex <= 4:
+                            complexidade = "Disruptiva"
+                        else:
+                            complexidade = "Valor inválido"
+
+                        if mediaNivel == 0:
+                            nivel = " "
+                        elif mediaNivel <= 1.5:
+                            nivel = "I"
+                        elif mediaNivel <= 2.5:
+                            nivel = "II"
+                        elif mediaNivel <= 4:
+                            nivel = "III"
+                        else:
+                            nivel = "Valor inválido"
 
                     finalizar = st.button("Finalizar avaliação", key=f"notaLider_{i}")
 
                     if finalizar:
                         mycursor = conexao.cursor()
-                        colunas = ["grauProjeto", "complxdd", "check_lider", "grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey", "check_avaliado"]
-                        dadosLider = [grauProjeto, f"'{complexidade}'", 1, grauEscopo, grauSquad, f"'{nivel}'", 1, matriUser, 1]
+                        dataEdic = datetime.datetime.now().date()
+                        if projetoAvaliar[i][2] != 3:
+                            colunas = ["grauProjeto", "complxdd", "check_lider", "grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey", "check_avaliado", "date_edic"]
+                            dados = [grauProjeto, f"'{complexidade}'", 1, grauEscopo, grauSquad, f"'{nivel}'", 1, matriUser, 1, f"'{dataEdic}'"]
+                        else:
+                            colunas = ["grauFoco", "grauImpacto", "complxdd", "check_lider", "grauEscopo", "grauSquad", "nivel", "check_govern", "id_edic_fgkey", "check_avaliado", "date_edic"]
+                            dados = [mediaFoco, mediaImpacto, f"'{complexidade}'", 1, mediaEscopo, mediaMaturidade, f"'{nivel}'", 1, matriUser, 1, f"'{dataEdic}'"]
 
                         for j in range(len(colunas)):
-                            sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[j]} = {dadosLider[j]} WHERE proj_fgkey = {projetoAvaliar[i][1]}"
+                            sqlUpdate = f"UPDATE projeu_complexidade SET {colunas[j]} = {dados[j]} WHERE proj_fgkey = {projetoAvaliar[i][1]}"
                             mycursor.execute(sqlUpdate)
                             conexao.commit()
                         st.toast('Dados Atualizados!', icon='✅')
