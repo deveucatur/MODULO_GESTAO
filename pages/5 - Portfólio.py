@@ -4,7 +4,7 @@ from util import font_TITLE, string_to_datetime, cardGRANDE, displayInd, ninebox
 from time import sleep
 from datetime import date, timedelta, datetime
 from collections import Counter
-from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss, ninebox_home, css_9box_home, nineboxDatasUnidades_home
+from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss, ninebox_home, css_9box_home, nineboxDatasUnidades_home, CanvaImplantacao, StyleCanvaImplantacao
 import streamlit_authenticator as stauth
 import plotly.graph_objects as go
 from conexao import conexaoBD
@@ -217,20 +217,32 @@ SELECT
         WHERE projeu_sprints.id_proj_fgkey = projeu_projetos.id_proj
     ) as CHECK_GOVERN,
     (
-	 	SELECT 
-		 	GROUP_CONCAT(PPP.qntd_event SEPARATOR '~/>') 
-		FROM 
-			projeu_param_premio AS PPP 
-		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
-	 ) AS QNTD_EVENTOS,
-	 (
-	 	SELECT 
-		 	GROUP_CONCAT(PPP.complx_param_fgkey SEPARATOR '~/>') 
-		FROM 
-			projeu_param_premio AS PPP 
-		WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
-	 ) AS COMPLEXID_EVENTOS,
-     (SELECT id_type FROM projeu_type_proj WHERE id_type = projeu_projetos.type_proj_fgkey) AS id_type_proj
+    SELECT 
+        GROUP_CONCAT(PPP.qntd_event SEPARATOR '~/>') 
+    FROM 
+        projeu_param_premio AS PPP 
+    WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
+    ) AS QNTD_EVENTOS,
+    (
+    SELECT 
+        GROUP_CONCAT(PPP.complx_param_fgkey SEPARATOR '~/>') 
+    FROM 
+        projeu_param_premio AS PPP 
+    WHERE PPP.typ_proj_fgkey = projeu_projetos.type_proj_fgkey
+    ) AS COMPLEXID_EVENTOS,
+    (SELECT id_type FROM projeu_type_proj WHERE id_type = projeu_projetos.type_proj_fgkey) AS id_type_proj,
+    projeu_projetos.justific_impl_proj,
+    projeu_projetos.stakeholders_impl_proj,
+    projeu_projetos.premissas_impl_proj,
+    projeu_projetos.riscos_impl_proj,
+    projeu_projetos.restric_impl_proj,
+    projeu_projetos.objSmart_impl_proj,
+    projeu_projetos.requisitos_impl_proj,
+    (
+        SELECT COALESCE(GROUP_CONCAT(marco_line_tempo SEPARATOR '~/>'), " ") 
+        FROM projeu_impl_linhaTempo 
+        WHERE projeu_impl_linhaTempo.id_proj_fgkey = projeu_projetos.id_proj 
+    ) AS linhaTempo
 FROM 
     projeu_projetos
 JOIN 
@@ -670,18 +682,27 @@ elif authentication_status:
             prodMvps = str(dadosOrigin[0][25]).split("~/>") if dadosOrigin[0][25] != None else " "
 
             
-        #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos
-            canvas = PlotCanvas(projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, [x[0] for x in equipBD if x[1] == 'Especialista'], [x[0] for x in equipBD if x[1] == 'Executor'], entregas, investimentos)
-            htmlRow = canvas.CreateHTML()
-            htmlEqp = canvas.tableEqp()
-            htmlUnic = canvas.tableUnic()
-            htmlCol = canvas.tableCol()
+        #SEQUÊNCIA --> projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos            
+            if dadosOrigin[0][4] == "Implantação":
+                dadosImplantacao = [[dadosOrigin[0][51]], [dadosOrigin[0][10]], [dadosOrigin[0][52]], [dadosOrigin[0][53]], [dadosOrigin[0][54]], [dadosOrigin[0][56]], [dadosOrigin[0][57]], dadosOrigin[0][21].split("~/>"), dadosOrigin[0][32].split("~/>"), dadosOrigin[0][58].split("~/>"), [dadosOrigin[0][9]], [dadosOrigin[0][55]], [dadosOrigin[0][8]]]
+                
+                html = CanvaImplantacao(dadosImplantacao)
+                css = StyleCanvaImplantacao()
 
-            html = canvas.tableGeral(htmlRow, htmlEqp, htmlUnic, htmlCol)
-            canvaStyle = canvas.cssStyle(mvps, prodMvps)
+                st.write(f'<div>{html}</div>', unsafe_allow_html=True)
+                st.write(f'<style>{css}</style>', unsafe_allow_html=True)
+            else:
+                canvas = PlotCanvas(projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, [x[0] for x in equipBD if x[1] == 'Especialista'], [x[0] for x in equipBD if x[1] == 'Executor'], entregas, investimentos)
+                htmlRow = canvas.CreateHTML()
+                htmlEqp = canvas.tableEqp()
+                htmlUnic = canvas.tableUnic()
+                htmlCol = canvas.tableCol()
 
-            st.write(f'<div>{html}</div>', unsafe_allow_html=True)
-            st.write(f'<style>{canvaStyle}</style>', unsafe_allow_html=True)
+                html1 = canvas.tableGeral(htmlRow, htmlEqp, htmlUnic, htmlCol)
+                canvaStyle = canvas.cssStyle(mvps, prodMvps)
+
+                st.write(f'<div>{html1}</div>', unsafe_allow_html=True)
+                st.write(f'<style>{canvaStyle}</style>', unsafe_allow_html=True)
 
         with tab2:
             def status_aux(sigla_status, func=0):
@@ -1074,7 +1095,6 @@ elif authentication_status:
 
         param_sprint_aux = [str(tratar_name_event(x)).strip().upper() for x in list(str(dadosOrigin[0][46]).split("~/>"))]
         
-        
         eventos_aux_sorted = ['SPRINT', 'PRÉ MVP', 'MVP', 'PÓS MVP', 'ENTREGA FINAL']
 
         if int(dadosOrigin[0][50]) == 3:
@@ -1187,7 +1207,7 @@ elif authentication_status:
         if func_split(dadosOrigin[0][11])[0] != None:
             # ----> DADOS [NUMBER_SPRINT, STATUS_SPRINT,  DATA INC SPRINT, DATA FIM SPRINT, ID_SPRINT, CHECK_SPRINT]
             sprints = [[func_split(dadosOrigin[0][11])[x], func_split(dadosOrigin[0][12])[x], func_split(dadosOrigin[0][13])[x], func_split(dadosOrigin[0][14])[x], func_split(dadosOrigin[0][27])[x], func_split(dadosOrigin[0][34])[x]] for x in range(len(func_split(dadosOrigin[0][11])))]
-            
+          
             for idx_parm in range(len(param_sprint)):
                 #INFORMAÇÕES DAS SPRINTS DAQUELE EVENTO
                 ddSprint = [sprints[x] for x in range(len(sprints)) if str(sprints[x][1]) == str(param_sprint[idx_parm])] #DESCOBRINDO QUAL A SPRINT DAQUELE STATUS
@@ -1203,7 +1223,6 @@ elif authentication_status:
 
                 cont_sprint = 0 
                 if len(ddSprint)> 0:
-                    
                     font_TITLE(f'{param_sprint[idx_parm]}', fonte_Projeto,"'Bebas Neue', sans-serif", 25, 'left')
 
                                                     #COLOCANDO EM ORDEM CRESCENTE AS SPRINTS
@@ -1238,7 +1257,6 @@ elif authentication_status:
                             block_sprint = True if str(ddSprint[list(x[4] for x in ddSprint).index(str(id_sprint))][5]) == str(0) else False
 
                             idSprint = dadosOrigin[0][27].split("~/>")
-
                             sprintAtual = idSprint.index(str(idx_spr))
 
                             checkSprint = dadosOrigin[0][34].split("~/>")
@@ -1527,11 +1545,10 @@ elif authentication_status:
                                                                 key=f'parec_homol{idx_spr}')
                                         
                                         btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True if str(status_homolog_atual).strip() == '1' else False)
+
                                         if btt_homo:
-                                            
                                             if len(parec_homol) > 0:
                                                 if 'Rápido' in [(str(dadosOrigin[0][36]).strip())] or (dadosOrigin[0][36] != None and dadosOrigin[0][37] != None and len(dadosOrigin[0][36]) > 0 and len(dadosOrigin[0][37]) > 0):
-                                                
                                                     try:
                                                         def trat_homol(name_hmo):
                                                             aux_dic = {'PRÉ MVP' : 'SPRINT PRÉ MVP',
@@ -1912,7 +1929,7 @@ elif authentication_status:
 
                                     st.write(" ")
                                     st.write(" ")
-   
+                                    
                             #with tab4:
                             #    #OBSERVAÇÃO DA SPRINT SELECIONADA
                             #    obsv_sprint = [x for x in ObservBD if x[1] == idx_spr]
@@ -1927,4 +1944,3 @@ elif authentication_status:
                             #    font_TITLE('ADCIONAR OBSERVAÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 26, 'left')  
                             #    obs_sprt = st.text_area('awdadad',label_visibility="collapsed", key=f'OBSERVAÇAÕ{idx_spr}')
                             #    btt_obs = st.button('Enviar', key=f'btt obsrv {idx_spr}')
-#
