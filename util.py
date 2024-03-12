@@ -906,6 +906,7 @@ class PlotCanvas:
         
         return canvaStyle
 
+
 import mysql.connector
 
 conexao = mysql.connector.connect(
@@ -936,7 +937,8 @@ SELECT
     typ_event,
     CAST(porc AS DECIMAL(2, 2)) AS porc,
     qntd_event,
-    PCP.nome_parm
+    PCP.nome_parm,
+    complx_param_fgkey
 FROM projeu_param_premio
 JOIN projeu_compl_param PCP ON id_compl_param = complx_param_fgkey
 ORDER BY id_pp;'''
@@ -965,6 +967,7 @@ class CalculoPrêmio:
         self.name_proj = name_proj
         self.complexidProj = complexidProj
         self.typProj = typProj
+        self.marcos = ['MARCO 1', 'MARCO 2', 'MARCO 3', 'MARCO 4', 'MARCO 5', 'MARCO 6', 'MARCO 7', 'MARCO 8']
         
         mycursor2 = conexao.cursor()
         mycursor2.execute(f"""
@@ -1093,7 +1096,18 @@ class CalculoPrêmio:
                    'Fácil': 1}
 
         return dic_aux[dif]
-
+    
+    
+    #PEGANDO O VALOR TOTAL DOS PROJETOS DE IMPLANTAÇÃO
+    def impl_valorEvento(self):#RADICAL II
+        valor_base = [float(x[2]) for x in premioBaseBD if str(x[1]).strip().upper() == str(self.complexidProj).strip().upper()][0]     
+        
+        valor_total = {'VALOR_MARCOS': sum([int(x[3]) for x in premioSprintBD if str(x[4]).strip().upper() == str(self.complexidProj).strip().upper() and str(x[1]).strip().upper() in self.marcos]) * valor_base, 
+                   'ENTREGA FINAL': sum([int(x[3]) for x in premioSprintBD if str(x[4]).strip().upper() == str(self.complexidProj).strip().upper() and str(x[1]).strip().upper() == 'ENTREGA FINAL']) * valor_base}
+        
+        return valor_total
+    
+    
     #PARÂMETROS DO CALCULO DE EVENTOS
     def param_eventos(self, evento):
         if evento in list(set([typEvent[1] for typEvent in premioSprintBD])):
@@ -1109,7 +1123,7 @@ class CalculoPrêmio:
                                     'Porcentagem': [x[2] for x in premioSprintBD if x[1] == nameEvent],
                                     'QuantidadeEventos': [x[3] for x in premioSprintBD if x[1] == nameEvent]}
                     for nameEvent in list(set([typEvent[1] for typEvent in premioSprintBD]))}
-
+                                
             retorno = premioSprint[evento]
         else:
             retorno = f'EVENTO INFORMADO NÃO EXISTENTE. EVENTOS DISPONÍVEIS {list(set([typEvent[1] for typEvent in premioSprintBD]))}'
@@ -1125,12 +1139,16 @@ class CalculoPrêmio:
         else:
             valor_base = [round(float(self.proj_especial[0][3]), 2)] #VALOR BASE DAQUELE PROJETO EM ESPECIAL  # VALOR BASE DAQUELA COMPLEXIDADE
         
+        if str(self.typProj).strip().upper() == 'IMPLANTAÇÃO':
+            impl_valor_base = self.impl_valorEvento()['VALOR_MARCOS'] / sum([int(x[3]) for x in premioSprintBD if str(x[4]).strip().upper() == str(self.complexidProj).strip().upper() and str(x[1]).strip() not in list(self.marcos)+['ENTREGA FINAL']])
+        
         eventos = list(set([typEvent[1] for typEvent in premioSprintBD if str(typEvent[4]).strip().upper() == str(self.complexidProj).strip().upper()]))  # SPRINT PRÉ-MVP, MVP, PÓS-MVP, ENTREGA FINAL
         
         AuxDDComplx = {}
         for event in eventos:
+            
             auxParam = self.param_eventos(event)
-
+            
             idx_complx = list(auxParam['Complexidade']).index(self.complexidProj)
 
             porct = list(auxParam['Porcentagem'])[idx_complx]  # PORCENTAGEM DO VALOR TOTAL DESTINADO PARA AQUELE EVENTO
@@ -1209,7 +1227,7 @@ class CalculoPrêmio:
 
         else:
             valor_colab = {'error': 'Sprint informada não possui dados'}
-
+        
         return valor_colab
 
     def CalculaSprint(self, valorSprint, sprint):
