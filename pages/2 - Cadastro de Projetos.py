@@ -145,7 +145,7 @@ elif authentication_status:
         with colG1:
             matric_gestor = st.text_input('Matricula Gestor', [x[0] for x in users if x[1] == gestorProjeto][0], disabled=True)
         
-        if typ_proj != "Rápido":
+        if typ_proj not in ("Rápido", "Implantação"):
             mvp_name = st.text_input('MVP')
 
         pdt_entrFinal = st.text_area('Produto Projeto', key='ProdutoEntrega')
@@ -159,24 +159,55 @@ elif authentication_status:
         with colD2:
             ivsProget = st.text_input('Investimento', placeholder='R$ 0,00')
 
-        if typ_proj != "Rápido":
+        if typ_proj not in ("Rápido", "Implantação"):
             mvp_produt = st.text_input('Produto MVP')    
 
         result_esperd = st.text_area('Resultado Esperado')
 
+    if typ_proj in ('Implantação'):
+        #PARÂMETROS ESPECÍFICOS DOS PROJETOS DE IMPLANTAÇÃO
+        font_TITLE('PARÂMETROS DE IMPLANTAÇÃO', fonte_Projeto,"'Bebas Neue', sans-serif", 33, 'left')
+        
+        impl_stake = st.text_input('Stakeholders')
+        impl_premi = st.text_input('Premissas')
+        impl_risco = st.text_input('Riscos')
+        impl_justific = st.text_area('Justificativa')
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            impl_obj = st.text_area('Objetivo Smart')
+        with col2:
+            impl_requis = st.text_area('Requisitos do Projeto')
+        with col3:
+            impl_restric = st.text_area('Restrições')
+        
 
-    ##### ADCIONANDO MÉTRICAS #####
-    st.write('---')
-    col1, col2 = st.columns([3,1])
-    with col1:
-        font_TITLE('MÉTRICAS', fonte_Projeto,"'Bebas Neue', sans-serif", 33, 'left')
-    with col2:
-        qntd_metric = st.number_input('Quantidade', min_value=1, step=1, key=f'Cadastrar Metricas')
+        ##### ADCIONANDO MARCOS NA LINHA DO TEMPO #####
+        st.write('---')
+        col1, col2 = st.columns([3,1])
+        with col1:
+            font_TITLE('LINHA DO TEMPO', fonte_Projeto,"'Bebas Neue', sans-serif", 33, 'left')
+        with col2:
+            qntd_entr = st.number_input('Quantidade', min_value=1, step=1, key='Cadastrar linha do tempo')
 
-    listMetric = []
-    st.caption('Métricas')
-    for a_metrc in range(qntd_metric):
-        listMetric.append(st.text_input('', label_visibility="collapsed", key=f'Cadastrar Metricas{a_metrc}'))
+        listMarcosTime = []
+        st.caption('Principais etapas e marcos do projeto')
+        for a_entr in range(qntd_entr):
+            listMarcosTime.append(st.text_input('', label_visibility="collapsed", key=f'Cadastrar linha do tempo{a_entr}'))
+
+    else:
+        ##### ADCIONANDO MÉTRICAS #####
+        st.write('---')
+        col1, col2 = st.columns([3,1])
+        with col1:
+            font_TITLE('MÉTRICAS', fonte_Projeto,"'Bebas Neue', sans-serif", 33, 'left')
+        with col2:
+            qntd_metric = st.number_input('Quantidade', min_value=1, step=1, key=f'Cadastrar Metricas')
+
+        listMetric = []
+        st.caption('Métricas')
+        for a_metrc in range(qntd_metric):
+            listMetric.append(st.text_input('', label_visibility="collapsed", key=f'Cadastrar Metricas{a_metrc}'))
+            
 
     ##### ADCIONANDO AS PRÍNCIPAIS ENTREGAS #####
     st.write('---')
@@ -191,6 +222,7 @@ elif authentication_status:
     for a_entr in range(qntd_entr):
         listEntregas.append(st.text_input('', label_visibility="collapsed", key=f'Cadastrar Entreg{a_entr}'))
 
+        
     ##### ADCIONANDO A EQUIPE #####
     st.write('---')
     col1, col2 = st.columns([3,1])
@@ -227,15 +259,20 @@ elif authentication_status:
 
     if btt_criar_prj:
         if nomeProjeto not in dd_proj:
-            if typ_proj != "Rápido":
-                parametros = [len(str(x)) if type(x) == date else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, mvp_name, pdt_entrFinal, nomePrograma, dat_inic, ivsProget, mvp_produt, result_esperd, listEntregas, list_colbs]]
-            else:
-                parametros = [len(str(x)) if type(x) == date else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, pdt_entrFinal, nomePrograma, dat_inic, ivsProget, result_esperd, listEntregas, list_colbs]]
+            if typ_proj == "Estratégico":
+                parametros = [len(str(x).strip()) if type(x) in (date, str) else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, mvp_name, pdt_entrFinal, nomePrograma, dat_inic, mvp_produt, result_esperd, listEntregas, list_colbs]]
+            elif typ_proj == 'Rápido':
+                parametros = [len(str(x).strip()) if type(x) in (date, str) else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, pdt_entrFinal, nomePrograma, dat_inic, result_esperd, listEntregas, list_colbs]]
+            elif typ_proj == 'Implantação':
+                parametros = [len(str(x).strip()) if type(x) in (date, str) else len(x) for x in [typ_proj, MacroProjeto, gestorProjeto, pdt_entrFinal, nomePrograma, dat_inic, listEntregas, list_colbs, impl_stake, impl_premi, impl_risco, impl_obj, impl_requis, impl_restric, impl_justific]]
+
             if 0 not in parametros:
+
                 mycursor = conexao.cursor()
                 try:
                     ############# INSERINDO O PROJETO #############
-                    if typ_proj != "Rápido":
+                    ['Estratégico', 'OKR', 'Implantação', 'Rápido']
+                    if typ_proj == "Estratégico":
                         cmd_criar_project = f"""INSERT INTO projeu_projetos(
                             type_proj_fgkey, macroproc_fgkey, progrm_fgkey, name_proj, 
                             result_esperad, gestor_id_fgkey, nome_mvp,
@@ -247,7 +284,7 @@ elif authentication_status:
                             '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
                             (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(mvp_name).strip()}', '{str(mvp_produt).strip()}', 
                             '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}');"""
-                    else:
+                    elif typ_proj == 'Rápido':
                         cmd_criar_project = f"""INSERT INTO projeu_projetos(
                             type_proj_fgkey, macroproc_fgkey, progrm_fgkey, name_proj, 
                             result_esperad, gestor_id_fgkey, produto_entrega_final,  
@@ -257,6 +294,34 @@ elif authentication_status:
                             (SELECT id_prog FROM projeu_programas WHERE nome_prog LIKE '%{nomePrograma}%'), 
                             '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
                             (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}');"""
+                    elif typ_proj == 'Implantação':
+                        cmd_criar_project = f"""
+                            INSERT INTO 
+                                projeu_projetos( 
+                                    type_proj_fgkey, 
+                                    macroproc_fgkey, 
+                                    progrm_fgkey, 
+                                    name_proj, 
+                                    result_esperad, 
+                                    gestor_id_fgkey, 
+                                    produto_entrega_final,
+                                    ano, 
+                                    date_posse_gestor, 
+                                    status_proj, 
+                                    investim_proj,
+                                    justific_impl_proj,
+                                    stakeholders_impl_proj,
+                                    premissas_impl_proj,
+                                    riscos_impl_proj,
+                                    restric_impl_proj,
+                                    objSmart_impl_proj,
+                                    requisitos_impl_proj 
+                            ) VALUES (
+                            (SELECT id_type FROM projeu_type_proj WHERE type_proj LIKE '%{str(typ_proj).strip()}%'), (SELECT id FROM projeu_macropr WHERE macroprocesso LIKE '%{str(MacroProjeto).strip()}%'), 
+                            (SELECT id_prog FROM projeu_programas WHERE nome_prog LIKE '%{nomePrograma}%'), 
+                            '{str(nomeProjeto).strip()}', '{str(result_esperd).strip()}', 
+                            (SELECT id_user FROM projeu_users WHERE Matricula = {matric_gestor}), '{str(pdt_entrFinal).strip()}', {int(dat_inic.year)}, '{dat_inic}', 'Aguardando Início' , '{str(ivsProget).strip()}', '{impl_justific}', '{impl_stake}', '{impl_premi}', '{impl_risco}', '{impl_restric}', '{impl_obj}', '{impl_requis}');"""
+
 
                     mycursor.execute(cmd_criar_project)
                     conexao.commit()
@@ -265,20 +330,36 @@ elif authentication_status:
                     print('VINCULANDO COLABORADORES AO PROJETO')
                     sleep(0.2)
 
-                    ############# INSERINDO MÉTRICAS DO PROJETO #############
-                    dd_metric = ''
-                    for metric_name in listMetric:
-                        dd_metric += f"((SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1), '{metric_name}'),"
-                    dd_metric = dd_metric[:len(dd_metric)-1]
+                    if typ_proj not in ('Implantação'):
+                        ############# INSERINDO MÉTRICAS DO PROJETO #############
+                        dd_metric = ''
+                        for metric_name in listMetric:
+                            dd_metric += f"((SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%' LIMIT 1), '{metric_name}'),"
+                        dd_metric = dd_metric[:len(dd_metric)-1]
 
-                    cmd_metric = f"""INSERT INTO projeu_metricas(id_prj_fgkey, name_metric) 
-                                        VALUES {dd_metric};"""
-                    
-                    mycursor.execute(cmd_metric)
-                    conexao.commit()
-                    sleep(0.2)
+                        cmd_metric = f"""INSERT INTO projeu_metricas(id_prj_fgkey, name_metric) 
+                                            VALUES {dd_metric};"""
+                        
+                        mycursor.execute(cmd_metric)
+                        conexao.commit()
+                        sleep(0.2)
+                    else:
+                        ############# INSERINDO MARCOS DO PROJETO #############
+                        values_line = ''
+                        for marco_time in listMarcosTime:
+                            
+                            if len(str(marco_time).strip()) > 0: 
+                                cmd_line_tempo = f"""('{marco_time}', (SELECT * FROM projeu_projetos WHERE name_proj LIKE '%{str(nomeProjeto).strip()}%')),"""
+                                values_line += cmd_line_tempo
+                        
+                        values_line = values_line[:-1]
 
-                    
+                        if len(str(values_line).strip()) > 0:
+                            cmd_insert_marcos = f"""
+                            INSERT INTO projeu_impl_linhaTempo (marco_line_tempo, id_proj_fgkey)
+                                VALUES {values_line};"""
+
+
                     ############# INSERINDO COMPLEXIDADE #############
                     if typ_proj != "Rápido":
                         cmd_insert_complx = f'''INSERT INTO projeu_complexidade (proj_fgkey, date_edic) 
