@@ -1515,9 +1515,9 @@ elif authentication_status:
                             with tab3:
                                 checkEntrega = [x[47].split('~/>') for x in dadosOrigin]
                                 entregaAtual = [x[sprintAtual] for x in checkEntrega]
+
                                 status_homolog_atual = [func_split(dadosOrigin[0][45])[x] for x in range(len(func_split(dadosOrigin[0][11]))) if str(func_split(dadosOrigin[0][27])[x]) == str(id_sprint)][0]
                                 
-                                status_homolog_atual = 0
                                 if str(entregaAtual[0]) != "0": #CHECANDO SE A GOVERNANÇA LIBEROU A HOMOLOGAÇÃO
                                     if str(status_homolog_atual) != '1': #CHECANDO SE A SPRINT JÁ FOI HOMOLOGADO
 
@@ -1544,6 +1544,7 @@ elif authentication_status:
                                         parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                                 key=f'parec_homol{idx_spr}')
                                         
+                                        st.error(status_homolog_atual)
                                         btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True if str(status_homolog_atual).strip() == '1' else False)
 
                                         if btt_homo:
@@ -1556,7 +1557,7 @@ elif authentication_status:
                                                                     'MVP': 'MVP',
                                                                     'ENTREGA FINAL': 'ENTREGA FINAL'}
                                                             
-                                                            retorno = aux_dic[str(name_hmo).strip().upper()]
+                                                            retorno = aux_dic[str(name_hmo).strip().upper()] if str(name_hmo).strip().upper() in list(aux_dic.keys()) else name_hmo
                                                             if str(dadosOrigin[0][38]) == '1':
                                                                 retorno = 'ENTREGA FINAL'
 
