@@ -129,7 +129,8 @@ elif authentication_status:
         ) AS PROGRAMA,
         PS.check_consolid AS CHECK_CONSOLIDADO,
         PS.date_check_consolid AS DATA_CONSOLIDADO,
-        PPE.id_premio
+        PPE.id_premio,
+        PS.referenc_consolid
         FROM projeu_premio_entr AS PPE
         LEFT JOIN 
             projeu_sprints PS ON PS.id_sprint = PPE.id_sprint_fgkey
@@ -201,8 +202,8 @@ elif authentication_status:
         s.login(msg['From'], password)
 
         #ENVIANDO EMAIL
-        #s.sendmail(msg['From'], [msg['To'], 'cleidi.sander@gmail.com', 'processos.eucatur@gmail.com', 'processos4.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
-        s.sendmail(msg['From'], [msg['To'], 'processos.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
+        s.sendmail(msg['From'], [msg['To'], 'folha.cvel@consultoriaan.com.br', 'deptopessoal.cvel@consultoriaan.com.br', 'cleidi.sander@gmail.com', 'processos.eucatur@gmail.com', 'processos4.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
+        #s.sendmail(msg['From'], [msg['To'], 'processos.eucatur@gmail.com'], msg.as_string().encode('utf-8'))
         print('Email enviado')
 
 
@@ -409,8 +410,8 @@ elif authentication_status:
             dadosBD_rel = [x for x in dadosBD if str(x[11]).strip() == '1' and str(x[18]).strip() == '1']
             
             ########## FORMATANDO OS DADOS EM VÁRIOS DICIONÁRIOS PARA FACILITAR A FILTRAGEM ##########
-            dados_for_filter = {empr: {progm: {proj: {func: {pess: {date: [x for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess and str(x[19]) == date] 
-                                                    for date in [str(x[19]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess]} 
+            dados_for_filter = {empr: {progm: {proj: {func: {pess: {date: [x for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess and str(x[21]) == date] 
+                                                    for date in [str(x[21]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func and str(x[5]).strip() == pess]} 
                                                 for pess in list(set([str(x[5]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj and str(x[6]).strip() == func]))}
                                             for func in list(set([str(x[6]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm and str(x[2]).strip() == proj]))} 
                                         for proj in list(set([str(x[2]).strip() for x in dadosBD_rel if str(x[14]).strip() == empr and str(x[17]).strip() == progm]))} 
@@ -482,7 +483,7 @@ elif authentication_status:
                                             if pes_aux in pess_relt_filt:
                                                 mes_aux.extend(dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux][pes_aux].keys())
 
-            mes_aux = list(set(['{} - {}'.format(meses_escrito(string_to_datetime(x).month), string_to_datetime(x).year) if x != 'TODOS' else x for x in list(set(mes_aux))]))
+            mes_aux = list(set(['{} - {}'.format(meses_escrito(int(x.split('-')[0])), int(x.split('-')[1])) if x != 'TODOS' else x for x in list(set(mes_aux))]))
             mes_relt_filt = st.multiselect('MÊS', mes_aux, 'TODOS')
             mes_relt_filt = [x for x in mes_aux if x != 'TODOS'] if 'TODOS' in mes_relt_filt else mes_relt_filt
 
@@ -499,7 +500,8 @@ elif authentication_status:
                                             for pess_aux in dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux].keys():
                                                 if pess_aux in pess_relt_filt: #PEGANDO SOMENTE OS VALORES DAS PESSOAS SELECIONADAS
                                                     for date_aux in dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux][pess_aux].keys():
-                                                        if '{} - {}'.format(string_to_datetime(date_aux).month, string_to_datetime(date_aux).year) in ['{} - {}'.format(meses_escrito(str(x).split('-')[0].strip(), id_dyn=True), str(x).split('-')[1].strip()) for x in mes_relt_filt]: 
+                                                        
+                                                        if date_aux in ['{}-{}'.format(meses_escrito(str(x).split('-')[0].strip(), id_dyn=True), str(x).split('-')[1].strip()) for x in mes_relt_filt]: 
                                                             dados_for_filter_aux.extend(dados_for_filter[empr_aux][prog_aux][proj_aux][func_aux][pess_aux][date_aux])  
                 
                 ###################### INICIANDO A APRESENTAÇÃO DOS DADOS ######################
@@ -758,7 +760,8 @@ elif authentication_status:
                     
                         #DESTINO, NOME_COLAB, LIST_VALORES, TXT_TEMPORARIO, NAME_ARQUIVO
                         enviar_email(destino='jesiel.eucatur@gmail.com', periodo=period_referen, nome_colab=name_colab, list_valores=by_proj)
-                    
+
+                    st.success('EMAILS ENVIADOS')
                     sleep(1)
                     st.rerun()
 
