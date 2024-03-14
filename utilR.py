@@ -1125,6 +1125,40 @@ class PlotCanvas:
         .box7::-webkit-scrollbar-thumb{
             border-radius: 20px;
             border: 1px solid;
+        }
+        
+        @media only screen and (max-width: 1000px){
+            .flex-row{
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .flex-column {
+                margin-bottom: 65px;
+            }
+
+            .box1,
+            .box2,
+            .box3,
+            .box4,
+            .box5,
+            .box6,
+            .box7{
+                max-width: 350px;
+                margin: 10px 0;
+            }
+
+            .table1,
+            .table2,
+            .table3,
+            .table4,
+            .table5,
+            .table6,
+            .table7{
+                min-width: 100%;
+                max-width: 100%;
+            }
         }"""
         
         return canvaStyle
