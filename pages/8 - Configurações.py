@@ -5,8 +5,14 @@ from util import string_to_datetime, CalculoPrêmio
 from utilR import menuProjeuHtml, menuProjeuCss
 from datetime import date, datetime
 import streamlit_authenticator as stauth
+from PIL import Image
 
-st.set_page_config(page_title="Cadastro de Parâmetros", layout="wide")
+icone = Image.open('imagens/LogoProjeu.png')
+st.set_page_config(
+    page_title="Cadastro de Parâmetros", 
+    layout="wide",
+    page_icon=icone)
+
 conexao = mysql.connector.connect(
     passwd='nineboxeucatur',
     port=3306,

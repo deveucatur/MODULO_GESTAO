@@ -5,9 +5,13 @@ from datetime import date, datetime
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 from conexao import conexaoBD
+from PIL import Image
 
-st.set_page_config(layout="wide",
-                   initial_sidebar_state="collapsed")
+icone = Image.open('imagens/LogoProjeu.png')
+st.set_page_config(
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    page_icon=icone)
 
 conexao = conexaoBD()
 mycursor = conexao.cursor()

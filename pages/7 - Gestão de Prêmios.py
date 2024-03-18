@@ -15,7 +15,7 @@ import streamlit_authenticator as stauth
 from dateutil.relativedelta import relativedelta
 
 
-icone = Image.open('imagens/icone.png')
+icone = Image.open('imagens/LogoProjeu.png')
 st.set_page_config(
     page_title="Gestão de Prêmios",
     page_icon=icone,

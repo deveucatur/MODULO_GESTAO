@@ -8,12 +8,14 @@ from utilR import PlotCanvas, menuProjeuHtml, menuProjeuCss, ninebox_home, css_9
 import streamlit_authenticator as stauth
 import plotly.graph_objects as go
 from conexao import conexaoBD
+from PIL import Image
 
-
+icone = Image.open('imagens/LogoProjeu.png')
 st.set_page_config(
     page_title="Gerir Projetos",
     layout="wide",
-    initial_sidebar_state='collapsed')
+    initial_sidebar_state='collapsed',
+    page_icon=icone)
 
 conexao = conexaoBD()
 

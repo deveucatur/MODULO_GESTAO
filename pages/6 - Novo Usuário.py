@@ -9,11 +9,12 @@ from conexao import conexaoBD
 conexao = conexaoBD()
 mycursor = conexao.cursor()
 
+icone = Image.open('imagens/LogoProjeu.png')
 st.set_page_config(
-page_title="9box | New User",
-page_icon=Image.open('imagens/icone.png'),
-layout="wide",
-initial_sidebar_state='collapsed')
+    page_title="9box | New User",
+    layout="wide",
+    initial_sidebar_state='collapsed',
+    page_icon=icone)
 
 menuHtml = menuProjeuHtml(" ")
 menuCss = menuProjeuCss()

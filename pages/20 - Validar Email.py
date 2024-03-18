@@ -3,10 +3,14 @@ import mysql.connector
 from utilR import font_TITLE, menuProjeuHtml, menuProjeuCss
 from time import sleep
 from conexao import conexaoBD
+from PIL import Image
 
-st.set_page_config(page_title="Validar Email", 
-                   layout="wide",
-                   initial_sidebar_state="collapsed")
+icone = Image.open('imagens/LogoProjeu.png')
+st.set_page_config(
+    page_title="Validar Email", 
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    page_icon=icone)
 
 conexao = conexaoBD()
 mycursor = conexao.cursor()
