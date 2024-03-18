@@ -217,9 +217,9 @@ with tab2:
             f"""'{str(status).strip()}'""",
             f"""'{str(email).strip()}'""",
             f'{list(set(x[4] for x in dadosPagingBD if x[1] == macro))[0]}',
-            f"""{str(cpf).strip() if cpf != None else 'NULL'}"""]
+            f"""{str(cpf).strip() if len(cpf) > 0 else 'NULL'}"""]
 
-        if senha:
+        if len(senha) > 0:
             colunasBD += ['senha', 'senha_hash']
             valoresBD += [f"""'{senha}'""",
                 f"""'{stauth.Hasher([senha]).generate()[0]}'"""]
@@ -231,7 +231,7 @@ with tab2:
             if i != len(colunasBD) - 1:
                 cmdUpdate += ", "
         cmdUpdate += f" WHERE id_user = {usersBD[index][0]}"
-
+        
         mycursor.execute(cmdUpdate)
         conexao.commit()
 
