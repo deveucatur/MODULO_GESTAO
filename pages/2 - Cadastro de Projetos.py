@@ -7,7 +7,7 @@ from datetime import date
 import streamlit_authenticator as stauth
 from utilR import menuProjeuHtml, menuProjeuCss
 
-icone = Image.open('imagens/icone.png')
+icone = Image.open('imagens/LogoProjeu.png')
 st.set_page_config(
     page_title="Cadastro de Projetos",
     page_icon=icone,
