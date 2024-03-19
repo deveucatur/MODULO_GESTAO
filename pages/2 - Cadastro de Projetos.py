@@ -417,5 +417,4 @@ elif authentication_status:
                 st.toast('Já existe um projeto com esse nome.', icon='❌')
         else:
             st.toast('Por gentileza, ajustar corretamente todas as funções da equipe selecionada.', icon='❌')
-
-    
+            
