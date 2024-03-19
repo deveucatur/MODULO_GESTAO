@@ -274,23 +274,21 @@ elif authentication_status:
     col1, col2, col3 = st.columns(3)
     with col1:
         st.write("")
-        nomeBotão = "CADASTRO DE PROJETOS"
-        link = "https://meusprojetos-mpjj-mg.streamlit.app/Cadastro_de_Projetos"
-        image_url=  "https://cdn-icons-png.flaticon.com/128/3803/3803936.png"
+        nomeBotão = "DASHBOARD"
+        link = "https://943d-186-232-176-19.ngrok-free.app/Dashboard"
+        image_url=  "https://cdn-icons-png.flaticon.com/128/4882/4882406.png"
         botao1(nomeBotão,link,image_url)
-
     with col2:
         st.write("")
-        nomeBotão = "GERIR PORTFÓLIO"
-        link = 'https://meusprojetos-mpjj-mg.streamlit.app/Portfólio'
-        image_url=  "https://cdn-icons-png.flaticon.com/128/64/64572.png"
+        nomeBotão = "PORTFÓLIO"
+        link = 'https://943d-186-232-176-19.ngrok-free.app/Portfólio'
+        image_url=  "https://cdn-icons-png.flaticon.com/128/3222/3222498.png"
         botao1(nomeBotão,link,image_url)
-
     with col3:    
         st.write("")
-        nomeBotão = 'PRÊMIO'
-        link = 'https://meusprojetos-mpjj-mg.streamlit.app/Gestão_de_Prêmios'
-        image_url="https://cdn-icons-png.flaticon.com/128/4798/4798118.png"
+        nomeBotão = 'PRÊMIOS'
+        link = 'https://943d-186-232-176-19.ngrok-free.app/Gestão_de_Prêmios'
+        image_url="https://cdn-icons-png.flaticon.com/128/5517/5517593.png"
         botao1(nomeBotão,link,image_url)
 
     st.text(' ')
