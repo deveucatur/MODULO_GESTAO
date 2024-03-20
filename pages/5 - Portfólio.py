@@ -1546,7 +1546,6 @@ elif authentication_status:
                                         parec_homol = st.text_area('Planejamento Sprint', label_visibility="collapsed",
                                                                 key=f'parec_homol{idx_spr}')
                                         
-                                        st.error(status_homolog_atual)
                                         btt_homo = st.button('Enviar', key=f'btt homolog {idx_spr}', disabled=True if str(status_homolog_atual).strip() == '1' else False)
 
                                         if btt_homo:
