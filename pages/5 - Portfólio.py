@@ -1111,7 +1111,7 @@ elif authentication_status:
         with st.expander('Adcionar Sprint'):
             #FUNÇÃO PARA IDENTIFICAR SE A COLUNA DO BANCO DE DADOS ESTÁ VAZIA 
             maior_idx = max([param_sprint.index(x)+1 if x != None else 0 for x in func_split(dadosOrigin[0][12])])
- 
+
             if None in func_split(dadosOrigin[0][11]):
                 on_ex = False
             else:    
@@ -1126,27 +1126,29 @@ elif authentication_status:
 
             col0, col1, col2, col3 = st.columns([0.5,3,1,1])
             with col1:
-                type_sprint_new = st.selectbox('Tipo', [listAddSprON_EX[1][listAddSprON_EX[0].index(max(listAddSprON_EX[0]))]] if on_ex else listAddSprOF_EX[1], disabled=disabledON)
+                opc_event = [listAddSprON_EX[1][-1:]][0] if on_ex else listAddSprOF_EX[1]
+                type_sprint_new = st.selectbox('Tipo', opc_event, len(opc_event) - 1 if opc_event[len(opc_event) - 1] != 'ENTREGA FINAL' else opc_event.index(opc_event[opc_event.index('ENTREGA FINAL')-1]), disabled=disabledON)
+            
             with col0:
-                number_sprt = listAddSprOF_EX[0] + 1 if type_sprint_new != 'MVP' else None
-                number_sprint_new = st.text_input('Sprint', max(listAddSprON_EX[0]) if on_ex else number_sprt, disabled=True)
+                number_sprt =listAddSprOF_EX[0] + 1 if type_sprint_new not in ('MVP', 'ENTREGA FINAL', 'MARCO 1', 'MARCO 2', 'MARCO 3', 'MARCO 4', 'MARCO 5', 'MARCO 6', 'MARCO 7', 'MARCO 8') else None
+                number_sprint_new = st.text_input('Sprint', listAddSprON_EX[0][-1:][0] if on_ex else number_sprt, disabled=True)
 
             with col2:
-                dat_inc_new = st.date_input('Início', value=listAddSprON_EX[2][listAddSprON_EX[0].index(max(listAddSprON_EX[0]))] if on_ex else listAddSprOF_EX[2], disabled=disabledON)
+                dat_inc_new = st.date_input('Início', value=listAddSprON_EX[2][-1:][0] if on_ex else listAddSprOF_EX[2], disabled=disabledON)
             with col3:
                 dat_fim_new = st.date_input('Fim', value=dat_inc_new + timedelta(days=14), disabled=True)
-
             
+            #st.error([str(str(dadosOrigin[0][11]).split("/>")[x]).strip() for x in range(len(str(dadosOrigin[0][27]).split("/>"))) if str(str(dadosOrigin[0][45]).split("~/>")[x]).strip() == '1'])
             colAdd, colExc = st.columns([1,7])
             with colAdd:
                 button_addSprint = st.button('Adcionar Sprint', disabled=disabledON)
             with colExc:
                 button_exSprint = st.button('Excluir Sprint', disabled=disabledOF)
-            
+
             if button_addSprint:
                 mycursor = conexao.cursor()
                 columns = 'id_proj_fgkey, status_sprint, date_inic_sp, date_fim_sp'
-                values = f'''(SELECT id_proj FROM projeu_projetos WHERE name_proj LIKE '%{str(project_filter).strip()}%'), '{type_sprint_new}', STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d'), STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d')'''
+                values = f'''{dadosOrigin[0][0]}, '{type_sprint_new}', STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d'), STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d')'''
                 
                 if number_sprint_new != None:
                     columns += ', number_sprint'
@@ -1166,14 +1168,15 @@ elif authentication_status:
                 mycursor.close()
                 st.toast('Sucesso na adição da sprint!', icon='✅')
                 st.text(' ')
-                
+                sleep(0.1)
+                st.rerun()
 
             if button_exSprint:
                 NotEntrg = False
                 if on_ex:
                     mycursor = conexao.cursor()
 
-                    if str(listAddSprOF_EX[0]) not in [str(str(dadosOrigin[0][11]).split("~/>")[x]).strip() for x in range(len(str(dadosOrigin[0][27]).split("~/>"))) if str(str(dadosOrigin[0][45]).split("~/>")[x]).strip() == '1']:
+                    if str(listAddSprOF_EX[0]) not in [str(str(dadosOrigin[0][11]).split("/>")[x]).strip() for x in range(len(str(dadosOrigin[0][27]).split("/>"))) if str(str(dadosOrigin[0][43]).split("~/>")[x]).strip() == '1']:
                         
                         #CHECANDO SE HÁ ENTREGAS VINCULADAS A SPRINT
                         if len(EntregasBD) == 0:
@@ -1183,20 +1186,18 @@ elif authentication_status:
                         
                         if NotEntrg:
                             cmdDEL = f'''DELETE FROM projeu_sprints 
-                                        WHERE number_sprint = {listAddSprOF_EX[0]} 
-                                        AND id_proj_fgkey = (SELECT id_proj FROM projeu_projetos 
-                                            WHERE name_proj LIKE '%{str(project_filter).strip()}%') 
+                                        WHERE number_sprint = {number_sprint_new} 
+                                        AND id_proj_fgkey = {dadosOrigin[0][0]} 
                                         AND status_sprint = '{type_sprint_new}'
                                         AND date_inic_sp = STR_TO_DATE('{dat_inc_new}', '%Y-%m-%d')
                                         AND date_fim_sp = STR_TO_DATE('{dat_fim_new}', '%Y-%m-%d');'''                
-
+                            
                             mycursor.execute(cmdDEL)
                             conexao.commit()
 
                             st.toast('Excluido!', icon='✅') 
-
-                            sleep(0.5)
-                            # st.rerun()
+                            sleep(0.1)
+                            st.rerun()
                         else:
                             st.toast('Primeiramente, é necessário excluir todas as atividades dessa sprint.', icon='❌')
                     else:
@@ -1334,7 +1335,7 @@ elif authentication_status:
                                                         WHERE 
                                                             id_colab_fgkey = (SELECT id_user FROM projeu_users WHERE Matricula = {matricula_especil}) 
                                                                 AND id_sprt_fgkey = {id_sprint};'''
-                                    #cmd_aux=''
+
                                     return cmd_aux
                                 
 
