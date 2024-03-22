@@ -537,95 +537,105 @@ elif authentication_status:
         st.write(f'<div>{html1}</div>', unsafe_allow_html=True)
         st.text(' ')
     
+    dadosOrigin = []
     font_TITLE('ACOMPANHAMENTO POR PROJETO', fonte_Projeto,"'Bebas Neue', sans-serif", 30, 'left', '#228B22')
     with st.expander('Filtro Projetos', expanded=False):
         macropr_filter = st.multiselect('Macroprocesso', set([x[5] for x in ddPaging]), set([x[5] for x in ddPaging]))
-        program_filter = st.multiselect('Programas', set([x[6] for x in ddPaging if x[5] in macropr_filter]), set([x[6] for x in ddPaging if x[5] in macropr_filter]))
-        project_filter = st.selectbox('Projetos', [x[1] for x in ddPaging if x[6] in program_filter])
         
-        dadosOrigin = [x for x in ddPaging if x[1] == project_filter]
+        if len(macropr_filter) > 0:
+            program_filter = st.multiselect('Programas', set([str(x[6]).strip() for x in ddPaging if x[5] in macropr_filter]), set([str(x[6]).strip() for x in ddPaging if x[5] in macropr_filter]))
 
-        cmd_entregas_planejameto = f"""SELECT 
-                                (SELECT number_sprint FROM projeu_sprints WHERE id_sprint = projeu_entregas_planejamento.id_sprint) AS NUMERO_SPRINT, 
-                                nome_Entrega AS NOME_ENTREGA, 
-                                (select Nome FROM projeu_users WHERE id_user = executor) AS EXECUTOR, 
-                                hra_necess AS HORAS, 
-                                compl_entrega AS COMPLEXIDADE,
-                                stt_entrega AS STATUS,
-                                id_entr,
-                                id_sprint,
-                                (SELECT Matricula FROM projeu_users WHERE id_user = executor) AS MATRICULA_EXECUTOR
-                            FROM projeu_entregas_planejamento 
-                                WHERE 
-                                    id_sprint IN ( 
-                                        SELECT id_sprint 
-                                        FROM projeu_sprints 
-                                        WHERE id_proj_fgkey = (
-                                            SELECT id_proj 
-                                            FROM projeu_projetos 
-                                            WHERE name_proj LIKE '%{str(project_filter).strip()}%'
-                                            ) 
-                                        );"""
+            if len(program_filter) > 0:
+                status_filter = st.multiselect('Status', list(set([str(x[31]).strip().upper() for x in ddPaging if str(x[6]).strip() in program_filter])), list(set([str(x[31]).strip().upper() for x in ddPaging if str(x[6]).strip() in program_filter])))
 
-        cmd_entregas = f"""SELECT 
-                                (SELECT number_sprint FROM projeu_sprints WHERE id_sprint = projeu_entregas.id_sprint) AS NUMERO_SPRINT, 
-                                nome_Entrega AS NOME_ENTREGA, 
-                                (select Nome FROM projeu_users WHERE id_user = executor) AS EXECUTOR, 
-                                hra_necess AS HORAS, 
-                                compl_entrega AS COMPLEXIDADE,
-                                stt_entrega AS STATUS,
-                                id_entr,
-                                (
-                                    SELECT 
-                                        id_sprint 
-                                    FROM 
-                                        projeu_sprints 
-                                    WHERE 
-                                        id_sprint = projeu_entregas.id_sprint
-                                ) AS ID_SPRINT,
-                                (SELECT Matricula FROM projeu_users WHERE id_user = executor) AS MATRICULA_EXECUTOR
-                            FROM projeu_entregas 
-                                WHERE 
-                                    id_sprint IN ( 
-                                        SELECT id_sprint 
-                                        FROM projeu_sprints 
-                                        WHERE id_proj_fgkey = (
-                                            SELECT id_proj 
-                                            FROM projeu_projetos 
-                                            WHERE name_proj LIKE '%{str(project_filter).strip()}%'
-                                            ) 
-                                        );"""
-        
-        #cmd_observcao = f"""SELECT 
-        #                        id_observ AS ID_OBSERVAÇÃO, 
-        #                        id_sprint_fgkey AS ID_SPRINT, 
-        #                        PS.number_sprint AS NUMBER_SPRINT, 
-        #                        observacao AS TEXTO_OBSERVACAO, 
-        #                        data_observ AS DATA_OBSERVACAO, 
-        #                        (
-        #                            SELECT Nome FROM projeu_users WHERE id_user = ultm_edicao LIMIT 1
-        #                        ) AS ULTIMA_EDICAO
-        #                    FROM 
-        #                        projeu_projt_observ 
-        #                    JOIN 
-        #                        projeu_sprints PS ON id_sprint = id_sprint_fgkey
-        #                    WHERE 
-        #                        PS.id_sprint IN ({dadosOrigin[0][27].replace('~/>', ',') if dadosOrigin[0][27] != None else 'null'});"""
+                if len(status_filter) > 0:
+                    project_filter = st.selectbox('Projetos', [x[1] for x in ddPaging if str(x[6]).strip() in program_filter and str(x[31]).strip().upper() in status_filter])
 
-        cmd_homolog = f'''SELECT * FROM projeu_homol_sprints WHERE id_sprint_fgkey IN ({dadosOrigin[0][27].replace('~/>', ',') if dadosOrigin[0][27] != None else 'null'});'''
+                    gestorProj = [x[3] for x in ddPaging if x[1] == project_filter][0] if project_filter != None else None
 
-        cmd_especialist_sprint = f"""SELECT
-                                        PES.id_sp, 
-                                        PES.id_sprt_fgkey, 
-                                        PS.number_sprint,
-                                        PES.id_colab_fgkey, 
-                                        PU.Matricula,
-                                        PU.Nome,
-                                        PES.status_sp
-                                    FROM projeu_especialist_sprint PES
-                                    JOIN projeu_users PU ON PU.id_user = PES.id_colab_fgkey
-                                    JOIN projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
-                                    WHERE PS.id_proj_fgkey IN (SELECT PP_AUX.id_proj FROM projeu_projetos PP_AUX WHERE PP_AUX.name_proj LIKE '%{str(dadosOrigin[0][1]).strip()}%');"""
+                    dadosOrigin = [x for x in ddPaging if x[1] == project_filter]
+
+                    cmd_entregas_planejameto = f"""SELECT 
+                                            (SELECT number_sprint FROM projeu_sprints WHERE id_sprint = projeu_entregas_planejamento.id_sprint) AS NUMERO_SPRINT, 
+                                            nome_Entrega AS NOME_ENTREGA, 
+                                            (select Nome FROM projeu_users WHERE id_user = executor) AS EXECUTOR, 
+                                            hra_necess AS HORAS, 
+                                            compl_entrega AS COMPLEXIDADE,
+                                            stt_entrega AS STATUS,
+                                            id_entr,
+                                            id_sprint,
+                                            (SELECT Matricula FROM projeu_users WHERE id_user = executor) AS MATRICULA_EXECUTOR
+                                        FROM projeu_entregas_planejamento 
+                                            WHERE 
+                                                id_sprint IN ( 
+                                                    SELECT id_sprint 
+                                                    FROM projeu_sprints 
+                                                    WHERE id_proj_fgkey = (
+                                                        SELECT id_proj 
+                                                        FROM projeu_projetos 
+                                                        WHERE name_proj LIKE '%{str(project_filter).strip()}%'
+                                                        ) 
+                                                    );"""
+
+                    cmd_entregas = f"""SELECT 
+                                            (SELECT number_sprint FROM projeu_sprints WHERE id_sprint = projeu_entregas.id_sprint) AS NUMERO_SPRINT, 
+                                            nome_Entrega AS NOME_ENTREGA, 
+                                            (select Nome FROM projeu_users WHERE id_user = executor) AS EXECUTOR, 
+                                            hra_necess AS HORAS, 
+                                            compl_entrega AS COMPLEXIDADE,
+                                            stt_entrega AS STATUS,
+                                            id_entr,
+                                            (
+                                                SELECT 
+                                                    id_sprint 
+                                                FROM 
+                                                    projeu_sprints 
+                                                WHERE 
+                                                    id_sprint = projeu_entregas.id_sprint
+                                            ) AS ID_SPRINT,
+                                            (SELECT Matricula FROM projeu_users WHERE id_user = executor) AS MATRICULA_EXECUTOR
+                                        FROM projeu_entregas 
+                                            WHERE 
+                                                id_sprint IN ( 
+                                                    SELECT id_sprint 
+                                                    FROM projeu_sprints 
+                                                    WHERE id_proj_fgkey = (
+                                                        SELECT id_proj 
+                                                        FROM projeu_projetos 
+                                                        WHERE name_proj LIKE '%{str(project_filter).strip()}%'
+                                                        ) 
+                                                    );"""
+                    
+                    #cmd_observcao = f"""SELECT 
+                    #                        id_observ AS ID_OBSERVAÇÃO, 
+                    #                        id_sprint_fgkey AS ID_SPRINT, 
+                    #                        PS.number_sprint AS NUMBER_SPRINT, 
+                    #                        observacao AS TEXTO_OBSERVACAO, 
+                    #                        data_observ AS DATA_OBSERVACAO, 
+                    #                        (
+                    #                            SELECT Nome FROM projeu_users WHERE id_user = ultm_edicao LIMIT 1
+                    #                        ) AS ULTIMA_EDICAO
+                    #                    FROM 
+                    #                        projeu_projt_observ 
+                    #                    JOIN 
+                    #                        projeu_sprints PS ON id_sprint = id_sprint_fgkey
+                    #                    WHERE 
+                    #                        PS.id_sprint IN ({dadosOrigin[0][27].replace('~/>', ',') if dadosOrigin[0][27] != None else 'null'});"""
+
+                    cmd_homolog = f'''SELECT * FROM projeu_homol_sprints WHERE id_sprint_fgkey IN ({dadosOrigin[0][27].replace('~/>', ',') if dadosOrigin[0][27] != None else 'null'});'''
+
+                    cmd_especialist_sprint = f"""SELECT
+                                                    PES.id_sp, 
+                                                    PES.id_sprt_fgkey, 
+                                                    PS.number_sprint,
+                                                    PES.id_colab_fgkey, 
+                                                    PU.Matricula,
+                                                    PU.Nome,
+                                                    PES.status_sp
+                                                FROM projeu_especialist_sprint PES
+                                                JOIN projeu_users PU ON PU.id_user = PES.id_colab_fgkey
+                                                JOIN projeu_sprints PS ON PS.id_sprint = PES.id_sprt_fgkey
+                                                WHERE PS.id_proj_fgkey IN (SELECT PP_AUX.id_proj FROM projeu_projetos PP_AUX WHERE PP_AUX.name_proj LIKE '%{str(dadosOrigin[0][1]).strip()}%');"""
 
     st.text(' ')
     st.text(' ')
@@ -887,9 +897,14 @@ elif authentication_status:
         dd_proj_grafic = {} if list(dd_proj_grafic.values())[0] == 0 else dd_proj_grafic
         col1, col2 = st.columns([1, 3])
         with col1:
+            #DESCOBRINDO QUANTOS NONES TEM NA COMPLEXIDADE DO PROJETO PARA ADAPTAR O TEXTO FORNECIDO NO FRONT
+            complx_list = [x if x != None else '' for x in (dadosOrigin[0][36], dadosOrigin[0][37])]
+            txt_complx = str(f'{complx_list[0]} {complx_list[1]}').strip()
+            displayInd('Complexidade', txt_complx if len(txt_complx) > 0 else 'Formulário Não Preenchido', 1, 3)
+            
             displayInd('Desvio entre Sprints (Média)', round(sum([x for x in dif_desvio_sprints if x != None]) / len([x for x in dif_desvio_sprints if x != None]), 2), 1, 3,padding=1.7, id=2)
             displayInd('Desvio Sprint X Homologação (Média)', round(sum(dif_desvio_homolog) / len(dif_desvio_homolog), 2), 1, 3,padding=1.7, id=2)
-
+            
         with col2:
             def fqntd_sprints_por_event(typ_proj, complexid):
                 typ_proj = str(typ_proj).strip()
