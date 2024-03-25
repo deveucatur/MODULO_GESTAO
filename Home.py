@@ -474,6 +474,9 @@ elif authentication_status:
                         else:
                             nivel = "Valor inválido"
 
+                    st.write("---")
+                    st.info(f"Complexidade: {complexidade} {nivel}")
+
                     finalizar = st.button("Finalizar avaliação", key=f"notaLider_{i}")
 
                     if finalizar:
