@@ -663,6 +663,8 @@ elif authentication_status:
         
         mycursor.close()
 
+        complx_list = [x if x != None else '' for x in (dadosOrigin[0][36], dadosOrigin[0][37])]
+        txt_complx = str(f'{complx_list[0]} {complx_list[1]}').strip()
 
         tab1, tab2 = st.tabs(['Canvas', 'Editar'])
         with tab1:
@@ -704,7 +706,7 @@ elif authentication_status:
                 st.write(f'<div>{html}</div>', unsafe_allow_html=True)
                 st.write(f'<style>{css}</style>', unsafe_allow_html=True)
             else:
-                canvas = PlotCanvas(projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, [x[0] for x in equipBD if x[1] == 'Especialista'], [x[0] for x in equipBD if x[1] == 'Executor'], entregas, investimentos)
+                canvas = PlotCanvas(projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, [x[0] for x in equipBD if x[1] == 'Especialista'], [x[0] for x in equipBD if x[1] == 'Executor'], entregas, investimentos, "gestao", txt_complx)
                 htmlRow = canvas.CreateHTML()
                 htmlEqp = canvas.tableEqp()
                 htmlUnic = canvas.tableUnic()
@@ -898,8 +900,6 @@ elif authentication_status:
         col1, col2 = st.columns([1, 3])
         with col1:
             #DESCOBRINDO QUANTOS NONES TEM NA COMPLEXIDADE DO PROJETO PARA ADAPTAR O TEXTO FORNECIDO NO FRONT
-            complx_list = [x if x != None else '' for x in (dadosOrigin[0][36], dadosOrigin[0][37])]
-            txt_complx = str(f'{complx_list[0]} {complx_list[1]}').strip()
             displayInd('Complexidade', txt_complx if len(txt_complx) > 0 else 'Formulário Não Preenchido', 1, 3)
             
             displayInd('Desvio entre Sprints (Média)', round(sum([x for x in dif_desvio_sprints if x != None]) / len([x for x in dif_desvio_sprints if x != None]), 2), 1, 3,padding=1.7, id=2)
