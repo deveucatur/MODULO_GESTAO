@@ -548,7 +548,7 @@ def menuGeral():
     )
 
 class PlotCanvas:
-    def __init__(self, projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos, modulo, complexidade):
+    def __init__(self, projetos, mvps, prodProjetos, prodMvps, resultados, metricas, gestores, especialistas, squads, entregas, investimentos):
         self.projeto = projetos
         self.mvp = mvps
         self.prodProjetos = prodProjetos
@@ -560,8 +560,6 @@ class PlotCanvas:
         self.squads = squads
         self.entregas = entregas
         self.investimentos = investimentos
-        self.modulo = modulo
-        self.complexidade = complexidade
 
     def CreateHTML(self):
         metricaCode = ""
@@ -591,21 +589,15 @@ class PlotCanvas:
         
         mvpCode = ""
         for i in range(len(self.mvp)):
-            if len(self.mvp[i]) <= 1:
-                self.mvp = "        "
-            else:
-                mvpCode += f"""<tr class="tdata2">
-                        <td>{self.mvp[i]}</td>
-                    </tr>"""
+            mvpCode += f"""<tr class="tdata2">
+                    <td>{self.mvp[i]}</td>
+                </tr>"""
             
         prodMvpCode = ""
         for i in range(len(self.prodMvp)):
-            if len(self.mvp[i]) <= 1:
-                self.prodMvp = "        "
-            else:
-                prodMvpCode += f"""<tr class="tdata2">
-                    <td>{self.prodMvp[i]}</td>
-                </tr>"""
+            prodMvpCode += f"""<tr class="tdata2">
+                        <td>{self.prodMvp[i]}</td>
+                    </tr>"""
 
         htmlRow = f"""<div class="flex-row">
                 <div class="box">
@@ -622,14 +614,12 @@ class PlotCanvas:
                         </table>
                     </div>
                 </div>"""
-        
-        if len(mvpCode) > 72 or len(prodMvpCode) > 72:
-            htmlRow += f"""
-                <div class="box">
+        if len(mvpCode) > 72 and len(prodMvpCode) > 80:
+            htmlRow += f"""<div class="box">
                     <div class="box2">
                         <table class="table2">
                             <tr class="thead2">
-                                <th>MVP <img src="https://cdn-icons-png.flaticon.com/128/9238/9238294.png" alt="Icone da tabela MVPs" class="table-icon"></th>
+                                <th>MVP<img src="https://cdn-icons-png.flaticon.com/128/9238/9238294.png" alt="Icone da tabela MVPs" class="table-icon"></th>
                             </tr>
                             <div>{mvpCode}</div>
                             <tr class="thead2-mvp">
@@ -638,8 +628,7 @@ class PlotCanvas:
                             <div>{prodMvpCode}</div>
                         </table>
                     </div>
-                </div>
-                """
+                </div>"""
         else:
             htmlRow += f"""<div class="box">
                     <p> </p>
@@ -741,46 +730,24 @@ class PlotCanvas:
 
     def tableCol(self):
         investimento = self.investimentos
-        complexidade = self.complexidade
 
         investimentoCode = ""
         for i in range(len(investimento)):
             investimentoCode += f"""<tr class="tdata3">
                     <td>R${investimento[i]}</td>
                 </tr>"""
-            
-        complexidadeCode = f"""<tr class="tdata3">
-                <td>{complexidade}</td>
-            </tr>"""
 
-        if self.modulo == "execucao":
-            htmlCol1 = f"""<div class="box">
-                    <div class="box3">
-                        <table class="table3">
-                            <tr class="thead3">
-                                <th>Investimento<img src="https://cdn-icons-png.flaticon.com/128/7928/7928255.png" alt="Icone da tabela Investimentos" class="table-icon"></th>
-                            </tr>
-                            <div>{investimentoCode}</div>
-                            <tr class="thead3-complex">
-                                <th>Complexidade<img src="https://cdn-icons-png.flaticon.com/128/5139/5139819.png" alt="Icone da tabela Investimentos" class="table-icon"></th>
-                            </tr>
-                            <div>{complexidadeCode}</div>
-                        </table>
-                    </div>
+        htmlCol1 = f"""<div class="box">
+                <div class="box3">
+                    <table class="table3">
+                        <tr class="thead3">
+                            <th>Investimento<img src="https://cdn-icons-png.flaticon.com/128/7928/7928255.png" alt="Icone da tabela Investimentos" class="table-icon"></th>
+                        </tr>
+                        <div>{investimentoCode}</div>
+                    </table>
                 </div>
-                </div>"""
-        else:
-            htmlCol1 = f"""<div class="box">
-                    <div class="box3">
-                        <table class="table3">
-                            <tr class="thead3">
-                                <th>Investimento<img src="https://cdn-icons-png.flaticon.com/128/7928/7928255.png" alt="Icone da tabela Investimentos" class="table-icon"></th>
-                            </tr>
-                            <div>{investimentoCode}</div>
-                        </table>
-                    </div>
-                </div>
-                </div>"""
+            </div>
+            </div>"""
         return htmlCol1
 
     @staticmethod
@@ -816,10 +783,17 @@ class PlotCanvas:
         prodMvpCode = ""
         for i in range(len(prodMvp)):
             prodMvpCode += f"""<tr class="tdata2">
-                    <td>{prodMvp[i]}</td>
-                </tr>"""
+                        <td>{prodMvp[i]}</td>
+                    </tr>"""
 
-        canvaStyle = """.box{
+        canvaStyle = """body{
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+        
+        .box{
             display: flex;
             align-items: flex-end;
             justify-content: center;
@@ -864,9 +838,8 @@ class PlotCanvas:
             box-shadow: 0px 0px 25px rgba(255, 255, 68, 1);
         }"""
 
-        if len(mvpCode) > 72 or len(prodMvpCode) > 72:
-             canvaStyle += """
-                .box1,
+        if len(mvpCode) > 72 and len(prodMvpCode) > 80:
+             canvaStyle += """.box1,
                 .box2,
                 .box3,
                 .box4,
@@ -878,10 +851,9 @@ class PlotCanvas:
                     max-width: 350px;
                     max-height: 250px;
                     margin: 5px;
+                    overflow: auto;
                     overflow-x: hidden;
-                    overflow-y: auto;
                     scrollbar-width: thin;
-                    border-radius: 15px;
                 }
              
                 .table1,
@@ -895,15 +867,12 @@ class PlotCanvas:
                     border-collapse: collapse;
                     border-radius: 10px;
                     overflow: hidden; 
-                    overflow-y: auto;
                     min-height: 250px;
                     max-height: 250px;
                     border-collapse: collapse;
-                }
-                """
+                }"""
         else:
-             canvaStyle += """
-                .box1,
+             canvaStyle += """.box1,
                 .box2,
                 .box3,
                 .box4,
@@ -916,9 +885,7 @@ class PlotCanvas:
                     margin: 5px;
                     overflow: auto;
                     overflow-x: hidden;
-                    overflow-y: auto;
                     scrollbar-width: thin;
-                    border-radius: 15px;
                 }
              
                 .table1,
@@ -926,8 +893,7 @@ class PlotCanvas:
                     min-width: 534px;
                     border-collapse: collapse;
                     border-radius: 10px;
-                    overflow: hidden;
-                    overflow-y: auto;
+                    overflow: hidden; 
                     min-height: 250px;
                     max-height: 250px;
                     border-collapse: collapse;
@@ -941,13 +907,11 @@ class PlotCanvas:
                     min-width: 350px;
                     border-collapse: collapse;
                     border-radius: 10px;
-                    overflow: hidden;
-                    overflow-y: auto;
+                    overflow: hidden; 
                     min-height: 250px;
                     max-height: 250px;
                     border-collapse: collapse;
-                }
-                """
+                }"""
              
         canvaStyle += """th{
             height: 20px;
@@ -963,10 +927,6 @@ class PlotCanvas:
 
         .thead3{
             background-color: #ff7354;
-        }
-
-        .thead3-complex{
-            background-color: #ff9982;
         }
 
         .thead4{
@@ -987,8 +947,7 @@ class PlotCanvas:
 
         .thead4-eqp,
         .thead1-proj,
-        .thead2-mvp,
-        .thead3-complex{
+        .thead2-mvp{
             align-items: center;
             border-bottom: 1px solid #1eff00;
         }
@@ -1031,8 +990,7 @@ class PlotCanvas:
 
         .thead4-eqp,
         .thead1-proj,
-        .thead2-mvp,
-        .thead3-complex{
+        .thead2-mvp{
             text-align: center;
             font-weight: bold;
         }
@@ -1044,8 +1002,7 @@ class PlotCanvas:
         .thead5 img,
         .thead6 img,
         .thead7 img,
-        .thead4-eqp img,
-        .thead3-complex img{
+        .thead4-eqp img{
             vertical-align: middle;
             margin-left: 10px;
             width: 20px;
@@ -1109,7 +1066,6 @@ class PlotCanvas:
             display: flex;
             justify-content: center;
             height: auto;
-            min-width: 350px;
         }
 
         .flex-column {
@@ -1585,7 +1541,7 @@ def ninebox_home(quadrante, nineboxDatasUnidadesAux, dadosNineboxUni, nome_quadr
     totalUnidades = sum([len(x) for x in qtdUnidades])
 
     quadrante = quadrante
-    boxTable = f"""<div class="box2-home">
+    boxTable = f"""<div class="box2">
                         <div class="box-{style[quadrante]}2">
                             <div class="header-{style[quadrante]}2">
                                 <div class="title-{style[quadrante]}2">
@@ -1672,7 +1628,7 @@ def css_9box_home(fonte0="""'Bebas Neue', sans-serif;""", fonte1="""@import url(
         align-items: center;
     }}
 
-    .box2-home{{
+    .box2{{
         display: flex;
         align-items: flex-end;
         justify-content: center;
@@ -1682,6 +1638,7 @@ def css_9box_home(fonte0="""'Bebas Neue', sans-serif;""", fonte1="""@import url(
 
     p{{
         font-size: 14px;
+        margin: 0;
     }}
 
     img{{
@@ -2179,7 +2136,6 @@ def menuProjeuHtml(nome):
                         <button type="button"><img src="https://cdn-icons-png.flaticon.com/128/1570/1570102.png" alt="ícone de configurações para alteração do módulo de uso"></button>
                         <div class="modulo">
                             <a href="https://meusprojetos-mpjj.streamlit.app/"><button type="button">Módulo de Execução</button></a>
-                            <a href="https://meusprojetos-mpjj-mg.streamlit.app/"><button type="button">Módulo de Gestão</button></a>
                         </div>
                     </div>
                 </div>
@@ -2470,7 +2426,6 @@ def enviar_email(destino, codigo):
 
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado!')
-
 
 def CanvaImplantacao(dadosImplantacao):
     dadosJustificativas = ""
@@ -3226,11 +3181,35 @@ def StyleCanvaImplantacao():
     
     return cssCanvaImplantacao
 
-# def menu():
-#     st.sidebar.page_link("HomeGestao.py", label="Home")
-#     st.sidebar.page_link("pages/1 - Dashboard.py")
-#     st.sidebar.page_link("pages/4 - Cadastro de Projetos.py")
-#     st.sidebar.page_link("pages/5 - Portfólio.py")
-#     st.sidebar.page_link("pages/6 - Novo Usuário.py")
-#     st.sidebar.page_link("pages/7 - Gestao de Prêmios.py")
-#     st.sidebar.page_link("pages/8 - Configurações.py")
+def htmlButtonProjetos(projeto):
+    htmlButton = f"""<div class="btProjeto">
+            <a href="https://95cf-186-232-176-19.ngrok-free.app/Meus_Projetos/?projeto={projeto}" target="_self">
+                <button type="button">Ir para o Projeto</button>
+            </a>
+        </div>"""
+
+    return htmlButton
+
+def cssButtonProjetos():
+    cssButton = """@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600&display=swap');
+
+        .btProjeto a{
+            text-decoration: none;
+        }
+
+        .btProjeto button{
+            font-family: 'Poppins', sans-serif;
+            background-color: #d3cbdb;
+            color: #622673;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid #622673;
+        }
+
+        .btProjeto button:hover{
+            background-color: #d2bce7;
+        }"""
+    
+    return cssButton
